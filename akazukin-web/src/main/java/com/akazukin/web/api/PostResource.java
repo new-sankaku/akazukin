@@ -20,6 +20,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 
+import com.akazukin.application.dto.ErrorResponseDto;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +36,11 @@ public class PostResource {
 
     @POST
     public Response createPost(PostRequestDto request, @Context SecurityContext securityContext) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
         UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         PostResponseDto response = postUseCase.createPost(userId, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
@@ -44,6 +51,11 @@ public class PostResource {
     public Response updatePost(@PathParam("id") UUID id,
                                PostRequestDto request,
                                @Context SecurityContext securityContext) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
         UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         PostResponseDto response = postUseCase.updatePost(id, userId, request);
         return Response.ok(response).build();

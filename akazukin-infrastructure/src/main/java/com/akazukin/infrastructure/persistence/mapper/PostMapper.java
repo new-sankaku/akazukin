@@ -52,7 +52,7 @@ public final class PostMapper {
 
     private static String serializeMediaUrls(List<String> mediaUrls) {
         if (mediaUrls == null || mediaUrls.isEmpty()) {
-            return null;
+            return "";
         }
         return String.join(MEDIA_URL_SEPARATOR, mediaUrls);
     }

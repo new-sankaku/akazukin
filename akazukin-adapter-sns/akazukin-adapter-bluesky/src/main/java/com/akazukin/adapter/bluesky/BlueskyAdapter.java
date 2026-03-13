@@ -10,13 +10,14 @@ import com.akazukin.sdk.bluesky.BlueskyClient;
 import com.akazukin.sdk.bluesky.BlueskyConfig;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -25,6 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class BlueskyAdapter extends AbstractSnsAdapter {
+
+    private static final Logger LOG = Logger.getLogger(BlueskyAdapter.class.getName());
 
     private static final String BSKY_SETTINGS_URL = "https://bsky.app/settings/app-passwords";
     private static final String DEFAULT_SERVICE_URL = "https://bsky.social";
@@ -43,7 +46,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
         this(
             serviceUrl,
             HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+                .connectTimeout(CONNECTION_TIMEOUT)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build(),
             new ObjectMapper()
@@ -57,6 +60,11 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
     @Override
     public SnsPlatform platform() {
         return SnsPlatform.BLUESKY;
+    }
+
+    @Override
+    public int getMaxContentLength() {
+        return BLUESKY_MAX_LENGTH;
     }
 
     @Override
@@ -80,7 +88,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -99,7 +107,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("exchangeToken", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
         }
     }
@@ -113,7 +121,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 .header("Authorization", "Bearer " + refreshToken)
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody())
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -132,7 +140,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("refreshToken", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
         }
     }
@@ -148,7 +156,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 .header("Authorization", "Bearer " + accessToken)
                 .header("Accept", "application/json")
                 .GET()
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -167,7 +175,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("getProfile", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
         }
     }
@@ -194,7 +202,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -213,7 +221,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("post", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("post", e);
         }
     }
@@ -235,7 +243,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -246,7 +254,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("deletePost", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
         }
     }
@@ -273,16 +281,11 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
                     return sub;
                 }
             }
-        } catch (Exception ignored) {
-            // Fall through to use token as-is if decoding fails
+        } catch (IllegalArgumentException | IOException e) {
+            LOG.log(Level.WARNING,
+                "Failed to decode DID from Bluesky JWT token, using token as-is: " + e.getMessage(), e);
         }
         return accessToken;
     }
 
-    private void checkResponseStatus(HttpResponse<String> response, String operation) {
-        if (response.statusCode() >= 400) {
-            throw wrapException(operation,
-                new RuntimeException("HTTP " + response.statusCode() + ": " + response.body()));
-        }
-    }
 }

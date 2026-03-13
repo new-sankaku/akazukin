@@ -81,6 +81,30 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+    public void changePassword(String newPasswordHash) {
+        if (newPasswordHash == null || newPasswordHash.isBlank()) {
+            throw new IllegalArgumentException("Password hash must not be null or blank");
+        }
+        this.passwordHash = newPasswordHash;
+        this.updatedAt = Instant.now();
+    }
+
+    public void updateEmail(String newEmail) {
+        if (newEmail == null || !newEmail.contains("@")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+        this.email = newEmail;
+        this.updatedAt = Instant.now();
+    }
+
+    public boolean hasRole(Role role) {
+        return this.role == role;
+    }
+
+    public boolean isAdmin() {
+        return hasRole(Role.ADMIN);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

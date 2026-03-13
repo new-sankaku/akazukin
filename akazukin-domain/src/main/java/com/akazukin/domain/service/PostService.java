@@ -3,14 +3,12 @@ package com.akazukin.domain.service;
 import com.akazukin.domain.exception.PostNotFoundException;
 import com.akazukin.domain.model.Post;
 import com.akazukin.domain.model.PostStatus;
-import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.PostRepository;
 
 import java.time.Instant;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class PostService {
@@ -91,32 +89,32 @@ public class PostService {
     }
 
     /**
-     * Validates content length per platform.
+     * Validates content length against the given maximum.
+     * The max length should be obtained from the adapter via
+     * {@link com.akazukin.domain.port.SnsAdapter#getMaxContentLength()}.
      *
-     * @param content  the post content to validate
-     * @param platform the target SNS platform
-     * @return a map of platform to error message; empty if valid
+     * @param content   the post content to validate
+     * @param maxLength the maximum allowed content length (from the SNS adapter)
+     * @return an Optional containing the error message if validation fails; empty if valid
      */
-    public Map<SnsPlatform, String> validateContent(String content, SnsPlatform platform) {
-        Objects.requireNonNull(platform, "platform must not be null");
-
-        Map<SnsPlatform, String> errors = new EnumMap<>(SnsPlatform.class);
-
-        if (content == null || content.isEmpty()) {
-            errors.put(platform, "Content must not be empty");
-            return errors;
+    public Optional<String> validateContent(String content, int maxLength) {
+        if (maxLength <= 0) {
+            throw new IllegalArgumentException("maxLength must be positive");
         }
 
-        int maxLength = getMaxContentLength(platform);
+        if (content == null || content.isEmpty()) {
+            return Optional.of("Content must not be empty");
+        }
+
         int contentLength = calculateContentLength(content);
 
         if (contentLength > maxLength) {
-            errors.put(platform,
-                    "Content exceeds maximum length for " + platform + ": "
+            return Optional.of(
+                    "Content exceeds maximum length: "
                             + contentLength + " / " + maxLength + " characters");
         }
 
-        return errors;
+        return Optional.empty();
     }
 
     /**
@@ -130,15 +128,5 @@ public class PostService {
             return 0;
         }
         return content.length();
-    }
-
-    private int getMaxContentLength(SnsPlatform platform) {
-        return switch (platform) {
-            case TWITTER -> 280;
-            case BLUESKY -> 300;
-            case MASTODON -> 500;
-            case REDDIT -> 40000;
-            case THREADS, INSTAGRAM, TELEGRAM, VK, PINTEREST -> 2200;
-        };
     }
 }

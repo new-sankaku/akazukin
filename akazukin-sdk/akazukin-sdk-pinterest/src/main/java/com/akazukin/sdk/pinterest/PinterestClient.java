@@ -27,6 +27,9 @@ public class PinterestClient implements AutoCloseable {
     private static final String API_BASE_URL = "https://api.pinterest.com/v5";
     private static final String AUTH_URL = "https://www.pinterest.com/oauth/";
     private static final String TOKEN_URL = "https://api.pinterest.com/v5/oauth/token";
+    private static final int HTTP_CLIENT_ERROR = 400;
+    private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
 
     private final PinterestConfig config;
     private final HttpClient httpClient;
@@ -64,7 +67,7 @@ public class PinterestClient implements AutoCloseable {
             .header("Accept", "application/json")
             .header("Authorization", "Basic " + basicAuth())
             .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -82,7 +85,7 @@ public class PinterestClient implements AutoCloseable {
             .header("Accept", "application/json")
             .header("Authorization", "Basic " + basicAuth())
             .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -107,7 +110,7 @@ public class PinterestClient implements AutoCloseable {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -120,7 +123,7 @@ public class PinterestClient implements AutoCloseable {
             .header("Authorization", "Bearer " + accessToken)
             .header("Accept", "application/json")
             .DELETE()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         sendRequest(request);
@@ -132,7 +135,7 @@ public class PinterestClient implements AutoCloseable {
             .header("Authorization", "Bearer " + accessToken)
             .header("Accept", "application/json")
             .GET()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -145,7 +148,7 @@ public class PinterestClient implements AutoCloseable {
             .header("Authorization", "Bearer " + accessToken)
             .header("Accept", "application/json")
             .GET()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -175,7 +178,7 @@ public class PinterestClient implements AutoCloseable {
     private HttpResponse<String> sendRequest(HttpRequest request) {
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
+            if (response.statusCode() >= HTTP_CLIENT_ERROR) {
                 handleErrorResponse(response);
             }
             return response;
@@ -200,8 +203,9 @@ public class PinterestClient implements AutoCloseable {
             message = root.path("message").asText(
                 root.path("error_description").asText(message)
             );
-        } catch (JsonProcessingException ignored) {
-            // Use defaults if response body is not valid JSON
+        } catch (JsonProcessingException e) {
+            throw new PinterestApiException(response.statusCode(), error,
+                message + " (response body not valid JSON)", e);
         }
 
         throw new PinterestApiException(response.statusCode(), error, message, response.body());
@@ -277,7 +281,7 @@ public class PinterestClient implements AutoCloseable {
             }
             if (httpClient == null) {
                 httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
+                    .connectTimeout(CONNECTION_TIMEOUT)
                     .followRedirects(HttpClient.Redirect.NORMAL)
                     .build();
             }

@@ -38,7 +38,7 @@ public class PasswordHasher implements com.akazukin.domain.port.PasswordHasher {
             String computedBase64 = Base64.getEncoder().encodeToString(computed);
             return computedBase64.equals(parts[1]);
         } catch (Exception e) {
-            return false;
+            throw new RuntimeException("Failed to verify password", e);
         }
     }
 }

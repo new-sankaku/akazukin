@@ -46,6 +46,11 @@ public class TwitterAdapter extends AbstractSnsAdapter {
     }
 
     @Override
+    public int getMaxContentLength() {
+        return TWITTER_MAX_LENGTH;
+    }
+
+    @Override
     public String getAuthorizationUrl(String callbackUrl, String state) {
         try {
             checkRateLimit();
@@ -55,7 +60,7 @@ public class TwitterAdapter extends AbstractSnsAdapter {
             String url = client.getAuthorizationUrl(state, codeChallenge);
             recordApiCall();
             return url;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("getAuthorizationUrl", e);
         }
     }
@@ -73,7 +78,7 @@ public class TwitterAdapter extends AbstractSnsAdapter {
             TokenResponse response = client.exchangeToken(code, codeVerifier);
             recordApiCall();
             return toSnsAuthToken(response);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
         }
     }
@@ -85,7 +90,7 @@ public class TwitterAdapter extends AbstractSnsAdapter {
             TokenResponse response = client.refreshToken(refreshToken);
             recordApiCall();
             return toSnsAuthToken(response);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
         }
     }
@@ -102,7 +107,7 @@ public class TwitterAdapter extends AbstractSnsAdapter {
                 user.profileImageUrl(),
                 user.followersCount()
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
         }
     }
@@ -118,7 +123,7 @@ public class TwitterAdapter extends AbstractSnsAdapter {
                 TWEET_URL_PREFIX + response.id(),
                 Instant.now()
             );
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("post", e);
         }
     }
@@ -129,7 +134,7 @@ public class TwitterAdapter extends AbstractSnsAdapter {
             checkRateLimit();
             client.deleteTweet(accessToken, postId);
             recordApiCall();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
         }
     }

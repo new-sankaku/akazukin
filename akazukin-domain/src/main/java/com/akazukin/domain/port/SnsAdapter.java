@@ -21,4 +21,6 @@ public interface SnsAdapter {
     PostResult post(String accessToken, PostRequest request);
 
     void deletePost(String accessToken, String postId);
+
+    int getMaxContentLength();
 }

@@ -23,6 +23,9 @@ public class TwitterClient implements AutoCloseable {
     private static final String API_BASE_URL = "https://api.twitter.com/2";
     private static final String AUTH_URL = "https://twitter.com/i/oauth2/authorize";
     private static final String TOKEN_URL = "https://api.twitter.com/2/oauth2/token";
+    private static final int HTTP_CLIENT_ERROR = 400;
+    private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
 
     private final TwitterConfig config;
     private final HttpClient httpClient;
@@ -61,7 +64,7 @@ public class TwitterClient implements AutoCloseable {
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -78,7 +81,7 @@ public class TwitterClient implements AutoCloseable {
             .header("Content-Type", "application/x-www-form-urlencoded")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -95,7 +98,7 @@ public class TwitterClient implements AutoCloseable {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -114,7 +117,7 @@ public class TwitterClient implements AutoCloseable {
             .header("Authorization", "Bearer " + accessToken)
             .header("Accept", "application/json")
             .DELETE()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         sendRequest(request);
@@ -126,7 +129,7 @@ public class TwitterClient implements AutoCloseable {
             .header("Authorization", "Bearer " + accessToken)
             .header("Accept", "application/json")
             .GET()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -159,7 +162,7 @@ public class TwitterClient implements AutoCloseable {
     private HttpResponse<String> sendRequest(HttpRequest request) {
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
+            if (response.statusCode() >= HTTP_CLIENT_ERROR) {
                 handleErrorResponse(response);
             }
             return response;
@@ -189,8 +192,9 @@ public class TwitterClient implements AutoCloseable {
                 errorCode = root.path("error").asText(errorCode);
                 message = root.path("error_description").asText(message);
             }
-        } catch (JsonProcessingException ignored) {
-            // Use defaults if response body is not valid JSON
+        } catch (JsonProcessingException e) {
+            throw new TwitterApiException(response.statusCode(), errorCode,
+                message + " (response body not valid JSON)", detail, e);
         }
 
         throw new TwitterApiException(response.statusCode(), errorCode, message, detail);
@@ -266,7 +270,7 @@ public class TwitterClient implements AutoCloseable {
             }
             if (httpClient == null) {
                 httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
+                    .connectTimeout(CONNECTION_TIMEOUT)
                     .followRedirects(HttpClient.Redirect.NORMAL)
                     .build();
             }

@@ -16,7 +16,8 @@ public class AccountService {
     private final SnsAccountRepository snsAccountRepository;
 
     public AccountService(SnsAccountRepository snsAccountRepository) {
-        this.snsAccountRepository = Objects.requireNonNull(snsAccountRepository, "snsAccountRepository must not be null");
+        this.snsAccountRepository = Objects.requireNonNull(
+                snsAccountRepository, "snsAccountRepository must not be null");
     }
 
     public SnsAccount linkAccount(UUID userId, SnsPlatform platform, String accountIdentifier,

@@ -1,5 +1,6 @@
 package com.akazukin.domain.model;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -110,6 +111,30 @@ public class SnsAccount {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isTokenExpired() {
+        if (tokenExpiresAt == null) {
+            return false;
+        }
+        return tokenExpiresAt.isBefore(Instant.now());
+    }
+
+    public boolean needsTokenRefresh() {
+        if (tokenExpiresAt == null) {
+            return false;
+        }
+        return tokenExpiresAt.isBefore(Instant.now().plus(Duration.ofMinutes(5)));
+    }
+
+    public void updateTokens(String accessToken, String refreshToken, Instant expiresAt) {
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new IllegalArgumentException("Access token must not be null or blank");
+        }
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenExpiresAt = expiresAt;
+        this.updatedAt = Instant.now();
     }
 
     @Override

@@ -18,6 +18,8 @@ import jakarta.inject.Inject;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,23 +68,27 @@ public class PostPublishUseCase {
             return;
         }
 
-        int successCount = 0;
-        int failureCount = 0;
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failureCount = new AtomicInteger(0);
 
-        for (PostTarget target : targets) {
-            try {
-                publishTarget(post, target);
-                successCount++;
-            } catch (Exception e) {
-                failureCount++;
-                LOG.log(Level.SEVERE, String.format(
-                        "Failed to publish post %s to target %s (%s)",
-                        postId, target.getId(), target.getPlatform()), e);
-                markTargetFailed(target, e.getMessage());
-            }
-        }
+        List<CompletableFuture<Void>> futures = targets.stream()
+                .map(target -> CompletableFuture.runAsync(() -> {
+                    try {
+                        publishTarget(post, target);
+                        successCount.incrementAndGet();
+                    } catch (Exception e) {
+                        failureCount.incrementAndGet();
+                        LOG.log(Level.SEVERE, String.format(
+                                "Failed to publish post %s to target %s (%s)",
+                                postId, target.getId(), target.getPlatform()), e);
+                        markTargetFailed(target, e.getMessage());
+                    }
+                }))
+                .toList();
 
-        updatePostStatus(post, successCount, failureCount, targets.size());
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        updatePostStatus(post, successCount.get(), failureCount.get(), targets.size());
     }
 
     private void publishTarget(Post post, PostTarget target) {

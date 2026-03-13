@@ -7,6 +7,7 @@ import com.akazukin.infrastructure.persistence.entity.SnsAccountEntity;
 import com.akazukin.infrastructure.persistence.mapper.SnsAccountMapper;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
@@ -17,9 +18,12 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class SnsAccountRepositoryImpl implements SnsAccountRepository, PanacheRepository<SnsAccountEntity> {
 
+    @Inject
+    SnsAccountMapper snsAccountMapper;
+
     @Override
     public Optional<SnsAccount> findById(UUID id) {
-        return find("id", id).firstResultOptional().map(SnsAccountMapper::toDomain);
+        return find("id", id).firstResultOptional().map(snsAccountMapper::toDomain);
     }
 
     @Override
@@ -27,7 +31,7 @@ public class SnsAccountRepositoryImpl implements SnsAccountRepository, PanacheRe
         return find("userId", userId)
                 .list()
                 .stream()
-                .map(SnsAccountMapper::toDomain)
+                .map(snsAccountMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
@@ -35,19 +39,19 @@ public class SnsAccountRepositoryImpl implements SnsAccountRepository, PanacheRe
     public Optional<SnsAccount> findByUserIdAndPlatform(UUID userId, SnsPlatform platform) {
         return find("userId = ?1 and platform = ?2", userId, platform.name())
                 .firstResultOptional()
-                .map(SnsAccountMapper::toDomain);
+                .map(snsAccountMapper::toDomain);
     }
 
     @Override
     @Transactional
     public SnsAccount save(SnsAccount snsAccount) {
-        SnsAccountEntity entity = SnsAccountMapper.toEntity(snsAccount);
+        SnsAccountEntity entity = snsAccountMapper.toEntity(snsAccount);
         if (entity.id != null && find("id", entity.id).firstResult() != null) {
             entity = getEntityManager().merge(entity);
         } else {
             persist(entity);
         }
-        return SnsAccountMapper.toDomain(entity);
+        return snsAccountMapper.toDomain(entity);
     }
 
     @Override

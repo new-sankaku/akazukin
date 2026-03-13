@@ -14,11 +14,19 @@ public class AccountController extends Controller {
     @CheckedTemplate
     public static class Templates {
         public static native TemplateInstance list();
+        public static native TemplateInstance connect();
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list() {
         return Templates.list();
+    }
+
+    @GET
+    @Path("/connect")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance connect() {
+        return Templates.connect();
     }
 }

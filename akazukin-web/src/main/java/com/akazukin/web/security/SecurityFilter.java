@@ -60,7 +60,9 @@ public class SecurityFilter implements ContainerRequestFilter {
 
         for (String publicPath : PUBLIC_PATH_PREFIXES) {
             if (publicPath.endsWith("/")) {
-                if (normalizedPath.startsWith(publicPath) || normalizedPath.equals(publicPath.substring(0, publicPath.length() - 1))) {
+                if (normalizedPath.startsWith(publicPath)
+                        || normalizedPath.equals(
+                                publicPath.substring(0, publicPath.length() - 1))) {
                     return true;
                 }
             } else {

@@ -17,7 +17,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -40,7 +39,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
         this(
             defaultChatId,
             HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+                .connectTimeout(CONNECTION_TIMEOUT)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build(),
             new ObjectMapper()
@@ -70,7 +69,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
             checkRateLimit();
             recordApiCall();
             return new SnsAuthToken(code, null, null, null);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
         }
     }
@@ -81,7 +80,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
             checkRateLimit();
             recordApiCall();
             return new SnsAuthToken(refreshToken, null, null, null);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
         }
     }
@@ -94,7 +93,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
                 .uri(URI.create(API_BASE + "/bot" + accessToken + "/getMe"))
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody())
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -118,7 +117,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("getProfile", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
         }
     }
@@ -154,7 +153,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
@@ -177,7 +176,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("post", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("post", e);
         }
     }
@@ -205,7 +204,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -218,7 +217,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("deletePost", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
         }
     }
@@ -236,10 +235,4 @@ public class TelegramAdapter extends AbstractSnsAdapter {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
-    private void checkResponseStatus(HttpResponse<String> response, String operation) {
-        if (response.statusCode() >= 400) {
-            throw wrapException(operation,
-                new RuntimeException("HTTP " + response.statusCode() + ": " + response.body()));
-        }
-    }
 }

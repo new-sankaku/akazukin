@@ -10,11 +10,13 @@ public class RateLimiter {
     private static final int DEFAULT_MAX_CALLS = 100;
     private static final long WINDOW_SECONDS = 900; // 15 minutes
 
-    private final ConcurrentHashMap<SnsPlatform, ConcurrentLinkedQueue<Instant>> callHistory = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<SnsPlatform, ConcurrentLinkedQueue<Instant>> callHistory =
+            new ConcurrentHashMap<>();
 
     public void checkLimit(SnsPlatform platform) {
         cleanup(platform);
-        ConcurrentLinkedQueue<Instant> history = callHistory.computeIfAbsent(platform, k -> new ConcurrentLinkedQueue<>());
+        ConcurrentLinkedQueue<Instant> history =
+                callHistory.computeIfAbsent(platform, k -> new ConcurrentLinkedQueue<>());
         if (history.size() >= DEFAULT_MAX_CALLS) {
             throw new RateLimitExceededException(platform, WINDOW_SECONDS);
         }

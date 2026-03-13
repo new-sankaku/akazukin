@@ -1,5 +1,6 @@
 package com.akazukin.web.api;
 
+import com.akazukin.application.dto.ErrorResponseDto;
 import com.akazukin.application.dto.LoginRequestDto;
 import com.akazukin.application.dto.LoginResponseDto;
 import com.akazukin.application.dto.RefreshRequestDto;
@@ -40,6 +41,11 @@ public class AuthResource {
     @POST
     @Path("/register")
     public Response register(RegisterRequestDto request) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
         User user = authUseCase.register(request);
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);
@@ -51,6 +57,11 @@ public class AuthResource {
     @POST
     @Path("/login")
     public Response login(LoginRequestDto request) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
         User user = authUseCase.authenticate(request.username(), request.password());
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);
@@ -63,7 +74,10 @@ public class AuthResource {
     public Response refresh(RefreshRequestDto request) {
         if (request == null || request.refreshToken() == null || request.refreshToken().isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"error\":\"INVALID_REQUEST\",\"message\":\"Refresh token is required\"}")
+                    .entity(ErrorResponseDto.of(
+                            "INVALID_REQUEST",
+                            "Refresh token is required",
+                            null))
                     .build();
         }
 
@@ -72,18 +86,16 @@ public class AuthResource {
             userId = jwtTokenService.parseRefreshToken(request.refreshToken());
         } catch (InvalidRefreshTokenException e) {
             return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"error\":\"INVALID_REFRESH_TOKEN\",\"message\":\""
-                            + e.getMessage() + "\"}")
+                    .entity(ErrorResponseDto.of(
+                            "INVALID_REFRESH_TOKEN",
+                            e.getMessage(),
+                            null))
                     .build();
         }
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity("{\"error\":\"USER_NOT_FOUND\","
-                            + "\"message\":\"User associated with refresh token no longer exists\"}")
-                    .build();
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new com.akazukin.domain.exception.AccountNotFoundException(userId));
+
 
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);

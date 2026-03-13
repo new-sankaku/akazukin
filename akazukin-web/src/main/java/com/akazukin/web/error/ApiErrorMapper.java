@@ -4,8 +4,14 @@ import com.akazukin.domain.exception.AccountNotFoundException;
 import com.akazukin.domain.exception.DomainException;
 import com.akazukin.domain.exception.PostNotFoundException;
 import com.akazukin.domain.exception.SnsApiException;
+import jakarta.ws.rs.core.Response;
 
 public final class ApiErrorMapper {
+
+    private static final int HTTP_NOT_FOUND = Response.Status.NOT_FOUND.getStatusCode();
+    private static final int HTTP_BAD_REQUEST = Response.Status.BAD_REQUEST.getStatusCode();
+    private static final int HTTP_BAD_GATEWAY = Response.Status.BAD_GATEWAY.getStatusCode();
+    private static final int HTTP_INTERNAL_SERVER_ERROR = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
 
     private ApiErrorMapper() {
     }
@@ -22,21 +28,21 @@ public final class ApiErrorMapper {
      */
     public static int mapToHttpStatus(DomainException exception) {
         if (exception instanceof PostNotFoundException) {
-            return 404;
+            return HTTP_NOT_FOUND;
         }
         if (exception instanceof AccountNotFoundException) {
-            return 404;
+            return HTTP_NOT_FOUND;
         }
         if (exception instanceof SnsApiException) {
-            return 502;
+            return HTTP_BAD_GATEWAY;
         }
-        return 400;
+        return HTTP_BAD_REQUEST;
     }
 
     public static int mapToHttpStatus(Exception exception) {
         if (exception instanceof DomainException domainException) {
             return mapToHttpStatus(domainException);
         }
-        return 500;
+        return HTTP_INTERNAL_SERVER_ERROR;
     }
 }

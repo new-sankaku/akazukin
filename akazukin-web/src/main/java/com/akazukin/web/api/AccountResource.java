@@ -19,6 +19,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 
+import com.akazukin.application.dto.ErrorResponseDto;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,8 +55,21 @@ public class AccountResource {
     public Response getAuthorizationUrl(@PathParam("platform") String platform,
                                         @QueryParam("callbackUrl") String callbackUrl,
                                         @Context SecurityContext securityContext) {
+        if (callbackUrl == null || callbackUrl.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "callbackUrl parameter is required", null))
+                    .build();
+        }
         UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
-        SnsPlatform snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());
+        SnsPlatform snsPlatform;
+        try {
+            snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_PLATFORM",
+                            "Unsupported SNS platform: " + platform, null))
+                    .build();
+        }
         String authUrl = accountUseCase.getAuthorizationUrl(userId, snsPlatform, callbackUrl);
         return Response.ok(Map.of("authorizationUrl", authUrl)).build();
     }
@@ -65,8 +80,21 @@ public class AccountResource {
                                         OAuthCallbackDto callbackDto,
                                         @QueryParam("callbackUrl") String callbackUrl,
                                         @Context SecurityContext securityContext) {
+        if (callbackUrl == null || callbackUrl.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "callbackUrl parameter is required", null))
+                    .build();
+        }
         UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
-        SnsPlatform snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());
+        SnsPlatform snsPlatform;
+        try {
+            snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_PLATFORM",
+                            "Unsupported SNS platform: " + platform, null))
+                    .build();
+        }
         AccountResponseDto account = accountUseCase.connectAccount(
                 userId, snsPlatform, callbackDto.code(), callbackUrl
         );

@@ -21,6 +21,10 @@ import java.util.Map;
 
 public class BlueskyClient implements AutoCloseable {
 
+    private static final int HTTP_CLIENT_ERROR = 400;
+    private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
+
     private final BlueskyConfig config;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -49,7 +53,7 @@ public class BlueskyClient implements AutoCloseable {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -62,7 +66,7 @@ public class BlueskyClient implements AutoCloseable {
             .header("Authorization", "Bearer " + refreshJwt)
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.noBody())
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -92,7 +96,7 @@ public class BlueskyClient implements AutoCloseable {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -113,7 +117,7 @@ public class BlueskyClient implements AutoCloseable {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         sendRequest(request);
@@ -125,7 +129,7 @@ public class BlueskyClient implements AutoCloseable {
             .header("Authorization", "Bearer " + accessJwt)
             .header("Accept", "application/json")
             .GET()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = sendRequest(request);
@@ -140,7 +144,7 @@ public class BlueskyClient implements AutoCloseable {
     private HttpResponse<String> sendRequest(HttpRequest request) {
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
+            if (response.statusCode() >= HTTP_CLIENT_ERROR) {
                 handleErrorResponse(response);
             }
             return response;
@@ -162,8 +166,9 @@ public class BlueskyClient implements AutoCloseable {
             JsonNode root = objectMapper.readTree(response.body());
             error = root.path("error").asText(error);
             message = root.path("message").asText(message);
-        } catch (JsonProcessingException ignored) {
-            // Use defaults if response body is not valid JSON
+        } catch (JsonProcessingException e) {
+            throw new BlueskyApiException(response.statusCode(), error,
+                message + " (response body not valid JSON)", e);
         }
 
         throw new BlueskyApiException(response.statusCode(), error, message, response.body());
@@ -216,7 +221,7 @@ public class BlueskyClient implements AutoCloseable {
             }
             if (httpClient == null) {
                 httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
+                    .connectTimeout(CONNECTION_TIMEOUT)
                     .followRedirects(HttpClient.Redirect.NORMAL)
                     .build();
             }

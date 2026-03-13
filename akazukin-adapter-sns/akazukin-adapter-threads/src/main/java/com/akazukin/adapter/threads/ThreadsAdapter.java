@@ -17,7 +17,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -45,7 +44,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
             clientId,
             clientSecret,
             HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+                .connectTimeout(CONNECTION_TIMEOUT)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build(),
             new ObjectMapper()
@@ -78,7 +77,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 + "&state=" + encode(state);
             recordApiCall();
             return url;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("getAuthorizationUrl", e);
         }
     }
@@ -98,7 +97,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -117,7 +116,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("exchangeToken", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
         }
     }
@@ -134,7 +133,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 .uri(URI.create(url))
                 .header("Accept", "application/json")
                 .GET()
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -156,7 +155,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("refreshToken", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
         }
     }
@@ -173,7 +172,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 .uri(URI.create(url))
                 .header("Accept", "application/json")
                 .GET()
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -192,7 +191,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("getProfile", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
         }
     }
@@ -214,7 +213,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(createBody))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> createResponse = httpClient.send(
@@ -232,7 +231,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(publishBody))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> publishResponse = httpClient.send(
@@ -250,7 +249,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("post", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("post", e);
         }
     }
@@ -265,7 +264,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 .uri(URI.create(url))
                 .header("Accept", "application/json")
                 .DELETE()
-                .timeout(Duration.ofSeconds(10))
+                .timeout(READ_TIMEOUT)
                 .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -276,7 +275,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
                 Thread.currentThread().interrupt();
             }
             throw wrapException("deletePost", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
         }
     }
@@ -287,7 +286,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
             .uri(URI.create(url))
             .header("Accept", "application/json")
             .GET()
-            .timeout(Duration.ofSeconds(10))
+            .timeout(READ_TIMEOUT)
             .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -300,10 +299,4 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
-    private void checkResponseStatus(HttpResponse<String> response, String operation) {
-        if (response.statusCode() >= 400) {
-            throw wrapException(operation,
-                new RuntimeException("HTTP " + response.statusCode() + ": " + response.body()));
-        }
-    }
 }

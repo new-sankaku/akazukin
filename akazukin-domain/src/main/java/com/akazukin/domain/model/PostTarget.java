@@ -102,6 +102,31 @@ public class PostTarget {
         this.createdAt = createdAt;
     }
 
+    public boolean isSuccessful() {
+        return this.status == PostStatus.PUBLISHED;
+    }
+
+    public boolean isFailed() {
+        return this.status == PostStatus.FAILED;
+    }
+
+    public void markAsPublished(String platformPostId) {
+        if (platformPostId == null || platformPostId.isBlank()) {
+            throw new IllegalArgumentException("Platform post ID must not be null or blank");
+        }
+        this.status = PostStatus.PUBLISHED;
+        this.platformPostId = platformPostId;
+        this.publishedAt = Instant.now();
+    }
+
+    public void markAsFailed(String errorMessage) {
+        if (errorMessage == null || errorMessage.isBlank()) {
+            throw new IllegalArgumentException("Error message must not be null or blank");
+        }
+        this.status = PostStatus.FAILED;
+        this.errorMessage = errorMessage;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
