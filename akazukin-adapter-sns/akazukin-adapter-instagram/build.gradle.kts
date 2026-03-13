@@ -1,4 +1,4 @@
 dependencies {
     api(project(":akazukin-adapter-sns:akazukin-adapter-core"))
-    implementation("com.restfb:restfb:2025.15.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
 }

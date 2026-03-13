@@ -5,7 +5,16 @@ import com.akazukin.application.dto.PostResponseDto;
 import com.akazukin.application.usecase.PostUseCase;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -28,6 +37,16 @@ public class PostResource {
         UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         PostResponseDto response = postUseCase.createPost(userId, request);
         return Response.status(Response.Status.CREATED).entity(response).build();
+    }
+
+    @PUT
+    @Path("/{id}")
+    public Response updatePost(@PathParam("id") UUID id,
+                               PostRequestDto request,
+                               @Context SecurityContext securityContext) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        PostResponseDto response = postUseCase.updatePost(id, userId, request);
+        return Response.ok(response).build();
     }
 
     @GET

@@ -3,10 +3,13 @@ package com.akazukin.domain.service;
 import com.akazukin.domain.exception.PostNotFoundException;
 import com.akazukin.domain.model.Post;
 import com.akazukin.domain.model.PostStatus;
+import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.PostRepository;
 
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -85,5 +88,57 @@ public class PostService {
     public long countPostsByUser(UUID userId) {
         Objects.requireNonNull(userId, "userId must not be null");
         return postRepository.countByUserId(userId);
+    }
+
+    /**
+     * Validates content length per platform.
+     *
+     * @param content  the post content to validate
+     * @param platform the target SNS platform
+     * @return a map of platform to error message; empty if valid
+     */
+    public Map<SnsPlatform, String> validateContent(String content, SnsPlatform platform) {
+        Objects.requireNonNull(platform, "platform must not be null");
+
+        Map<SnsPlatform, String> errors = new EnumMap<>(SnsPlatform.class);
+
+        if (content == null || content.isEmpty()) {
+            errors.put(platform, "Content must not be empty");
+            return errors;
+        }
+
+        int maxLength = getMaxContentLength(platform);
+        int contentLength = calculateContentLength(content);
+
+        if (contentLength > maxLength) {
+            errors.put(platform,
+                    "Content exceeds maximum length for " + platform + ": "
+                            + contentLength + " / " + maxLength + " characters");
+        }
+
+        return errors;
+    }
+
+    /**
+     * Returns the character count of the content.
+     *
+     * @param content the content to measure
+     * @return the character count, or 0 if content is null
+     */
+    public int calculateContentLength(String content) {
+        if (content == null) {
+            return 0;
+        }
+        return content.length();
+    }
+
+    private int getMaxContentLength(SnsPlatform platform) {
+        return switch (platform) {
+            case TWITTER -> 280;
+            case BLUESKY -> 300;
+            case MASTODON -> 500;
+            case REDDIT -> 40000;
+            case THREADS, INSTAGRAM, TELEGRAM, VK, PINTEREST -> 2200;
+        };
     }
 }

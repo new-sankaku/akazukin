@@ -1,6 +1,7 @@
 package com.akazukin.domain.port;
 
 import com.akazukin.domain.model.Post;
+import com.akazukin.domain.model.PostStatus;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,4 +21,6 @@ public interface PostRepository {
     void deleteById(UUID id);
 
     long countByUserId(UUID userId);
+
+    long countByUserIdAndStatus(UUID userId, PostStatus status);
 }

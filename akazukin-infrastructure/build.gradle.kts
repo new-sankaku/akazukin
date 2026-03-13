@@ -13,8 +13,8 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-flyway")
-    // TODO: Add SQS dependency with explicit version when implementing SqsPostPublisher
-    // implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:2.17.2")
+    implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
+    implementation("software.amazon.awssdk:scheduler:2.25.27")
 
     testImplementation("io.quarkus:quarkus-junit5")
 }

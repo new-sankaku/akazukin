@@ -1,2 +1,5 @@
 // Pure Java library — no framework dependencies
-// Test dependencies (JUnit 5) are provided by the root build script
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+}

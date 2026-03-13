@@ -1,17 +1,16 @@
 package com.akazukin.sdk.twitter;
 
 public record TwitterConfig(
-    String apiKey,
-    String apiSecret,
-    String accessToken,
-    String accessTokenSecret
+    String clientId,
+    String clientSecret,
+    String redirectUri
 ) {
     public TwitterConfig {
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalArgumentException("apiKey must not be blank");
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId required");
         }
-        if (apiSecret == null || apiSecret.isBlank()) {
-            throw new IllegalArgumentException("apiSecret must not be blank");
+        if (clientSecret == null || clientSecret.isBlank()) {
+            throw new IllegalArgumentException("clientSecret required");
         }
     }
 }

@@ -1,0 +1,182 @@
+{#include base}
+{#title}Analytics - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/dashboard/analytics">Analytics</a>
+        <a href="/posts">Posts</a>
+        <a href="/posts/compose">Compose</a>
+        <a href="/accounts">Accounts</a>
+        <a href="#" onclick="toggleTheme()" id="theme-icon">Theme</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/dashboard/analytics" class="active">Analytics</a>
+        <a href="/posts">Posts</a>
+        <a href="/posts/compose">Compose</a>
+        <a href="/accounts">Accounts</a>
+    </aside>
+
+    <main class="ak-main">
+        <h2>Analytics</h2>
+
+        <div id="analytics-summary"
+             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;"
+             hx-get="/api/v1/dashboard/summary"
+             hx-trigger="load"
+             hx-swap="innerHTML">
+            <div class="ak-card ak-stat">
+                <h3>--</h3>
+                <p>Total Posts</p>
+            </div>
+            <div class="ak-card ak-stat">
+                <h3>--</h3>
+                <p>Published</p>
+            </div>
+            <div class="ak-card ak-stat">
+                <h3>--</h3>
+                <p>Scheduled</p>
+            </div>
+            <div class="ak-card ak-stat">
+                <h3>--</h3>
+                <p>Failed</p>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: 2rem;">
+            <h3>Posts per Platform</h3>
+            <div id="platform-chart" style="margin-top: 1rem;">
+                <p style="color: var(--ak-text-muted);">Loading chart data...</p>
+            </div>
+        </div>
+
+        <style>
+            .ak-bar-chart {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .ak-bar-row {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .ak-bar-label {
+                min-width: 100px;
+                font-size: 0.85rem;
+                text-align: right;
+                color: var(--ak-text-muted);
+            }
+
+            .ak-bar-track {
+                flex: 1;
+                height: 24px;
+                background: var(--ak-border);
+                border-radius: 4px;
+                overflow: hidden;
+            }
+
+            .ak-bar-fill {
+                height: 100%;
+                background: var(--ak-primary);
+                border-radius: 4px;
+                transition: width 0.5s ease;
+                min-width: 2px;
+            }
+
+            .ak-bar-value {
+                min-width: 40px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--ak-text);
+            }
+        </style>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAnalytics();
+    });
+
+    async function loadAnalytics() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            var response = await fetch('/api/v1/dashboard/summary', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (response.ok) {
+                var data = await response.json();
+                renderSummary(data);
+                renderPlatformChart(data.platformCounts || {});
+            }
+        } catch (err) {
+            document.getElementById('platform-chart').innerHTML =
+                '<p style="color: var(--ak-primary);">Failed to load analytics data.</p>';
+        }
+    }
+
+    function renderSummary(data) {
+        var container = document.getElementById('analytics-summary');
+        container.innerHTML =
+            '<div class="ak-card ak-stat"><h3>' + (data.totalPosts || 0) + '</h3><p>Total Posts</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.publishedPosts || 0) + '</h3><p>Published</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.scheduledPosts || 0) + '</h3><p>Scheduled</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.failedPosts || 0) + '</h3><p>Failed</p></div>';
+    }
+
+    function renderPlatformChart(platformCounts) {
+        var container = document.getElementById('platform-chart');
+        var entries = Object.entries(platformCounts);
+
+        if (entries.length === 0) {
+            container.innerHTML = '<p style="color: var(--ak-text-muted);">No platform data available yet. Start posting to see analytics.</p>';
+            return;
+        }
+
+        var maxCount = Math.max.apply(null, entries.map(function(e) { return e[1]; }));
+        if (maxCount === 0) maxCount = 1;
+
+        var html = '<div class="ak-bar-chart">';
+        entries.forEach(function(entry) {
+            var platform = entry[0];
+            var count = entry[1];
+            var pct = Math.round((count / maxCount) * 100);
+            html += '<div class="ak-bar-row">' +
+                '<span class="ak-bar-label">' + escapeHtml(platform) + '</span>' +
+                '<div class="ak-bar-track"><div class="ak-bar-fill" style="width: ' + pct + '%;"></div></div>' +
+                '<span class="ak-bar-value">' + count + '</span>' +
+                '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{/body}
+{/include}

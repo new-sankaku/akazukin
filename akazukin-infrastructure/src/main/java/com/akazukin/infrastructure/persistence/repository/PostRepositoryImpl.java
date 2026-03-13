@@ -65,4 +65,9 @@ public class PostRepositoryImpl implements PostRepository, PanacheRepository<Pos
     public long countByUserId(UUID userId) {
         return count("userId", userId);
     }
+
+    @Override
+    public long countByUserIdAndStatus(UUID userId, PostStatus status) {
+        return count("userId = ?1 and status = ?2", userId, status.name());
+    }
 }

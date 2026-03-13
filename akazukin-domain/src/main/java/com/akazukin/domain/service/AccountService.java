@@ -76,4 +76,34 @@ public class AccountService {
         getAccount(accountId);
         snsAccountRepository.deleteById(accountId);
     }
+
+    /**
+     * Checks if the account's access token has expired or is about to expire.
+     * A token is considered expired if its expiration time is null or before the current time.
+     *
+     * @param account the SNS account to check
+     * @return true if the token is expired or expiration is unknown
+     */
+    public boolean isTokenExpired(SnsAccount account) {
+        Objects.requireNonNull(account, "account must not be null");
+
+        if (account.getTokenExpiresAt() == null) {
+            return true;
+        }
+
+        return !account.getTokenExpiresAt().isAfter(Instant.now());
+    }
+
+    /**
+     * Validates that the given platform is supported.
+     * Currently all SnsPlatform values are supported. This method serves as an
+     * extensibility point for future platform-specific validation or feature flags.
+     *
+     * @param platform the platform to validate
+     * @return true if the platform is supported
+     */
+    public boolean validatePlatformSupported(SnsPlatform platform) {
+        Objects.requireNonNull(platform, "platform must not be null");
+        return true;
+    }
 }

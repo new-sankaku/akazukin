@@ -1,15 +1,14 @@
 package com.akazukin.sdk.bluesky;
 
-public record BlueskyConfig(
-    String handle,
-    String appPassword
-) {
+public record BlueskyConfig(String serviceUrl) {
+
     public BlueskyConfig {
-        if (handle == null || handle.isBlank()) {
-            throw new IllegalArgumentException("handle must not be blank");
+        if (serviceUrl == null || serviceUrl.isBlank()) {
+            throw new IllegalArgumentException("serviceUrl required");
         }
-        if (appPassword == null || appPassword.isBlank()) {
-            throw new IllegalArgumentException("appPassword must not be blank");
-        }
+    }
+
+    public static BlueskyConfig defaultConfig() {
+        return new BlueskyConfig("https://bsky.social");
     }
 }
