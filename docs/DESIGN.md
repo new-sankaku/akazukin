@@ -44,11 +44,10 @@ REST APIによるローカルPCからの操作にも対応する。
 | SNS | ライブラリ | Maven座標 | バージョン | 状態 |
 |-----|----------|----------|-----------|------|
 | Mastodon | BigBone | `io.github.pattafeufeu:bigbone` | 2.x | 活発にメンテナンス |
-| Instagram | RestFB | `com.restfb:restfb` | 2025.x | 活発 (Graph API対応) |
-| Threads | RestFB | `com.restfb:restfb` | 同上 | Meta Graph API共用 |
-| Telegram | TelegramBots | `org.telegram:telegrambots-client` | 9.4.0 | 活発 |
-| VK | vk-java-sdk | `com.vk.api:sdk` | 1.0.14 | VK公式 |
-| Pinterest | pinterest-sdk | `com.chrisdempewolf:pinterest-sdk` | 4.1.0 | コミュニティ |
+| Instagram | RestFB | `com.restfb:restfb` | 2025.15.0 | 活発 (Graph API対応) |
+| Threads | RestFB | `com.restfb:restfb` | 同上 | Meta Graph API共用 (DefaultThreadsClient) |
+| Telegram | TelegramBots | `org.telegram:telegrambots-client` | 9.4.0 | 活発 (5.4k GitHub stars) |
+| VK | vk-java-sdk | `com.vk.api:sdk` | 1.0.14 | VK公式 (低メンテナンス) |
 
 ### 3.2 REST Clientで直接実装するSNS
 
@@ -58,8 +57,9 @@ Quarkus REST Client (MicroProfile REST Client) で公式APIを直接呼び出す
 | SNS | 理由 | API仕様 |
 |-----|------|---------|
 | X (Twitter) | twitter4j は2022年以降メンテナンスなし、API v2非対応 | Twitter API v2 (OAuth 2.0 PKCE) |
-| Bluesky | bsky4j はJitPack限定、Maven Central未公開 | AT Protocol (XRPC) |
-| Reddit | JRAW は2018年以降メンテナンスなし | Reddit API (OAuth 2.0) |
+| Bluesky | bsky4j はJitPack限定、Maven Central未公開、不安定 | AT Protocol (XRPC) |
+| Reddit | JRAW は2018年以降放棄、JCenter廃止 | Reddit API (OAuth 2.0) |
+| Pinterest | pinterest-sdk の作者がAPIアクセス放棄、メンテナンス停止 | Pinterest API v5 (OAuth 2.0) |
 
 ### 3.3 設計方針
 
