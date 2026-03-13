@@ -49,24 +49,56 @@ REST APIによるローカルPCからの操作にも対応する。
 | Telegram | TelegramBots | `org.telegram:telegrambots-client` | 9.4.0 | 活発 (5.4k GitHub stars) |
 | VK | vk-java-sdk | `com.vk.api:sdk` | 1.0.14 | VK公式 (低メンテナンス) |
 
-### 3.2 REST Clientで直接実装するSNS
+### 3.2 独自SDK化するSNS
 
 以下のSNSは良質なJavaライブラリが存在しない/メンテナンスされていないため、
-Quarkus REST Client (MicroProfile REST Client) で公式APIを直接呼び出す。
+**独自SDKモジュール**として開発する。Quarkus非依存の純粋Java HTTPクライアント
+ライブラリとして設計し、将来的にMaven Centralへの単独公開も可能にする。
 
-| SNS | 理由 | API仕様 |
-|-----|------|---------|
-| X (Twitter) | twitter4j は2022年以降メンテナンスなし、API v2非対応 | Twitter API v2 (OAuth 2.0 PKCE) |
-| Bluesky | bsky4j はJitPack限定、Maven Central未公開、不安定 | AT Protocol (XRPC) |
-| Reddit | JRAW は2018年以降放棄、JCenter廃止 | Reddit API (OAuth 2.0) |
-| Pinterest | pinterest-sdk の作者がAPIアクセス放棄、メンテナンス停止 | Pinterest API v5 (OAuth 2.0) |
+| SNS | 理由 | API仕様 | SDKモジュール名 |
+|-----|------|---------|---------------|
+| X (Twitter) | twitter4j は2022年以降メンテナンスなし、API v2非対応 | Twitter API v2 (OAuth 2.0 PKCE) | `akazukin-sdk-twitter` |
+| Bluesky | bsky4j はJitPack限定、Maven Central未公開、不安定 | AT Protocol (XRPC) | `akazukin-sdk-bluesky` |
+| Reddit | JRAW は2018年以降放棄、JCenter廃止 | Reddit API (OAuth 2.0) | `akazukin-sdk-reddit` |
+| Pinterest | pinterest-sdk の作者がAPIアクセス放棄、メンテナンス停止 | Pinterest API v5 (OAuth 2.0) | `akazukin-sdk-pinterest` |
+
+#### SDK設計方針
+
+```
+akazukin-sdk-{platform}/
+├── build.gradle.kts          # Quarkus非依存 (java.net.http.HttpClient ベース)
+└── src/main/java/
+    └── com/akazukin/sdk/{platform}/
+        ├── {Platform}Client.java        # メインクライアント (Builder パターン)
+        ├── {Platform}Config.java        # 設定 (API Key, Secret 等)
+        ├── auth/
+        │   ├── {Platform}Auth.java      # OAuth認証フロー
+        │   └── TokenStore.java          # トークン管理インターフェース
+        ├── model/                       # APIレスポンスモデル (record)
+        │   ├── Post.java
+        │   ├── Profile.java
+        │   └── Timeline.java
+        ├── api/                         # APIエンドポイント別クライアント
+        │   ├── PostApi.java
+        │   ├── TimelineApi.java
+        │   └── ProfileApi.java
+        └── exception/
+            └── {Platform}ApiException.java
+```
+
+- **Quarkus非依存**: `java.net.http.HttpClient` (Java 11標準) + Jackson でHTTP通信
+- **Builder パターン**: `TwitterClient.builder().apiKey("...").build()`
+- **record クラス**: Java 21のrecordでAPIモデルを型安全に定義
+- **単体テスト可能**: WireMock等でAPIモックテスト
+- **将来のMaven Central公開**: groupId `com.akazukin.sdk` で独立公開可能
 
 ### 3.3 設計方針
 
 - **既存ライブラリ優先**: メンテナンスされているライブラリがあれば積極的に採用
-- **REST Client統一**: ライブラリがない場合はQuarkus REST Clientインターフェースで実装
+- **独自SDK化**: ライブラリがない場合はQuarkus非依存のSDKモジュールとして開発
 - **SPI (ServiceLoader)**: SNSアダプターはJava SPIで動的ロード、JARを追加するだけで新SNS対応可能
 - **共通インターフェース**: 全SNSアダプターが同じドメインインターフェースを実装
+- **3層分離**: SDK (HTTP通信) → Adapter (ドメイン変換) → Domain (共通モデル)
 
 ## 4. アーキテクチャ
 
@@ -161,7 +193,22 @@ akazukin/
 │           └── queue/
 │               └── SqsPostPublisher.java
 │
-├── akazukin-adapter-sns/               # SNSアダプター親モジュール
+├── akazukin-sdk/                       # 独自SDKモジュール群 (Quarkus非依存)
+│   ├── akazukin-sdk-twitter/           # X (Twitter) API v2 SDK
+│   │   ├── build.gradle.kts            # java.net.http + Jackson のみ
+│   │   └── src/main/java/
+│   │       └── com/akazukin/sdk/twitter/
+│   │           ├── TwitterClient.java          # Builder パターン
+│   │           ├── TwitterConfig.java
+│   │           ├── auth/OAuthPkceFlow.java
+│   │           ├── model/                      # record クラス群
+│   │           └── api/                        # エンドポイント別
+│   │
+│   ├── akazukin-sdk-bluesky/           # Bluesky AT Protocol SDK
+│   ├── akazukin-sdk-reddit/            # Reddit API SDK
+│   └── akazukin-sdk-pinterest/         # Pinterest API v5 SDK
+│
+├── akazukin-adapter-sns/               # SNSアダプター親モジュール (ドメイン変換層)
 │   ├── akazukin-adapter-core/          # SNSアダプター共通ユーティリティ
 │   │   ├── build.gradle.kts
 │   │   └── src/main/java/
@@ -170,22 +217,21 @@ akazukin/
 │   │           ├── AbstractSnsAdapter.java     # 共通処理
 │   │           └── RateLimiter.java            # レートリミット管理
 │   │
-│   ├── akazukin-adapter-twitter/       # X (Twitter) - REST Client実装
-│   │   ├── build.gradle.kts
+│   ├── akazukin-adapter-twitter/       # X → 独自SDK使用
+│   │   ├── build.gradle.kts            # depends on akazukin-sdk-twitter
 │   │   └── src/main/java/
 │   │       └── com/akazukin/adapter/twitter/
-│   │           ├── TwitterAdapter.java
-│   │           ├── TwitterApiClient.java       # Quarkus REST Client
+│   │           ├── TwitterAdapter.java         # SnsAdapter実装
 │   │           └── META-INF/services/          # SPI登録
 │   │
-│   ├── akazukin-adapter-bluesky/       # Bluesky - REST Client実装
-│   ├── akazukin-adapter-mastodon/      # Mastodon - BigBone使用
-│   ├── akazukin-adapter-threads/       # Threads - RestFB使用
-│   ├── akazukin-adapter-instagram/     # Instagram - RestFB使用
-│   ├── akazukin-adapter-reddit/        # Reddit - REST Client実装
-│   ├── akazukin-adapter-telegram/      # Telegram - TelegramBots使用
-│   ├── akazukin-adapter-vk/            # VK - vk-java-sdk使用
-│   └── akazukin-adapter-pinterest/     # Pinterest - pinterest-sdk使用
+│   ├── akazukin-adapter-bluesky/       # Bluesky → 独自SDK使用
+│   ├── akazukin-adapter-mastodon/      # Mastodon → BigBone使用
+│   ├── akazukin-adapter-threads/       # Threads → RestFB使用
+│   ├── akazukin-adapter-instagram/     # Instagram → RestFB使用
+│   ├── akazukin-adapter-reddit/        # Reddit → 独自SDK使用
+│   ├── akazukin-adapter-telegram/      # Telegram → TelegramBots使用
+│   ├── akazukin-adapter-vk/            # VK → vk-java-sdk使用
+│   └── akazukin-adapter-pinterest/     # Pinterest → 独自SDK使用
 │
 ├── akazukin-web/                       # Webアプリケーション (Renarde + HTMX)
 │   ├── build.gradle.kts
