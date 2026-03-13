@@ -13,16 +13,29 @@ REST APIによるローカルPCからの操作にも対応する。
 | 言語 | Java | 21 (LTS) | |
 | フレームワーク | Quarkus | 3.x | |
 | Web UI | Renarde + HTMX + Qute | 3.1.x | サーバーサイドレンダリング |
+| アセット管理 | Quarkus Web Bundler | Quarkiverse | htmxをMaven依存で管理、Node.js不要 |
 | REST API | quarkus-rest (RESTEasy Reactive) | Quarkus標準 | |
 | 認証 | quarkus-smallrye-jwt | Quarkus標準 | JWT + リフレッシュトークン |
-| ORM | Hibernate ORM with Panache | Quarkus標準 | |
+| ORM | Hibernate ORM with Panache | Quarkus標準 | Repository パターン (テスタビリティ重視) |
 | DB (RDB) | PostgreSQL (Aurora Serverless v2) | | メインデータ |
 | DB (KV) | DynamoDB | | セッション・キャッシュ |
-| スケジューラ | quarkus-quartz | Quarkus標準 | 予約投稿・バックグラウンドジョブ |
+| スケジューラ | EventBridge Scheduler | AWS | ※Lambda上ではQuartzは動作不可 |
 | キュー | Amazon SQS | | 投稿キュー・リトライ |
 | ビルド | Gradle (Kotlin DSL) | 8.x | マルチモジュール |
-| デプロイ | AWS Lambda + API Gateway | | quarkus-amazon-lambda |
+| デプロイ | AWS Lambda + API Gateway | | quarkus-amazon-lambda-http |
 | CSS | PicoCSS または Water.css | | 軽量CSSフレームワーク |
+
+### 2.1 重要な技術的制約
+
+1. **Lambda + Quartz/Scheduler 非互換**: AWS Lambdaはリクエスト駆動のため、
+   `@Scheduled`やQuartzのバックグラウンドジョブは動作しない。
+   予約投稿は **EventBridge Scheduler → SQS → Lambda** の構成で実現する。
+
+2. **Renarde 単一継承制限**: `HxController` と `ControllerWithUser` を同時に
+   extends できない (Java単一継承)。認証付きHTMXコントローラはComposition パターンで解決する。
+
+3. **quarkus-smallrye-jwt vs quarkus-oidc**: 同一アプリで同じ認証メカニズムには
+   併用不可。REST API向けにsmallrye-jwtを使用し、将来のOIDC対応時に分離する。
 
 ## 3. SNS対応ライブラリ
 
@@ -355,11 +368,12 @@ public interface SnsAdapter {
 ```
 1. ユーザーが投稿作成 (scheduledAt指定)
 2. Post (status=SCHEDULED) としてDB保存
-3. Quartz Scheduler が毎分チェック
-4. 予約時刻到来 → SQSにメッセージ送信
+3. EventBridge Scheduler にワンタイムスケジュール登録
+   (※ LambdaではQuartz/@Scheduledは動作しないため)
+4. 予約時刻到来 → EventBridge が SQS にメッセージ送信
 5. Lambda (SQSコンシューマー) が各SNSアダプター経由で投稿
 6. 結果をPostTarget.statusに反映
-7. 失敗時 → SQSリトライ (最大3回、Exponential Backoff)
+7. 失敗時 → SQS DLQ + リトライ (最大3回、Exponential Backoff)
 ```
 
 ## 10. AWS構成
@@ -379,18 +393,21 @@ public interface SnsAdapter {
               │  - REST API            │
               └────────────┬────────────┘
                            │
-         ┌─────────┬───────┴────────┬──────────┐
-         │         │                │          │
-    ┌────┴───┐ ┌───┴───┐    ┌──────┴──┐  ┌───┴────┐
-    │ Aurora │ │  SQS  │    │DynamoDB │  │Secrets │
-    │Serverl.│ │       │    │         │  │Manager │
-    └────────┘ └───┬───┘    └─────────┘  └────────┘
-                   │
-            ┌──────┴──────┐
-            │ Lambda      │
-            │(SQS Consumer│
-            │ 投稿実行)   │
-            └─────────────┘
+    ┌──────────┬───────────┴──────────┬──────────┐
+    │          │                      │          │
+┌───┴────┐ ┌──┴──────────┐    ┌──────┴──┐  ┌───┴────┐
+│ Aurora │ │ EventBridge │    │DynamoDB │  │Secrets │
+│Serverl.│ │ Scheduler   │    │         │  │Manager │
+└────────┘ └──────┬──────┘    └─────────┘  └────────┘
+                  │ (予約時刻到来)
+            ┌─────┴─────┐
+            │    SQS    │
+            └─────┬─────┘
+            ┌─────┴─────┐
+            │  Lambda   │
+            │(SQS消費者)│
+            │ 投稿実行  │
+            └───────────┘
 ```
 
 ## 11. 開発フェーズ
@@ -405,7 +422,7 @@ public interface SnsAdapter {
 - [ ] REST API
 
 ### Phase 2: 予約投稿・バックグラウンド
-- [ ] Quartz Scheduler
+- [ ] EventBridge Scheduler 連携
 - [ ] SQS連携
 - [ ] 予約投稿フロー
 
@@ -428,8 +445,12 @@ dependencies {
 
     // Web / HTMX
     implementation("io.quarkiverse.renarde:quarkus-renarde")
+    implementation("io.quarkiverse.web-bundler:quarkus-web-bundler") // htmx等のアセット管理
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")
+
+    // HTMX (Maven経由で管理、Node.js不要)
+    implementation("org.mvnpm:htmx.org:2.0.8")
 
     // Security
     implementation("io.quarkus:quarkus-smallrye-jwt")
@@ -439,9 +460,6 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-flyway")             // DBマイグレーション
-
-    // Scheduler
-    implementation("io.quarkus:quarkus-quartz")
 
     // REST Client (SNS API呼び出し用)
     implementation("io.quarkus:quarkus-rest-client-jackson")
