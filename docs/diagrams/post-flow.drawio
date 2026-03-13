@@ -1,0 +1,150 @@
+<mxfile host="app.diagrams.net" modified="2026-03-13" agent="akazukin" version="24.0.0">
+  <diagram id="postflow" name="投稿フロー (即時 + 予約)">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Akazukin - 投稿フロー" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="384" y="10" width="400" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: User -->
+        <mxCell id="lane_user" value="User" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;strokeColor=#6c8ebf;fillColor=#dae8fc;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="200" height="720" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Lambda (API) -->
+        <mxCell id="lane_api" value="Lambda (API)" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;strokeColor=#82b366;fillColor=#d5e8d4;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="260" y="60" width="240" height="720" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: AWS Services -->
+        <mxCell id="lane_aws" value="AWS Services" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="240" height="720" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Worker Lambda -->
+        <mxCell id="lane_worker" value="Lambda (Worker)" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;strokeColor=#d6b656;fillColor=#fff2cc;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="780" y="60" width="240" height="720" as="geometry" />
+        </mxCell>
+
+        <!-- Flow Steps -->
+        <!-- 1. User creates post -->
+        <mxCell id="s1" value="投稿作成&lt;br&gt;(テキスト入力&lt;br&gt;SNS選択&lt;br&gt;予約日時)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="60" y="110" width="160" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- 2. API receives request -->
+        <mxCell id="s2" value="PostUseCase&lt;br&gt;.createPost()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="290" y="120" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 3. Save to DB -->
+        <mxCell id="s3" value="Post + PostTarget&lt;br&gt;DB保存&lt;br&gt;(Aurora)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="290" y="210" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Decision: 即時 or 予約 -->
+        <mxCell id="decision" value="即時?&lt;br&gt;予約?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="330" y="300" width="100" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 即時投稿パス -->
+        <mxCell id="s4a" value="SQSに&lt;br&gt;メッセージ送信&lt;br&gt;(即時)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="550" y="290" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- 予約投稿パス -->
+        <mxCell id="s4b" value="EventBridge&lt;br&gt;Schedulerに&lt;br&gt;ワンタイム登録" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="550" y="380" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- EventBridge fires -->
+        <mxCell id="s5" value="予約時刻到来&lt;br&gt;→ SQSに送信" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="550" y="470" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Worker receives -->
+        <mxCell id="s6" value="SQSメッセージ受信&lt;br&gt;PostTarget取得" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="810" y="380" width="180" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Worker calls SNS -->
+        <mxCell id="s7" value="SnsAdapterFactory&lt;br&gt;.getAdapter(platform)&lt;br&gt;.post(request)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="810" y="470" width="180" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Result Decision -->
+        <mxCell id="result_decision" value="成功?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="855" y="570" width="90" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Success -->
+        <mxCell id="s8a" value="PostTarget.status&lt;br&gt;= PUBLISHED&lt;br&gt;platformPostId保存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="810" y="670" width="180" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Failure -->
+        <mxCell id="s8b" value="リトライ (最大3回)&lt;br&gt;→ DLQへ&lt;br&gt;status = FAILED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="550" y="585" width="180" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Response to user -->
+        <mxCell id="s9" value="投稿受付完了&lt;br&gt;レスポンス" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="290" y="430" width="180" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s10" value="ダッシュボードで&lt;br&gt;ステータス確認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="60" y="420" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows -->
+        <mxCell id="a1" style="strokeWidth=1.5;" edge="1" source="s1" target="s2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" style="strokeWidth=1.5;" edge="1" source="s2" target="s3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" style="strokeWidth=1.5;" edge="1" source="s3" target="decision" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4a" value="即時" style="strokeWidth=1.5;strokeColor=#6c8ebf;" edge="1" source="decision" target="s4a" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4b" value="予約" style="strokeWidth=1.5;strokeColor=#9673a6;" edge="1" source="decision" target="s4b" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" style="strokeWidth=1.5;strokeColor=#9673a6;" edge="1" source="s4b" target="s5" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5b" style="strokeWidth=1.5;" edge="1" source="s4a" target="s6" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5c" style="strokeWidth=1.5;" edge="1" source="s5" target="s6" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" style="strokeWidth=1.5;" edge="1" source="s6" target="s7" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" style="strokeWidth=1.5;" edge="1" source="s7" target="result_decision" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8a" value="成功" style="strokeWidth=1.5;strokeColor=#82b366;" edge="1" source="result_decision" target="s8a" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8b" value="失敗" style="strokeWidth=1.5;strokeColor=#b85450;" edge="1" source="result_decision" target="s8b" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" style="strokeWidth=1.5;" edge="1" source="decision" target="s9" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a10" style="strokeWidth=1.5;" edge="1" source="s9" target="s10" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

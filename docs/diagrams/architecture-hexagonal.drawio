@@ -1,0 +1,162 @@
+<mxfile host="app.diagrams.net" modified="2026-03-13" agent="akazukin" version="24.0.0">
+  <diagram id="hexagonal" name="ヘキサゴナルアーキテクチャ">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Akazukin - ヘキサゴナルアーキテクチャ" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="284" y="20" width="600" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Inbound Adapters Layer -->
+        <mxCell id="inbound_layer" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="1010" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="inbound_label" value="Inbound Adapters" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="90" y="85" width="200" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="renarde" value="&lt;b&gt;Renarde / HTMX UI&lt;/b&gt;&lt;br&gt;Web ダッシュボード&lt;br&gt;投稿画面・ログイン" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="120" y="115" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="restapi" value="&lt;b&gt;REST API&lt;/b&gt;&lt;br&gt;外部クライアント向け&lt;br&gt;ローカルPC操作" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="370" y="115" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="sqs_consumer" value="&lt;b&gt;SQS Consumer&lt;/b&gt;&lt;br&gt;Lambda&lt;br&gt;投稿実行ワーカー" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="620" y="115" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="eventbridge" value="&lt;b&gt;EventBridge&lt;/b&gt;&lt;br&gt;Scheduler&lt;br&gt;予約トリガー" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="860" y="115" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Application Layer -->
+        <mxCell id="app_layer" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="230" width="1010" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="app_label" value="Application Layer (Use Cases)" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="90" y="235" width="300" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="auth_uc" value="&lt;b&gt;AuthUseCase&lt;/b&gt;&lt;br&gt;登録・ログイン&lt;br&gt;JWT発行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="120" y="265" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="post_uc" value="&lt;b&gt;PostUseCase&lt;/b&gt;&lt;br&gt;投稿作成&lt;br&gt;即時・予約" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="330" y="265" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="schedule_uc" value="&lt;b&gt;SchedulePost&lt;/b&gt;&lt;br&gt;&lt;b&gt;UseCase&lt;/b&gt;&lt;br&gt;予約管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="540" y="265" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="analytics_uc" value="&lt;b&gt;Analytics&lt;/b&gt;&lt;br&gt;&lt;b&gt;UseCase&lt;/b&gt;&lt;br&gt;解析・統計" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="750" y="265" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Domain Layer -->
+        <mxCell id="domain_layer" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="360" width="1010" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_label" value="Domain Layer (フレームワーク非依存)" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="90" y="365" width="350" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sns_adapter_if" value="&lt;b&gt;≪interface≫&lt;br&gt;SnsAdapter&lt;/b&gt;&lt;br&gt;post() / getTimeline()&lt;br&gt;getProfile() / authenticate()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="120" y="395" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="user_entity" value="&lt;b&gt;User&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="420" y="395" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="post_entity" value="&lt;b&gt;Post&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="540" y="395" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="snsaccount_entity" value="&lt;b&gt;SnsAccount&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="660" y="395" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="repo_if" value="&lt;b&gt;≪interface≫&lt;/b&gt;&lt;br&gt;UserRepository&lt;br&gt;PostRepository&lt;br&gt;SnsAccountRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="830" y="395" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="platform_enum" value="&lt;b&gt;SnsPlatform&lt;/b&gt;&lt;br&gt;(enum)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="540" y="450" width="120" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Outbound Adapters Layer -->
+        <mxCell id="outbound_layer" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="530" width="1010" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="outbound_label" value="Outbound Adapters" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="90" y="535" width="200" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- SNS Adapters with SDK -->
+        <mxCell id="twitter_adapter" value="&lt;b&gt;X (Twitter)&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CC0000&quot;&gt;独自SDK&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="90" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="bluesky_adapter" value="&lt;b&gt;Bluesky&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CC0000&quot;&gt;独自SDK&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="195" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="mastodon_adapter" value="&lt;b&gt;Mastodon&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;BigBone&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="300" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="threads_adapter" value="&lt;b&gt;Threads&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;RestFB&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="405" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="instagram_adapter" value="&lt;b&gt;Instagram&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;RestFB&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="510" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="reddit_adapter" value="&lt;b&gt;Reddit&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CC0000&quot;&gt;独自SDK&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="615" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="telegram_adapter" value="&lt;b&gt;Telegram&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;TGBots&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="720" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="vk_adapter" value="&lt;b&gt;VK&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;vk-sdk&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="825" y="565" width="80" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pinterest_adapter" value="&lt;b&gt;Pinterest&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CC0000&quot;&gt;独自SDK&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="915" y="565" width="95" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- DB Adapter -->
+        <mxCell id="db_adapter" value="&lt;b&gt;DB / SQS&lt;/b&gt;&lt;br&gt;Panache + SQS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="90" y="625" width="150" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="80" y="690" width="400" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;凡例&lt;/b&gt;" style="text;html=1;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="90" y="693" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_sdk" value="&lt;font color=&quot;#CC0000&quot;&gt;■ 独自SDK&lt;/font&gt; = Quarkus非依存の独自Javaライブラリ" style="text;html=1;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="90" y="715" width="350" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_lib" value="&lt;font color=&quot;#006600&quot;&gt;■ ライブラリ名&lt;/font&gt; = 既存サードパーティライブラリ使用" style="text;html=1;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="90" y="735" width="350" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: Inbound → Application -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="renarde" target="app_layer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="restapi" target="app_layer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="sqs_consumer" target="app_layer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: Application → Domain -->
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="app_layer" target="domain_layer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: Domain → Outbound -->
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="domain_layer" target="outbound_layer" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
