@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{#insert title}Akazukin{/insert}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    {#bundle /}
+    <style>
+        :root {
+            --ak-primary: #e63946;
+            --ak-primary-hover: #c1121f;
+            --ak-bg: #ffffff;
+            --ak-bg-secondary: #f8f9fa;
+            --ak-text: #212529;
+            --ak-text-muted: #6c757d;
+            --ak-border: #dee2e6;
+            --ak-sidebar-width: 250px;
+            --ak-header-height: 60px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --ak-bg: #1a1a2e;
+                --ak-bg-secondary: #16213e;
+                --ak-text: #e6e6e6;
+                --ak-text-muted: #a0a0a0;
+                --ak-border: #2a2a4a;
+            }
+        }
+
+        [data-theme="dark"] {
+            --ak-bg: #1a1a2e;
+            --ak-bg-secondary: #16213e;
+            --ak-text: #e6e6e6;
+            --ak-text-muted: #a0a0a0;
+            --ak-border: #2a2a4a;
+        }
+
+        body {
+            background-color: var(--ak-bg);
+            color: var(--ak-text);
+        }
+
+        .ak-header {
+            background-color: var(--ak-primary);
+            color: white;
+            padding: 0 1.5rem;
+            height: var(--ak-header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .ak-header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: white;
+        }
+
+        .ak-header nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            opacity: 0.85;
+        }
+
+        .ak-header nav a:hover {
+            opacity: 1;
+        }
+
+        .ak-layout {
+            display: flex;
+            min-height: calc(100vh - var(--ak-header-height));
+        }
+
+        .ak-sidebar {
+            width: var(--ak-sidebar-width);
+            background-color: var(--ak-bg-secondary);
+            border-right: 1px solid var(--ak-border);
+            padding: 1.5rem 1rem;
+        }
+
+        .ak-sidebar a {
+            display: block;
+            padding: 0.6rem 1rem;
+            margin-bottom: 0.3rem;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--ak-text);
+        }
+
+        .ak-sidebar a:hover,
+        .ak-sidebar a.active {
+            background-color: var(--ak-primary);
+            color: white;
+        }
+
+        .ak-main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 960px;
+        }
+
+        .ak-card {
+            background: var(--ak-bg-secondary);
+            border: 1px solid var(--ak-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ak-stat {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .ak-stat h3 {
+            font-size: 2rem;
+            margin: 0;
+            color: var(--ak-primary);
+        }
+
+        .ak-stat p {
+            margin: 0.3rem 0 0;
+            color: var(--ak-text-muted);
+        }
+
+        .ak-auth-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+        }
+
+        .ak-auth-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .ak-sidebar {
+                display: none;
+            }
+
+            .ak-main {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    {#insert body}{/insert}
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        // Restore saved theme
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+</body>
+</html>

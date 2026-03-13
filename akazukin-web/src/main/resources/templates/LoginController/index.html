@@ -1,0 +1,60 @@
+{#include base}
+{#title}Login - Akazukin{/title}
+{#body}
+<div class="ak-auth-container">
+    <h2>Akazukin</h2>
+    <p style="text-align: center; color: var(--ak-text-muted);">Multi-SNS Management Tool</p>
+
+    <div id="login-error" class="ak-card" style="display: none; border-color: var(--ak-primary); color: var(--ak-primary);"></div>
+
+    <form id="login-form" onsubmit="return handleLogin(event)">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+        <button type="submit" class="contrast">Sign In</button>
+    </form>
+
+    <p style="text-align: center; margin-top: 1rem;">
+        Don't have an account? <a href="/register">Register</a>
+    </p>
+</div>
+
+<script>
+    async function handleLogin(event) {
+        event.preventDefault();
+        const errorDiv = document.getElementById('login-error');
+        errorDiv.style.display = 'none';
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                errorDiv.textContent = data.message || 'Login failed';
+                errorDiv.style.display = 'block';
+                return false;
+            }
+
+            const data = await response.json();
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            window.location.href = '/dashboard';
+        } catch (err) {
+            errorDiv.textContent = 'Network error. Please try again.';
+            errorDiv.style.display = 'block';
+        }
+        return false;
+    }
+</script>
+{/body}
+{/include}
