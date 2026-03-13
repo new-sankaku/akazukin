@@ -1,0 +1,117 @@
+{#include base}
+{#title}Accounts - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/posts">Posts</a>
+        <a href="/posts/compose">Compose</a>
+        <a href="/accounts">Accounts</a>
+        <a href="#" onclick="toggleTheme()">Theme</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/posts">Posts</a>
+        <a href="/posts/compose">Compose</a>
+        <a href="/accounts" class="active">Accounts</a>
+    </aside>
+
+    <main class="ak-main">
+        <h2>Connected Accounts</h2>
+
+        <div id="accounts-list">
+            <p style="color: var(--ak-text-muted);">Loading accounts...</p>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAccounts();
+    });
+
+    async function loadAccounts() {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/accounts', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (response.ok) {
+                const accounts = await response.json();
+                renderAccounts(accounts);
+            }
+        } catch (err) {
+            document.getElementById('accounts-list').innerHTML =
+                '<div class="ak-card" style="color: var(--ak-primary);">Failed to load accounts.</div>';
+        }
+    }
+
+    function renderAccounts(accounts) {
+        const container = document.getElementById('accounts-list');
+        if (accounts.length === 0) {
+            container.innerHTML = '<div class="ak-card"><p style="color: var(--ak-text-muted);">No connected accounts yet. Connect your first SNS account to get started.</p></div>';
+            return;
+        }
+
+        container.innerHTML = accounts.map(function(account) {
+            const date = new Date(account.connectedAt).toLocaleString();
+            return '<div class="ak-card">' +
+                '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                '<div>' +
+                '<strong>' + escapeHtml(account.platform) + '</strong>' +
+                '<br><span>' + escapeHtml(account.displayName || account.accountIdentifier) + '</span>' +
+                '<br><small style="color: var(--ak-text-muted);">Connected: ' + date + '</small>' +
+                '</div>' +
+                '<button class="secondary outline" onclick="deleteAccount(\'' + account.id + '\')">Disconnect</button>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    async function deleteAccount(id) {
+        if (!confirm('Are you sure you want to disconnect this account?')) return;
+
+        const token = localStorage.getItem('accessToken');
+        try {
+            const response = await fetch('/api/v1/accounts/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok || response.status === 204) {
+                loadAccounts();
+            }
+        } catch (err) {
+            console.error('Failed to disconnect account', err);
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

@@ -1,0 +1,135 @@
+<mxfile host="app.diagrams.net" modified="2026-03-13" agent="akazukin" version="24.0.0">
+  <diagram id="modules" name="Gradleモジュール依存関係">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1200" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Akazukin - Gradle モジュール依存関係" style="text;html=1;fontSize=20;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="284" y="10" width="600" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- akazukin-web -->
+        <mxCell id="web" value="&lt;b&gt;akazukin-web&lt;/b&gt;&lt;br&gt;&lt;br&gt;Renarde + HTMX + Qute&lt;br&gt;REST API (外部向け)&lt;br&gt;JWT認証&lt;br&gt;Quarkus Lambda" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="60" width="310" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- akazukin-application -->
+        <mxCell id="app" value="&lt;b&gt;akazukin-application&lt;/b&gt;&lt;br&gt;&lt;br&gt;AuthUseCase / PostUseCase&lt;br&gt;SchedulePostUseCase / AnalyticsUseCase" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="220" width="310" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- akazukin-domain -->
+        <mxCell id="domain" value="&lt;b&gt;akazukin-domain&lt;/b&gt;&lt;br&gt;&lt;br&gt;SnsAdapter (interface) / Entities&lt;br&gt;Repository (interface) / SnsPlatform&lt;br&gt;&lt;font color=&quot;#CC0000&quot;&gt;※フレームワーク非依存 (純粋Java)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="370" width="310" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- akazukin-infrastructure -->
+        <mxCell id="infra" value="&lt;b&gt;akazukin-infrastructure&lt;/b&gt;&lt;br&gt;&lt;br&gt;Panache Repository実装&lt;br&gt;JPA Entity / Flyway&lt;br&gt;SQS Publisher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="220" width="250" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- akazukin-adapter-core -->
+        <mxCell id="adapter_core" value="&lt;b&gt;akazukin-adapter-core&lt;/b&gt;&lt;br&gt;&lt;br&gt;SnsAdapterFactory (SPI)&lt;br&gt;AbstractSnsAdapter&lt;br&gt;RateLimiter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="830" y="220" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- SDK Group -->
+        <mxCell id="sdk_group" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="530" width="300" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="sdk_label" value="&lt;b&gt;独自SDK群&lt;/b&gt; (Quarkus非依存)" style="text;html=1;fontSize=13;fontStyle=0;align=left;fontColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="90" y="535" width="250" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sdk_twitter" value="&lt;b&gt;akazukin-sdk-twitter&lt;/b&gt;&lt;br&gt;Twitter API v2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="100" y="565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="sdk_bluesky" value="&lt;b&gt;akazukin-sdk-bluesky&lt;/b&gt;&lt;br&gt;AT Protocol" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="240" y="565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="sdk_reddit" value="&lt;b&gt;akazukin-sdk-reddit&lt;/b&gt;&lt;br&gt;Reddit API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="100" y="625" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="sdk_pinterest" value="&lt;b&gt;akazukin-sdk-pinterest&lt;/b&gt;&lt;br&gt;Pinterest API v5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#E65100;" vertex="1" parent="1">
+          <mxGeometry x="240" y="625" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="sdk_deps" value="依存: java.net.http.HttpClient + Jackson&lt;br&gt;将来 Maven Central 公開可能" style="text;html=1;fontSize=10;align=left;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="100" y="690" width="260" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Adapter Group -->
+        <mxCell id="adapter_group" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#9673a6;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="530" width="610" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="adapter_label" value="&lt;b&gt;SNS Adapter群&lt;/b&gt; (SnsAdapter実装 + SPI登録)" style="text;html=1;fontSize=13;fontStyle=0;align=left;fontColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="460" y="535" width="400" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ad_twitter" value="&lt;b&gt;adapter-twitter&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#E65100&quot;&gt;→ sdk-twitter&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="470" y="565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_bluesky" value="&lt;b&gt;adapter-bluesky&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#E65100&quot;&gt;→ sdk-bluesky&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="610" y="565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_mastodon" value="&lt;b&gt;adapter-mastodon&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;→ BigBone&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="750" y="565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_threads" value="&lt;b&gt;adapter-threads&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;→ RestFB&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="890" y="565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_instagram" value="&lt;b&gt;adapter-instagram&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;→ RestFB&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="470" y="625" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_reddit" value="&lt;b&gt;adapter-reddit&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#E65100&quot;&gt;→ sdk-reddit&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="610" y="625" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_telegram" value="&lt;b&gt;adapter-telegram&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;→ TelegramBots&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="750" y="625" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_vk" value="&lt;b&gt;adapter-vk&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#006600&quot;&gt;→ vk-java-sdk&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="890" y="625" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="ad_pinterest" value="&lt;b&gt;adapter-pinterest&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#E65100&quot;&gt;→ sdk-pinterest&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="470" y="690" width="120" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Dependency Arrows -->
+        <!-- web → application -->
+        <mxCell id="d1" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=2;strokeColor=#333;" edge="1" source="web" target="app" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- web → infrastructure -->
+        <mxCell id="d2" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1.5;strokeColor=#6c8ebf;" edge="1" source="web" target="infra" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- web → adapter-core -->
+        <mxCell id="d3" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1.5;strokeColor=#9673a6;" edge="1" source="web" target="adapter_core" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- application → domain -->
+        <mxCell id="d4" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=2;strokeColor=#333;" edge="1" source="app" target="domain" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- infrastructure → domain -->
+        <mxCell id="d5" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1.5;strokeColor=#333;" edge="1" source="infra" target="domain" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- adapter-core → domain -->
+        <mxCell id="d6" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1.5;strokeColor=#333;" edge="1" source="adapter_core" target="domain" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- adapter group → adapter-core -->
+        <mxCell id="d7" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1.5;strokeColor=#9673a6;dashed=1;" edge="1" source="adapter_group" target="adapter_core" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- adapter(sdk系) → sdk group -->
+        <mxCell id="d8" value="依存" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1.5;strokeColor=#E65100;dashed=1;" edge="1" source="ad_twitter" target="sdk_twitter" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

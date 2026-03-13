@@ -1,0 +1,199 @@
+{#include base}
+{#title}Connect Account - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/posts">Posts</a>
+        <a href="/posts/compose">Compose</a>
+        <a href="/accounts">Accounts</a>
+        <a href="#" onclick="toggleTheme()" id="theme-icon">Theme</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/posts">Posts</a>
+        <a href="/posts/compose">Compose</a>
+        <a href="/accounts" class="active">Accounts</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Connect SNS Account</h2>
+            <a href="/accounts" role="button" class="secondary outline">Back to Accounts</a>
+        </div>
+
+        <p style="color: var(--ak-text-muted); margin-bottom: 1.5rem;">
+            Select a platform to connect your account. You will be redirected to authorize Akazukin.
+        </p>
+
+        <div id="connect-status"></div>
+
+        <div class="ak-platform-grid">
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #1da1f2;">X</div>
+                <h3>Twitter / X</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post tweets and threads</p>
+                <button onclick="connectPlatform('TWITTER')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #0085ff;">BS</div>
+                <h3>Bluesky</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to AT Protocol network</p>
+                <button onclick="connectPlatform('BLUESKY')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #6364ff;">MD</div>
+                <h3>Mastodon</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to the fediverse</p>
+                <button onclick="connectPlatform('MASTODON')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #000000;">TH</div>
+                <h3>Threads</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to Meta Threads</p>
+                <button onclick="connectPlatform('THREADS')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #e1306c;">IG</div>
+                <h3>Instagram</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Share photos and stories</p>
+                <button onclick="connectPlatform('INSTAGRAM')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #ff4500;">RD</div>
+                <h3>Reddit</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to subreddits</p>
+                <button onclick="connectPlatform('REDDIT')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #0088cc;">TG</div>
+                <h3>Telegram</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to channels and groups</p>
+                <button onclick="connectPlatform('TELEGRAM')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #4a76a8;">VK</div>
+                <h3>VK</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to VKontakte</p>
+                <button onclick="connectPlatform('VK')" class="contrast">Connect</button>
+            </div>
+
+            <div class="ak-card ak-platform-card">
+                <div class="ak-platform-icon" style="background-color: #e60023;">PI</div>
+                <h3>Pinterest</h3>
+                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Create pins and boards</p>
+                <button onclick="connectPlatform('PINTEREST')" class="contrast">Connect</button>
+            </div>
+        </div>
+
+        <style>
+            .ak-platform-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .ak-platform-card {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 1.5rem 1rem;
+            }
+
+            .ak-platform-card h3 {
+                margin: 0.75rem 0 0.25rem;
+                font-size: 1.1rem;
+            }
+
+            .ak-platform-card button {
+                margin-top: auto;
+                padding-top: 0.75rem;
+                width: 100%;
+            }
+
+            .ak-platform-icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: 700;
+                font-size: 1.1rem;
+            }
+        </style>
+    </main>
+</div>
+
+<script>
+    async function connectPlatform(platform) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        var statusDiv = document.getElementById('connect-status');
+        statusDiv.innerHTML = '';
+
+        var buttons = document.querySelectorAll('.ak-platform-card button');
+        buttons.forEach(function(btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); });
+
+        try {
+            var response = await fetch('/api/v1/accounts/connect/' + platform, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (response.ok) {
+                var data = await response.json();
+                if (data.authorizationUrl) {
+                    window.location.href = data.authorizationUrl;
+                    return;
+                }
+                statusDiv.innerHTML = '<div class="ak-card" style="border-color: #2d6a4f; color: #2d6a4f;">' +
+                    'Successfully connected to ' + escapeHtml(platform) + '!</div>';
+            } else {
+                var errorData = await response.json();
+                statusDiv.innerHTML = '<div class="ak-card" style="border-color: var(--ak-primary); color: var(--ak-primary);">' +
+                    escapeHtml(errorData.message || 'Failed to connect to ' + platform) + '</div>';
+            }
+        } catch (err) {
+            statusDiv.innerHTML = '<div class="ak-card" style="border-color: var(--ak-primary); color: var(--ak-primary);">' +
+                'Network error. Please try again.</div>';
+        } finally {
+            buttons.forEach(function(btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); });
+        }
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{/body}
+{/include}
