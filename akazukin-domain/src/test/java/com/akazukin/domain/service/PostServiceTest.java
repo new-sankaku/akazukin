@@ -3,6 +3,7 @@ package com.akazukin.domain.service;
 import com.akazukin.domain.exception.PostNotFoundException;
 import com.akazukin.domain.model.Post;
 import com.akazukin.domain.model.PostStatus;
+import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.PostRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -323,6 +324,11 @@ class PostServiceTest {
                     .filter(post -> post.getUserId().equals(userId))
                     .filter(post -> post.getStatus() == status)
                     .count();
+        }
+
+        @Override
+        public Map<SnsPlatform, Long> countByUserIdGroupByPlatform(UUID userId) {
+            return new java.util.EnumMap<>(SnsPlatform.class);
         }
     }
 }

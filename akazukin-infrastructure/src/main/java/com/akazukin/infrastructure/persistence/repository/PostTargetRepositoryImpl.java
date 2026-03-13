@@ -35,7 +35,7 @@ public class PostTargetRepositoryImpl implements PostTargetRepository, PanacheRe
     @Transactional
     public PostTarget save(PostTarget target) {
         PostTargetEntity entity = PostTargetMapper.toEntity(target);
-        if (entity.id != null && find("id", entity.id).firstResult() != null) {
+        if (entity.id != null) {
             entity = getEntityManager().merge(entity);
         } else {
             persist(entity);
@@ -47,6 +47,18 @@ public class PostTargetRepositoryImpl implements PostTargetRepository, PanacheRe
     @Transactional
     public void deleteByPostId(UUID postId) {
         delete("postId", postId);
+    }
+
+    @Override
+    public List<PostTarget> findByPostIds(List<UUID> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return List.of();
+        }
+        return find("postId in ?1", postIds)
+                .list()
+                .stream()
+                .map(PostTargetMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

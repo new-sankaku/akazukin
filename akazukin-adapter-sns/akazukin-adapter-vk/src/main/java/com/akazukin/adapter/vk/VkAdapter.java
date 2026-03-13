@@ -7,6 +7,7 @@ import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.model.SnsProfile;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,7 +21,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 
-public class VkAdapter extends AbstractSnsAdapter {
+public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper SHARED_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final String AUTH_URL = "https://oauth.vk.com/authorize";
     private static final String TOKEN_URL = "https://oauth.vk.com/access_token";
@@ -32,6 +42,8 @@ public class VkAdapter extends AbstractSnsAdapter {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    private volatile String cachedUserId;
+
     public VkAdapter(String clientId, String clientSecret,
                      HttpClient httpClient, ObjectMapper objectMapper) {
         this.clientId = Objects.requireNonNull(clientId, "clientId must not be null");
@@ -41,15 +53,7 @@ public class VkAdapter extends AbstractSnsAdapter {
     }
 
     public VkAdapter(String clientId, String clientSecret) {
-        this(
-            clientId,
-            clientSecret,
-            HttpClient.newBuilder()
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build(),
-            new ObjectMapper()
-        );
+        this(clientId, clientSecret, SHARED_HTTP_CLIENT, SHARED_OBJECT_MAPPER);
     }
 
     public VkAdapter() {
@@ -259,6 +263,9 @@ public class VkAdapter extends AbstractSnsAdapter {
     }
 
     private String getUserId(String accessToken) throws IOException, InterruptedException {
+        if (cachedUserId != null) {
+            return cachedUserId;
+        }
         String body = "access_token=" + encode(accessToken) + "&v=" + API_VERSION;
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -274,7 +281,9 @@ public class VkAdapter extends AbstractSnsAdapter {
         JsonNode json = objectMapper.readTree(response.body());
         JsonNode users = json.path("response");
         if (users.isArray() && !users.isEmpty()) {
-            return String.valueOf(users.get(0).path("id").asLong());
+            String userId = String.valueOf(users.get(0).path("id").asLong());
+            cachedUserId = userId;
+            return userId;
         }
         return "0";
     }
@@ -287,6 +296,11 @@ public class VkAdapter extends AbstractSnsAdapter {
             throw wrapException(operation,
                 new RuntimeException("VK API error " + errorCode + ": " + errorMsg));
         }
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

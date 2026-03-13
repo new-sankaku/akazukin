@@ -139,17 +139,12 @@ public class AnalyticsUseCase {
     }
 
     private Map<SnsPlatform, Integer> calculatePostCountByPlatform(UUID userId) {
-        Map<SnsPlatform, Integer> counts = new EnumMap<>(SnsPlatform.class);
-        List<Post> posts = postRepository.findByUserId(userId, 0, Integer.MAX_VALUE);
-
-        for (Post post : posts) {
-            List<PostTarget> targets = postTargetRepository.findByPostId(post.getId());
-            for (PostTarget target : targets) {
-                counts.merge(target.getPlatform(), 1, Integer::sum);
-            }
-        }
-
-        return counts;
+        Map<SnsPlatform, Long> counts = postRepository.countByUserIdGroupByPlatform(userId);
+        return counts.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().intValue()
+                ));
     }
 
     private List<AccountStats> fetchAccountStats(List<SnsAccount> accounts) {

@@ -14,15 +14,20 @@ import com.akazukin.sdk.twitter.model.TweetResponse;
 import com.akazukin.sdk.twitter.model.TwitterUser;
 
 import java.time.Instant;
+import java.util.AbstractMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TwitterAdapter extends AbstractSnsAdapter {
+public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
     private static final String TWEET_URL_PREFIX = "https://twitter.com/i/status/";
+    private static final long CODE_VERIFIER_TTL_MILLIS = 10 * 60 * 1000L;
 
     private final TwitterClient client;
-    private final ConcurrentHashMap<String, String> codeVerifiers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map.Entry<String, Instant>> codeVerifiers =
+            new ConcurrentHashMap<>();
 
     public TwitterAdapter(TwitterClient client) {
         this.client = Objects.requireNonNull(client, "TwitterClient must not be null");
@@ -54,9 +59,11 @@ public class TwitterAdapter extends AbstractSnsAdapter {
     public String getAuthorizationUrl(String callbackUrl, String state) {
         try {
             checkRateLimit();
+            cleanupExpiredVerifiers();
             String codeVerifier = OAuth2PkceFlow.generateCodeVerifier();
             String codeChallenge = OAuth2PkceFlow.generateCodeChallenge(codeVerifier);
-            codeVerifiers.put(state, codeVerifier);
+            codeVerifiers.put(callbackUrl,
+                new AbstractMap.SimpleImmutableEntry<>(codeVerifier, Instant.now()));
             String url = client.getAuthorizationUrl(state, codeChallenge);
             recordApiCall();
             return url;
@@ -69,12 +76,14 @@ public class TwitterAdapter extends AbstractSnsAdapter {
     public SnsAuthToken exchangeToken(String code, String callbackUrl) {
         try {
             checkRateLimit();
-            String codeVerifier = codeVerifiers.remove(callbackUrl);
-            if (codeVerifier == null) {
+            cleanupExpiredVerifiers();
+            Map.Entry<String, Instant> entry = codeVerifiers.remove(callbackUrl);
+            if (entry == null) {
                 throw new IllegalStateException(
                     "No code verifier found. getAuthorizationUrl must be called first."
                 );
             }
+            String codeVerifier = entry.getKey();
             TokenResponse response = client.exchangeToken(code, codeVerifier);
             recordApiCall();
             return toSnsAuthToken(response);
@@ -136,6 +145,23 @@ public class TwitterAdapter extends AbstractSnsAdapter {
             recordApiCall();
         } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
+        }
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
+    }
+
+    private void cleanupExpiredVerifiers() {
+        Instant cutoff = Instant.now().minusMillis(CODE_VERIFIER_TTL_MILLIS);
+        Iterator<Map.Entry<String, Map.Entry<String, Instant>>> it =
+                codeVerifiers.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, Map.Entry<String, Instant>> entry = it.next();
+            if (entry.getValue().getValue().isBefore(cutoff)) {
+                it.remove();
+            }
         }
     }
 

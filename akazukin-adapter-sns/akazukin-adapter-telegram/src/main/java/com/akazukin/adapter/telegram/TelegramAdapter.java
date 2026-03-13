@@ -7,6 +7,7 @@ import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.model.SnsProfile;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,7 +21,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 
-public class TelegramAdapter extends AbstractSnsAdapter {
+public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper SHARED_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final String BOT_FATHER_URL = "https://t.me/BotFather";
     private static final String API_BASE = "https://api.telegram.org";
@@ -36,14 +46,7 @@ public class TelegramAdapter extends AbstractSnsAdapter {
     }
 
     public TelegramAdapter(String defaultChatId) {
-        this(
-            defaultChatId,
-            HttpClient.newBuilder()
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build(),
-            new ObjectMapper()
-        );
+        this(defaultChatId, SHARED_HTTP_CLIENT, SHARED_OBJECT_MAPPER);
     }
 
     public TelegramAdapter() {
@@ -229,6 +232,11 @@ public class TelegramAdapter extends AbstractSnsAdapter {
             throw wrapException(operation,
                 new RuntimeException("Telegram API error " + errorCode + ": " + description));
         }
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

@@ -19,4 +19,6 @@ public interface PostTargetRepository {
     void deleteByPostId(UUID postId);
 
     void updateStatus(UUID id, PostStatus status, String errorMessage);
+
+    List<PostTarget> findByPostIds(List<UUID> postIds);
 }

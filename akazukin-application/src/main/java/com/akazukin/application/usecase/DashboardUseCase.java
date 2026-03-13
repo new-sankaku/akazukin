@@ -14,10 +14,10 @@ import com.akazukin.domain.port.SnsAccountRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class DashboardUseCase {
@@ -60,9 +60,15 @@ public class DashboardUseCase {
     public List<PostResponseDto> getRecentPosts(UUID userId, int limit) {
         List<Post> posts = postRepository.findByUserId(userId, 0, limit);
 
+        List<UUID> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        List<PostTarget> allTargets = postTargetRepository.findByPostIds(postIds);
+        Map<UUID, List<PostTarget>> targetsByPostId = allTargets.stream()
+                .collect(Collectors.groupingBy(PostTarget::getPostId));
+
         return posts.stream()
                 .map(post -> {
-                    List<PostTarget> targets = postTargetRepository.findByPostId(post.getId());
+                    List<PostTarget> targets = targetsByPostId.getOrDefault(
+                            post.getId(), List.of());
                     List<PostTargetDto> targetDtos = targets.stream()
                             .map(target -> new PostTargetDto(
                                     target.getId(),
@@ -97,16 +103,11 @@ public class DashboardUseCase {
     }
 
     private Map<SnsPlatform, Integer> calculatePostCountByPlatform(UUID userId) {
-        Map<SnsPlatform, Integer> counts = new EnumMap<>(SnsPlatform.class);
-        List<Post> posts = postRepository.findByUserId(userId, 0, Integer.MAX_VALUE);
-
-        for (Post post : posts) {
-            List<PostTarget> targets = postTargetRepository.findByPostId(post.getId());
-            for (PostTarget target : targets) {
-                counts.merge(target.getPlatform(), 1, Integer::sum);
-            }
-        }
-
-        return counts;
+        Map<SnsPlatform, Long> counts = postRepository.countByUserIdGroupByPlatform(userId);
+        return counts.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().intValue()
+                ));
     }
 }

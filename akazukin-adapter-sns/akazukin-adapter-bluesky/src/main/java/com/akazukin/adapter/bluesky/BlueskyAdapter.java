@@ -21,11 +21,21 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class BlueskyAdapter extends AbstractSnsAdapter {
+public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper SHARED_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final Logger LOG = Logger.getLogger(BlueskyAdapter.class.getName());
 
@@ -43,14 +53,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
     }
 
     public BlueskyAdapter(String serviceUrl) {
-        this(
-            serviceUrl,
-            HttpClient.newBuilder()
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build(),
-            new ObjectMapper()
-        );
+        this(serviceUrl, SHARED_HTTP_CLIENT, SHARED_OBJECT_MAPPER);
     }
 
     public BlueskyAdapter() {
@@ -265,6 +268,11 @@ public class BlueskyAdapter extends AbstractSnsAdapter {
             return atUri;
         }
         return atUri.substring(lastSlash + 1);
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
     }
 
     private String extractDidFromToken(String accessToken) {

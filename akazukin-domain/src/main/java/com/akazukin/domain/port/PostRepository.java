@@ -2,9 +2,11 @@ package com.akazukin.domain.port;
 
 import com.akazukin.domain.model.Post;
 import com.akazukin.domain.model.PostStatus;
+import com.akazukin.domain.model.SnsPlatform;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,4 +25,6 @@ public interface PostRepository {
     long countByUserId(UUID userId);
 
     long countByUserIdAndStatus(UUID userId, PostStatus status);
+
+    Map<SnsPlatform, Long> countByUserIdGroupByPlatform(UUID userId);
 }

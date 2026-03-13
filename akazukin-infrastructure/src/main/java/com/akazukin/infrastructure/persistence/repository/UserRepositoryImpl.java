@@ -33,7 +33,7 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepository<Use
     @Transactional
     public User save(User user) {
         UserEntity entity = UserMapper.toEntity(user);
-        if (entity.id != null && findById("id", entity.id) != null) {
+        if (entity.id != null) {
             entity = getEntityManager().merge(entity);
         } else {
             persist(entity);
@@ -45,9 +45,5 @@ public class UserRepositoryImpl implements UserRepository, PanacheRepository<Use
     @Transactional
     public void deleteById(UUID id) {
         delete("id", id);
-    }
-
-    private UserEntity findById(String field, UUID value) {
-        return find(field, value).firstResult();
     }
 }

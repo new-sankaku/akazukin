@@ -55,7 +55,7 @@ public class TeamRepositoryImpl implements TeamRepository, PanacheRepository<Tea
     @Transactional
     public Team save(Team team) {
         TeamEntity entity = TeamMapper.toEntity(team);
-        if (entity.id != null && find("id", entity.id).firstResult() != null) {
+        if (entity.id != null) {
             entity = getEntityManager().merge(entity);
         } else {
             persist(entity);

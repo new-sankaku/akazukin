@@ -5,6 +5,7 @@ import com.akazukin.sdk.twitter.model.TokenResponse;
 import com.akazukin.sdk.twitter.model.TweetResponse;
 import com.akazukin.sdk.twitter.model.TwitterUser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +27,15 @@ public class TwitterClient implements AutoCloseable {
     private static final int HTTP_CLIENT_ERROR = 400;
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
+
+    private static final HttpClient DEFAULT_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final TwitterConfig config;
     private final HttpClient httpClient;
@@ -156,12 +166,41 @@ public class TwitterClient implements AutoCloseable {
 
     @Override
     public void close() {
-        httpClient.close();
+        if (httpClient != null && httpClient != DEFAULT_HTTP_CLIENT) {
+            httpClient.close();
+        }
+    }
+
+    private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler)
+            throws IOException, InterruptedException {
+        int maxRetries = 3;
+        long delayMs = 1000;
+        IOException lastException = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                HttpResponse<T> response = httpClient.send(request, handler);
+                if (response.statusCode() == 429 && attempt < maxRetries) {
+                    String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
+                    long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
+                    Thread.sleep(Math.min(waitMs, 30000));
+                    delayMs *= 2;
+                    continue;
+                }
+                return response;
+            } catch (IOException e) {
+                lastException = e;
+                if (attempt < maxRetries) {
+                    Thread.sleep(delayMs);
+                    delayMs *= 2;
+                }
+            }
+        }
+        throw lastException;
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) {
         try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendWithRetry(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= HTTP_CLIENT_ERROR) {
                 handleErrorResponse(response);
             }
@@ -269,13 +308,10 @@ public class TwitterClient implements AutoCloseable {
                 throw new IllegalStateException("TwitterConfig must be provided");
             }
             if (httpClient == null) {
-                httpClient = HttpClient.newBuilder()
-                    .connectTimeout(CONNECTION_TIMEOUT)
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .build();
+                httpClient = DEFAULT_HTTP_CLIENT;
             }
             if (objectMapper == null) {
-                objectMapper = new ObjectMapper();
+                objectMapper = DEFAULT_OBJECT_MAPPER;
             }
             return new TwitterClient(config, httpClient, objectMapper);
         }

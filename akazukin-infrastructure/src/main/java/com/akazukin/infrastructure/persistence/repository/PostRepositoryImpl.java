@@ -2,6 +2,7 @@ package com.akazukin.infrastructure.persistence.repository;
 
 import com.akazukin.domain.model.Post;
 import com.akazukin.domain.model.PostStatus;
+import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.PostRepository;
 import com.akazukin.infrastructure.persistence.entity.PostEntity;
 import com.akazukin.infrastructure.persistence.mapper.PostMapper;
@@ -11,7 +12,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -47,7 +50,7 @@ public class PostRepositoryImpl implements PostRepository, PanacheRepository<Pos
     @Transactional
     public Post save(Post post) {
         PostEntity entity = PostMapper.toEntity(post);
-        if (entity.id != null && find("id", entity.id).firstResult() != null) {
+        if (entity.id != null) {
             entity = getEntityManager().merge(entity);
         } else {
             persist(entity);
@@ -69,5 +72,22 @@ public class PostRepositoryImpl implements PostRepository, PanacheRepository<Pos
     @Override
     public long countByUserIdAndStatus(UUID userId, PostStatus status) {
         return count("userId = ?1 and status = ?2", userId, status.name());
+    }
+
+    @Override
+    public Map<SnsPlatform, Long> countByUserIdGroupByPlatform(UUID userId) {
+        List<Object[]> results = getEntityManager()
+                .createQuery(
+                        "SELECT pt.platform, COUNT(pt) FROM PostTargetEntity pt"
+                                + " JOIN PostEntity p ON pt.postId = p.id"
+                                + " WHERE p.userId = :userId GROUP BY pt.platform",
+                        Object[].class)
+                .setParameter("userId", userId)
+                .getResultList();
+        Map<SnsPlatform, Long> counts = new EnumMap<>(SnsPlatform.class);
+        for (Object[] row : results) {
+            counts.put((SnsPlatform) row[0], (Long) row[1]);
+        }
+        return counts;
     }
 }

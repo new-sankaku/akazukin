@@ -7,6 +7,7 @@ import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.model.SnsProfile;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,7 +21,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 
-public class ThreadsAdapter extends AbstractSnsAdapter {
+public class ThreadsAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper SHARED_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final String GRAPH_API_BASE = "https://graph.threads.net/v1.0";
     private static final String AUTH_URL = "https://threads.net/oauth/authorize";
@@ -31,6 +41,8 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    private volatile String cachedUserId;
+
     public ThreadsAdapter(String clientId, String clientSecret,
                           HttpClient httpClient, ObjectMapper objectMapper) {
         this.clientId = Objects.requireNonNull(clientId, "clientId must not be null");
@@ -40,15 +52,7 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
     }
 
     public ThreadsAdapter(String clientId, String clientSecret) {
-        this(
-            clientId,
-            clientSecret,
-            HttpClient.newBuilder()
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build(),
-            new ObjectMapper()
-        );
+        this(clientId, clientSecret, SHARED_HTTP_CLIENT, SHARED_OBJECT_MAPPER);
     }
 
     public ThreadsAdapter() {
@@ -281,6 +285,9 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
     }
 
     private String getUserId(String accessToken) throws IOException, InterruptedException {
+        if (cachedUserId != null) {
+            return cachedUserId;
+        }
         String url = GRAPH_API_BASE + "/me?fields=id&access_token=" + encode(accessToken);
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
@@ -292,7 +299,14 @@ public class ThreadsAdapter extends AbstractSnsAdapter {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         checkResponseStatus(response, "getUserId");
         JsonNode json = objectMapper.readTree(response.body());
-        return json.path("id").asText();
+        String userId = json.path("id").asText();
+        cachedUserId = userId;
+        return userId;
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

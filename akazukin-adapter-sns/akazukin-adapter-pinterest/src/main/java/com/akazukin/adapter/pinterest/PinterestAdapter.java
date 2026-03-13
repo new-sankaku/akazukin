@@ -7,6 +7,7 @@ import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.model.SnsProfile;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -22,7 +23,16 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Objects;
 
-public class PinterestAdapter extends AbstractSnsAdapter {
+public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper SHARED_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final String AUTH_URL = "https://www.pinterest.com/oauth/";
     private static final String TOKEN_URL = "https://api.pinterest.com/v5/oauth/token";
@@ -42,15 +52,7 @@ public class PinterestAdapter extends AbstractSnsAdapter {
     }
 
     public PinterestAdapter(String appId, String appSecret) {
-        this(
-            appId,
-            appSecret,
-            HttpClient.newBuilder()
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build(),
-            new ObjectMapper()
-        );
+        this(appId, appSecret, SHARED_HTTP_CLIENT, SHARED_OBJECT_MAPPER);
     }
 
     public PinterestAdapter() {
@@ -287,6 +289,11 @@ public class PinterestAdapter extends AbstractSnsAdapter {
             expiresAt,
             json.path("scope").asText(null)
         );
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

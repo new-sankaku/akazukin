@@ -43,7 +43,7 @@ public class PostResource {
         }
         UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         PostResponseDto response = postUseCase.createPost(userId, request);
-        return Response.status(Response.Status.CREATED).entity(response).build();
+        return Response.status(Response.Status.ACCEPTED).entity(response).build();
     }
 
     @PUT

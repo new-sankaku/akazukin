@@ -19,6 +19,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +32,10 @@ import java.util.logging.Logger;
 public class PostPublishUseCase {
 
     private static final Logger LOG = Logger.getLogger(PostPublishUseCase.class.getName());
+
+    private static final ExecutorService PUBLISH_EXECUTOR =
+            Executors.newFixedThreadPool(
+                    Math.min(Runtime.getRuntime().availableProcessors() * 2, 16));
 
     private final PostRepository postRepository;
     private final PostTargetRepository postTargetRepository;
@@ -83,10 +92,23 @@ public class PostPublishUseCase {
                                 postId, target.getId(), target.getPlatform()), e);
                         markTargetFailed(target, e.getMessage());
                     }
-                }))
+                }, PUBLISH_EXECUTOR))
                 .toList();
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .get(60, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            LOG.log(Level.WARNING,
+                    "Publishing timed out after 60 seconds for post " + post.getId());
+        } catch (ExecutionException e) {
+            LOG.log(Level.SEVERE,
+                    "Publishing failed for post " + post.getId(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOG.log(Level.WARNING,
+                    "Publishing interrupted for post " + post.getId());
+        }
 
         updatePostStatus(post, successCount.get(), failureCount.get(), targets.size());
     }

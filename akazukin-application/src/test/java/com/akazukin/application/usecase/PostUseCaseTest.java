@@ -315,6 +315,11 @@ class PostUseCaseTest {
                     .filter(post -> post.getStatus() == status)
                     .count();
         }
+
+        @Override
+        public Map<SnsPlatform, Long> countByUserIdGroupByPlatform(UUID userId) {
+            return new java.util.EnumMap<>(SnsPlatform.class);
+        }
     }
 
     private static class InMemoryPostTargetRepository implements PostTargetRepository {
@@ -346,6 +351,16 @@ class PostUseCaseTest {
                     .map(PostTarget::getId)
                     .toList();
             toRemove.forEach(store::remove);
+        }
+
+        @Override
+        public List<PostTarget> findByPostIds(List<UUID> postIds) {
+            if (postIds == null || postIds.isEmpty()) {
+                return List.of();
+            }
+            return store.values().stream()
+                    .filter(target -> postIds.contains(target.getPostId()))
+                    .toList();
         }
 
         @Override

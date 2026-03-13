@@ -7,6 +7,7 @@ import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.model.SnsProfile;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,7 +21,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 
-public class MastodonAdapter extends AbstractSnsAdapter {
+public class MastodonAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(CONNECTION_TIMEOUT)
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .version(HttpClient.Version.HTTP_2)
+        .build();
+
+    private static final ObjectMapper SHARED_OBJECT_MAPPER = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final String instanceUrl;
     private final String clientId;
@@ -38,16 +48,7 @@ public class MastodonAdapter extends AbstractSnsAdapter {
     }
 
     public MastodonAdapter(String instanceUrl, String clientId, String clientSecret) {
-        this(
-            instanceUrl,
-            clientId,
-            clientSecret,
-            HttpClient.newBuilder()
-                .connectTimeout(CONNECTION_TIMEOUT)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .build(),
-            new ObjectMapper()
-        );
+        this(instanceUrl, clientId, clientSecret, SHARED_HTTP_CLIENT, SHARED_OBJECT_MAPPER);
     }
 
     public MastodonAdapter() {
@@ -264,6 +265,11 @@ public class MastodonAdapter extends AbstractSnsAdapter {
         } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
         }
+    }
+
+    @Override
+    public void close() {
+        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

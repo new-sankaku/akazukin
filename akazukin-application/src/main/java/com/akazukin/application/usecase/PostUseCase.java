@@ -20,9 +20,11 @@ import jakarta.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PostUseCase {
@@ -167,9 +169,14 @@ public class PostUseCase {
         int offset = page * size;
         List<Post> posts = postRepository.findByUserId(userId, offset, size);
 
+        List<UUID> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        List<PostTarget> allTargets = postTargetRepository.findByPostIds(postIds);
+        Map<UUID, List<PostTarget>> targetsByPostId = allTargets.stream()
+                .collect(Collectors.groupingBy(PostTarget::getPostId));
+
         List<PostResponseDto> result = new ArrayList<>();
         for (Post post : posts) {
-            List<PostTarget> targets = postTargetRepository.findByPostId(post.getId());
+            List<PostTarget> targets = targetsByPostId.getOrDefault(post.getId(), List.of());
             result.add(toPostResponseDto(post, targets));
         }
 

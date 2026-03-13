@@ -46,7 +46,7 @@ public class SnsAccountRepositoryImpl implements SnsAccountRepository, PanacheRe
     @Transactional
     public SnsAccount save(SnsAccount snsAccount) {
         SnsAccountEntity entity = snsAccountMapper.toEntity(snsAccount);
-        if (entity.id != null && find("id", entity.id).firstResult() != null) {
+        if (entity.id != null) {
             entity = getEntityManager().merge(entity);
         } else {
             persist(entity);
