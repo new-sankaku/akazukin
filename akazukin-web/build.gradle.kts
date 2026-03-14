@@ -43,6 +43,12 @@ dependencies {
     // Validation
     implementation("io.quarkus:quarkus-hibernate-validator")
 
+    // Health Check
+    implementation("io.quarkus:quarkus-smallrye-health")
+
+    // Fault Tolerance
+    implementation("io.quarkus:quarkus-smallrye-fault-tolerance")
+
     // AWS Lambda HTTP adapter
     implementation("io.quarkus:quarkus-amazon-lambda-http")
 
