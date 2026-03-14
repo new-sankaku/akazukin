@@ -59,4 +59,14 @@ public class SnsAccountRepositoryImpl implements SnsAccountRepository, PanacheRe
     public void deleteById(UUID id) {
         delete("id", id);
     }
+
+    @Override
+    public long countAll() {
+        return count();
+    }
+
+    @Override
+    public long countByPlatform(SnsPlatform platform) {
+        return count("platform", platform.name());
+    }
 }

@@ -18,4 +18,8 @@ public interface SnsAccountRepository {
     SnsAccount save(SnsAccount snsAccount);
 
     void deleteById(UUID id);
+
+    long countAll();
+
+    long countByPlatform(SnsPlatform platform);
 }
