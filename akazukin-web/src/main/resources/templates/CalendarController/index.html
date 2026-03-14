@@ -1,0 +1,228 @@
+{#include base}
+{#title}コンテンツカレンダー - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/calendar" class="active">カレンダー</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/calendar" class="active">カレンダー</a>
+        <a href="/news">ニュース</a>
+        <a href="/ab-tests">A/Bテスト</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">コンテンツカレンダー</h2>
+            <button onclick="openCreateModal()" style="
+                background-color: var(--accent-gold, #C8964A);
+                border: none;
+                color: #fff;
+                font-size: 0.85rem;
+                padding: 0.5rem 1.2rem;
+                border-radius: 2px;
+                cursor: pointer;
+                letter-spacing: 0.05em;
+            ">新規予定</button>
+        </div>
+
+        <div id="calendar" style="
+            background: var(--bg-surface, #EDE8D5);
+            border: 1px solid var(--border-lt, #CCC5AE);
+            border-radius: 2px;
+            padding: 1rem;
+            min-height: 600px;
+        "></div>
+    </main>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="entry-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border, #B8B19C); border-radius: 2px; padding: 2rem; width: 90%; max-width: 500px;">
+        <h3 id="modal-title" style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">新規予定</h3>
+        <form id="entry-form" onsubmit="saveEntry(event)">
+            <input type="hidden" id="entry-id" />
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">タイトル</label>
+                <input type="text" id="entry-title" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">説明</label>
+                <textarea id="entry-description" rows="3" style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);"></textarea>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">予定日時</label>
+                <input type="datetime-local" id="entry-scheduled" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">カラー</label>
+                <input type="color" id="entry-color" value="#C8A96E" style="width:50px; height:30px; border:1px solid var(--border-lt, #CCC5AE); cursor:pointer;" />
+            </div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button type="button" onclick="closeModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
+                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+<script>
+    var calendar;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'ja',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            events: function(info, successCallback, failureCallback) {
+                loadEvents(info.startStr, info.endStr, successCallback, failureCallback);
+            },
+            eventClick: function(info) {
+                openEditModal(info.event);
+            },
+            dateClick: function(info) {
+                openCreateModal(info.dateStr);
+            },
+            editable: false,
+            selectable: true
+        });
+        calendar.render();
+    });
+
+    async function loadEvents(from, to, successCallback, failureCallback) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+        try {
+            var response = await fetch('/api/v1/calendar?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to), {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+            if (response.ok) {
+                var entries = await response.json();
+                var events = entries.map(function(e) {
+                    return {
+                        id: e.id,
+                        title: e.title,
+                        start: e.scheduledAt,
+                        color: e.color || '#C8A96E',
+                        extendedProps: { description: e.description, platforms: e.platforms, postId: e.postId }
+                    };
+                });
+                successCallback(events);
+            } else {
+                await showApiError(response, 'カレンダーの読み込みに失敗しました');
+                failureCallback();
+            }
+        } catch (err) {
+            showToast('error', 'カレンダーの読み込みに失敗しました');
+            failureCallback();
+        }
+    }
+
+    function openCreateModal(dateStr) {
+        document.getElementById('modal-title').textContent = '新規予定';
+        document.getElementById('entry-id').value = '';
+        document.getElementById('entry-title').value = '';
+        document.getElementById('entry-description').value = '';
+        document.getElementById('entry-color').value = '#C8A96E';
+        if (dateStr) {
+            document.getElementById('entry-scheduled').value = dateStr + 'T09:00';
+        } else {
+            document.getElementById('entry-scheduled').value = '';
+        }
+        document.getElementById('entry-modal').style.display = 'flex';
+    }
+
+    function openEditModal(event) {
+        document.getElementById('modal-title').textContent = '予定を編集';
+        document.getElementById('entry-id').value = event.id;
+        document.getElementById('entry-title').value = event.title;
+        document.getElementById('entry-description').value = event.extendedProps.description || '';
+        document.getElementById('entry-color').value = event.backgroundColor || '#C8A96E';
+        var d = new Date(event.start);
+        var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.getElementById('entry-scheduled').value = local;
+        document.getElementById('entry-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('entry-modal').style.display = 'none';
+    }
+
+    async function saveEntry(e) {
+        e.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        var entryId = document.getElementById('entry-id').value;
+        var scheduledLocal = document.getElementById('entry-scheduled').value;
+        var scheduledAt = new Date(scheduledLocal).toISOString();
+
+        var body = {
+            title: document.getElementById('entry-title').value,
+            description: document.getElementById('entry-description').value,
+            scheduledAt: scheduledAt,
+            platforms: [],
+            color: document.getElementById('entry-color').value
+        };
+
+        var url = '/api/v1/calendar';
+        var method = 'POST';
+        if (entryId) {
+            url += '/' + entryId;
+            method = 'PUT';
+        }
+
+        try {
+            var response = await fetch(url, {
+                method: method,
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', entryId ? '予定を更新しました' : '予定を作成しました');
+                closeModal();
+                calendar.refetchEvents();
+            } else {
+                await showApiError(response, '予定の保存に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', '予定の保存に失敗しました');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

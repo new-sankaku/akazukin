@@ -1,0 +1,359 @@
+{#include base}
+{#title}監査ログ - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <h1>Akazukin</h1>
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/audit-logs" class="active">監査ログ</a>
+    </aside>
+
+    <main class="ak-main" style="max-width: 1200px;">
+        <h2>監査ログ</h2>
+
+        <div class="ak-card">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
+                <label>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">開始日</span>
+                    <input type="date" id="filter-from" style="margin: 0;">
+                </label>
+                <label>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">終了日</span>
+                    <input type="date" id="filter-to" style="margin: 0;">
+                </label>
+                <label>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">カテゴリ</span>
+                    <select id="filter-category" style="margin: 0; min-width: 130px;">
+                        <option value="">すべて</option>
+                        <option value="SNS_API">SNS API</option>
+                        <option value="INTERNAL_API">内部 API</option>
+                        <option value="PAGE">ページ</option>
+                    </select>
+                </label>
+                <label>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">パス</span>
+                    <input type="text" id="filter-path" placeholder="/api/v1/..." style="margin: 0;">
+                </label>
+                <button onclick="applyFilter()" style="margin-bottom: 0;">検索</button>
+                <button class="secondary outline" onclick="clearFilter()" style="margin-bottom: 0;">クリア</button>
+            </div>
+        </div>
+
+        <div id="audit-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table id="audit-table" role="grid">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>カテゴリ</th>
+                        <th>ユーザー</th>
+                        <th>メソッド</th>
+                        <th>パス</th>
+                        <th>ステータス</th>
+                        <th>処理時間</th>
+                        <th>詳細</th>
+                    </tr>
+                </thead>
+                <tbody id="audit-tbody">
+                    <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">読み込み中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="pagination" style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;"></div>
+    </main>
+</div>
+
+<!-- Detail modal -->
+<dialog id="detail-modal" class="audit-modal">
+    <div class="audit-modal-inner">
+        <div class="audit-modal-header">
+            <div class="audit-modal-header-left">
+                <h3>リクエスト詳細</h3>
+                <span id="detail-category-badge"></span>
+            </div>
+            <button class="audit-modal-close" onclick="document.getElementById('detail-modal').close()" aria-label="閉じる">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <div id="detail-content" class="audit-modal-body"></div>
+    </div>
+</dialog>
+
+<script>
+    let currentPage = 0;
+    const pageSize = 50;
+    let allLogs = [];
+
+    const CATEGORY_MAP = {
+        'PAGE':         { type: 'page',         label: 'ページ' },
+        'INTERNAL_API': { type: 'internal-api',  label: '内部 API' },
+        'SNS_API':      { type: 'sns-api',       label: 'SNS API' }
+    };
+
+    function classifyFromServer(log) {
+        var cat = log.category || 'PAGE';
+        var info = CATEGORY_MAP[cat] || CATEGORY_MAP['PAGE'];
+        var platform = null;
+        if (cat === 'SNS_API') {
+            var parsed = parseSnsApiPath(log.requestPath);
+            if (parsed.platform) {
+                platform = { key: parsed.platform.toLowerCase(), label: parsed.platform };
+            }
+        }
+        return { type: info.type, label: info.label, platform: platform };
+    }
+
+    function parseSnsApiPath(requestPath) {
+        if (!requestPath) return { platform: null, endpoint: requestPath };
+        var arrowIdx = requestPath.indexOf(' \u2192 ');
+        if (arrowIdx !== -1) {
+            return {
+                platform: requestPath.substring(0, arrowIdx).trim(),
+                endpoint: requestPath.substring(arrowIdx + 3).trim()
+            };
+        }
+        return { platform: null, endpoint: requestPath };
+    }
+
+    function getDisplayPath(log) {
+        if (log.category === 'SNS_API') {
+            var parsed = parseSnsApiPath(log.requestPath);
+            return parsed.endpoint;
+        }
+        return log.requestPath;
+    }
+
+    function renderCategoryBadge(classification) {
+        var typeClass = 'audit-cat--' + classification.type;
+        var html = '<span class="audit-cat ' + typeClass + '">' + classification.label + '</span>';
+        if (classification.platform) {
+            html += ' <span class="platform-badge ' + classification.platform.key + '">' + classification.platform.label + '</span>';
+        }
+        return html;
+    }
+
+    function renderMethodBadge(method) {
+        return '<span class="audit-method audit-method--' + method.toLowerCase() + '">' + method + '</span>';
+    }
+
+    function renderStatusBadge(status) {
+        var cls = 'audit-status';
+        if (status >= 500) cls += ' audit-status--5xx';
+        else if (status >= 400) cls += ' audit-status--4xx';
+        else if (status >= 300) cls += ' audit-status--3xx';
+        else cls += ' audit-status--2xx';
+        return '<span class="' + cls + '">' + status + '</span>';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var today = new Date();
+        var weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        document.getElementById('filter-to').value = today.toISOString().split('T')[0];
+        document.getElementById('filter-from').value = weekAgo.toISOString().split('T')[0];
+        loadAuditLogs(0);
+
+        var modal = document.getElementById('detail-modal');
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.close();
+        });
+    });
+
+    async function loadAuditLogs(page) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        currentPage = page;
+        var url = '/api/v1/audit-logs?page=' + page + '&size=' + pageSize;
+
+        var from = document.getElementById('filter-from').value;
+        var to = document.getElementById('filter-to').value;
+        var path = document.getElementById('filter-path').value;
+        var category = document.getElementById('filter-category').value;
+
+        if (from) url += '&from=' + from;
+        if (to) url += '&to=' + to;
+        if (path) url += '&path=' + encodeURIComponent(path);
+        if (category) url += '&category=' + encodeURIComponent(category);
+
+        try {
+            var response = await fetch(url, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (response.status === 403) {
+                document.getElementById('audit-tbody').innerHTML =
+                    '<tr><td colspan="8" style="text-align: center; color: var(--status-error);">アクセスが拒否されました。管理者権限が必要です。</td></tr>';
+                return;
+            }
+
+            if (response.ok) {
+                var result = await response.json();
+                allLogs = result.data;
+                renderSummary(result);
+                renderTable(result.data);
+                renderPagination(result);
+            }
+        } catch (err) {
+            document.getElementById('audit-tbody').innerHTML =
+                '<tr><td colspan="8" style="text-align: center; color: var(--status-error);">監査ログの読み込みに失敗しました</td></tr>';
+            showToast('error', '監査ログの読み込みに失敗しました', 'サーバーに接続できませんでした。');
+        }
+    }
+
+    function renderSummary(result) {
+        var snsCount = result.data.filter(function(l) { return l.category === 'SNS_API'; }).length;
+        var errorCount = result.data.filter(function(l) { return l.responseStatus >= 400; }).length;
+        var container = document.getElementById('audit-summary');
+        container.innerHTML =
+            '<div class="ak-card ak-stat"><h3>' + result.totalCount + '</h3><p>総レコード数</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + result.data.length + '</h3><p>表示中</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + snsCount + '</h3><p>SNS API</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + errorCount + '</h3><p>エラー</p></div>';
+    }
+
+    function renderTable(logs) {
+        var tbody = document.getElementById('audit-tbody');
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">監査ログが見つかりません</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = logs.map(function(log, idx) {
+            var date = new Date(log.createdAt).toLocaleString();
+            var classification = classifyFromServer(log);
+            var displayPath = getDisplayPath(log);
+            var pathDisplay = escapeHtmlGlobal(displayPath) + (log.queryString ? '?' + escapeHtmlGlobal(log.queryString) : '');
+            return '<tr class="audit-row audit-row--' + classification.type + '">' +
+                '<td style="white-space: nowrap; font-size: 0.85rem;">' + date + '</td>' +
+                '<td style="white-space: nowrap;">' + renderCategoryBadge(classification) + '</td>' +
+                '<td>' + escapeHtmlGlobal(log.username || '-') + '</td>' +
+                '<td>' + renderMethodBadge(log.httpMethod) + '</td>' +
+                '<td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' + escapeHtmlGlobal(log.requestPath) + '">' + pathDisplay + '</td>' +
+                '<td>' + renderStatusBadge(log.responseStatus) + '</td>' +
+                '<td style="white-space: nowrap;">' + log.durationMs + '<span class="text-muted" style="font-size:0.75rem;">ms</span></td>' +
+                '<td><button class="btn-sm btn-secondary" onclick="showDetail(' + idx + ')">詳細</button></td>' +
+                '</tr>';
+        }).join('');
+    }
+
+    function showDetail(idx) {
+        var log = allLogs[idx];
+        var content = document.getElementById('detail-content');
+        var date = new Date(log.createdAt).toLocaleString();
+        var classification = classifyFromServer(log);
+        var displayPath = getDisplayPath(log);
+
+        document.getElementById('detail-category-badge').innerHTML = renderCategoryBadge(classification);
+
+        var html = '';
+
+        html += '<div class="audit-detail-section">' +
+            '<div class="audit-detail-section-title">概要</div>' +
+            '<div class="audit-detail-grid">' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">日時</span><span class="audit-detail-value">' + date + '</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">ユーザー</span><span class="audit-detail-value">' + escapeHtmlGlobal(log.username || '-') + '</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">ステータス</span><span class="audit-detail-value">' + renderStatusBadge(log.responseStatus) + '</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">処理時間</span><span class="audit-detail-value">' + log.durationMs + 'ms</span></div>' +
+            '</div>' +
+            '</div>';
+
+        html += '<div class="audit-detail-section">' +
+            '<div class="audit-detail-section-title">リクエスト</div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">メソッド</span>' + renderMethodBadge(log.httpMethod) + '</div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">パス</span><code class="audit-detail-path">' + escapeHtmlGlobal(displayPath) + '</code></div>';
+
+        if (log.category === 'SNS_API') {
+            var parsed = parseSnsApiPath(log.requestPath);
+            if (parsed.platform) {
+                html += '<div class="audit-detail-row"><span class="audit-detail-label">プラットフォーム</span><span class="audit-detail-value">' + escapeHtmlGlobal(parsed.platform) + '</span></div>';
+            }
+        }
+
+        if (log.queryString) {
+            html += '<div class="audit-detail-row"><span class="audit-detail-label">クエリ</span><code class="audit-detail-path">' + escapeHtmlGlobal(log.queryString) + '</code></div>';
+        }
+
+        if (log.requestBody) {
+            var formatted = log.requestBody;
+            try {
+                formatted = JSON.stringify(JSON.parse(log.requestBody), null, 2);
+            } catch (e) { }
+            html += '<div class="audit-detail-row" style="flex-direction:column; align-items:stretch;">' +
+                '<span class="audit-detail-label">リクエストボディ</span>' +
+                '<pre class="audit-detail-code">' + escapeHtmlGlobal(formatted) + '</pre>' +
+                '</div>';
+        }
+        html += '</div>';
+
+        html += '<div class="audit-detail-section">' +
+            '<div class="audit-detail-section-title">クライアント情報</div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">IP アドレス</span><span class="audit-detail-value">' + escapeHtmlGlobal(log.clientIp || '-') + '</span></div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">User-Agent</span><span class="audit-detail-value audit-detail-ua">' + escapeHtmlGlobal(log.userAgent || '-') + '</span></div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">ユーザー ID</span><span class="audit-detail-value" style="font-size:0.8rem;">' + (log.userId || '-') + '</span></div>' +
+            '</div>';
+
+        content.innerHTML = html;
+        document.getElementById('detail-modal').showModal();
+    }
+
+    function renderPagination(result) {
+        var container = document.getElementById('pagination');
+        var html = '';
+        if (currentPage > 0) {
+            html += '<button class="btn-secondary btn-sm" onclick="loadAuditLogs(' + (currentPage - 1) + ')">前へ</button>';
+        }
+        html += '<span style="line-height: 2.5; color: var(--text-muted);">ページ ' + (currentPage + 1) + '</span>';
+        if (result.data.length >= pageSize) {
+            html += '<button class="btn-secondary btn-sm" onclick="loadAuditLogs(' + (currentPage + 1) + ')">次へ</button>';
+        }
+        container.innerHTML = html;
+    }
+
+    function applyFilter() {
+        loadAuditLogs(0);
+    }
+
+    function clearFilter() {
+        document.getElementById('filter-from').value = '';
+        document.getElementById('filter-to').value = '';
+        document.getElementById('filter-path').value = '';
+        document.getElementById('filter-category').value = '';
+        loadAuditLogs(0);
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

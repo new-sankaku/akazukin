@@ -1,0 +1,259 @@
+{#include base}
+{#title}ペルソナ管理 - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ai" class="active">AI</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ai" class="active">AI</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">ペルソナ管理</h2>
+            <a href="/ai" role="button"
+                style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">AI 生成に戻る</a>
+        </div>
+
+        <!-- 新規ペルソナ作成 -->
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem;">
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">新規ペルソナ作成</h3>
+            <form id="persona-form" onsubmit="return handleCreatePersona(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="persona-name" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">名前</label>
+                        <input type="text" id="persona-name" name="name" required placeholder="例: カジュアルライター"
+                            style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                    </div>
+                    <div>
+                        <label for="persona-tone" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">トーン</label>
+                        <input type="text" id="persona-tone" name="tone" required placeholder="例: フレンドリー"
+                            style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                    </div>
+                    <div>
+                        <label for="persona-language" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">言語</label>
+                        <input type="text" id="persona-language" name="language" required placeholder="例: ja"
+                            style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                    </div>
+                </div>
+                <button type="submit" id="create-persona-btn"
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;"
+                    onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
+                    onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">作成</button>
+            </form>
+        </div>
+
+        <!-- ペルソナ一覧 -->
+        <div id="personas-list">
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">ペルソナを読み込み中...</p>
+        </div>
+    </main>
+</div>
+
+<style>
+    .persona-card {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s;
+    }
+    .persona-card:hover {
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+    .persona-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .persona-card-name {
+        font-weight: 600;
+        color: var(--text-heading, var(--ak-text));
+        letter-spacing: 0.05em;
+    }
+    .persona-card-meta {
+        display: flex;
+        gap: 1rem;
+        color: var(--text-muted, var(--ak-text-muted));
+        font-size: 0.85rem;
+    }
+    .persona-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPersonas();
+    });
+
+    async function loadPersonas() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        try {
+            var response = await fetch('/api/v1/ai/personas', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                document.getElementById('personas-list').innerHTML =
+                    '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">ペルソナの読み込みに失敗しました。</div>';
+                return;
+            }
+            var personas = await response.json();
+            renderPersonas(personas);
+        } catch (err) {
+            document.getElementById('personas-list').innerHTML =
+                '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">ペルソナの読み込みに失敗しました。</div>';
+            showToast('error', 'ペルソナの読み込みに失敗しました');
+        }
+    }
+
+    function renderPersonas(personas) {
+        var container = document.getElementById('personas-list');
+        if (personas.length === 0) {
+            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 2rem; color: var(--text-muted, var(--ak-text-muted));">ペルソナがまだありません。上のフォームから作成してください。</div>';
+            return;
+        }
+        container.innerHTML = personas.map(function(p) {
+            return '<div class="persona-card">' +
+                '<div class="persona-card-header">' +
+                    '<span class="persona-card-name">' + escapeHtmlGlobal(p.name) + '</span>' +
+                '</div>' +
+                '<div class="persona-card-meta">' +
+                    '<span>トーン: ' + escapeHtmlGlobal(p.tone || '-') + '</span>' +
+                    '<span>言語: ' + escapeHtmlGlobal(p.language || '-') + '</span>' +
+                '</div>' +
+                '<div class="persona-card-actions">' +
+                    '<button class="ak-btn-detail" onclick="editPersona(\'' + escapeHtmlGlobal(p.id) + '\', \'' + escapeHtmlGlobal(p.name) + '\', \'' + escapeHtmlGlobal(p.tone || '') + '\', \'' + escapeHtmlGlobal(p.language || '') + '\')">編集</button>' +
+                    '<button class="ak-btn-delete" onclick="deletePersona(\'' + escapeHtmlGlobal(p.id) + '\')">削除</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    async function handleCreatePersona(event) {
+        event.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return false; }
+
+        var btn = document.getElementById('create-persona-btn');
+        btn.disabled = true;
+        btn.textContent = '作成中...';
+
+        try {
+            var response = await fetch('/api/v1/ai/personas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    name: document.getElementById('persona-name').value,
+                    tone: document.getElementById('persona-tone').value,
+                    language: document.getElementById('persona-language').value
+                })
+            });
+
+            if (response.status === 401) { window.location.href = '/'; return false; }
+            if (!response.ok) {
+                await showApiError(response, 'ペルソナの作成に失敗しました');
+                return false;
+            }
+
+            showToast('success', 'ペルソナを作成しました');
+            document.getElementById('persona-form').reset();
+            loadPersonas();
+        } catch (err) {
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '作成';
+        }
+        return false;
+    }
+
+    function editPersona(id, name, tone, language) {
+        var newName = prompt('名前:', name);
+        if (newName === null) return;
+        var newTone = prompt('トーン:', tone);
+        if (newTone === null) return;
+        var newLanguage = prompt('言語:', language);
+        if (newLanguage === null) return;
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        fetch('/api/v1/ai/personas/' + id, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ name: newName, tone: newTone, language: newLanguage })
+        }).then(function(response) {
+            if (!response.ok) {
+                showApiError(response, 'ペルソナの更新に失敗しました');
+                return;
+            }
+            showToast('success', 'ペルソナを更新しました');
+            loadPersonas();
+        }).catch(function() {
+            showToast('error', 'ネットワークエラー');
+        });
+    }
+
+    async function deletePersona(id) {
+        if (!confirm('このペルソナを削除してもよろしいですか？')) return;
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ai/personas/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'ペルソナを削除しました');
+                loadPersonas();
+            } else {
+                await showApiError(response, 'ペルソナの削除に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

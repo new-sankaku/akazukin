@@ -1,0 +1,225 @@
+{#include base}
+{#title}ニュースソース - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/news" class="active">ニュース</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/calendar">カレンダー</a>
+        <a href="/news" class="active">ニュース</a>
+        <a href="/ab-tests">A/Bテスト</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">ニュースソース管理</h2>
+            <button onclick="openAddModal()" style="
+                background-color: var(--accent-gold, #C8964A);
+                border: none;
+                color: #fff;
+                font-size: 0.85rem;
+                padding: 0.5rem 1.2rem;
+                border-radius: 2px;
+                cursor: pointer;
+                letter-spacing: 0.05em;
+            ">ソース追加</button>
+        </div>
+
+        <div id="sources-list">
+            <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+            </div>
+        </div>
+
+        <!-- Generated Post Preview -->
+        <div id="generated-preview" style="display:none; margin-top:1.5rem;">
+            <h3 style="color: var(--text-heading, #3D3A32); margin-bottom:0.75rem;">AI生成投稿プレビュー</h3>
+            <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; padding: 1.25rem;">
+                <div id="generated-news-title" style="font-weight:600; color:var(--text-heading, #3D3A32); margin-bottom:0.5rem;"></div>
+                <div id="generated-text" style="color:var(--text-primary, #4D493E); white-space:pre-wrap; margin-bottom:0.75rem;"></div>
+                <a id="generated-news-url" href="#" target="_blank" style="font-size:0.85rem; color:var(--accent-gold, #C8964A);">元記事を見る</a>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Add Source Modal -->
+<div id="source-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border, #B8B19C); border-radius: 2px; padding: 2rem; width: 90%; max-width: 500px;">
+        <h3 style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">ニュースソース追加</h3>
+        <form id="source-form" onsubmit="addSource(event)">
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">ソース名</label>
+                <input type="text" id="source-name" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">RSS URL</label>
+                <input type="url" id="source-url" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">タイプ</label>
+                <select id="source-type" style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);">
+                    <option value="RSS">RSS</option>
+                    <option value="ATOM">Atom</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button type="button" onclick="closeModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
+                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">追加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .source-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .source-type-badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--accent-gold, #C8964A);
+        color: #fff;
+        letter-spacing: 0.05em;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() { loadSources(); });
+
+    async function loadSources() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        try {
+            var response = await fetch('/api/v1/news/sources', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (response.ok) {
+                var sources = await response.json();
+                renderSources(sources);
+            } else {
+                await showApiError(response, 'ソースの読み込みに失敗しました');
+            }
+        } catch (err) { showToast('error', 'ソースの読み込みに失敗しました'); }
+    }
+
+    function renderSources(sources) {
+        var container = document.getElementById('sources-list');
+        if (sources.length === 0) {
+            container.innerHTML = '<div class="source-card" style="text-align:center; padding:3rem;"><p style="color:var(--text-sec, #7A7464);">ニュースソースがまだ登録されていません</p></div>';
+            return;
+        }
+        container.innerHTML = sources.map(function(s) {
+            return '<div class="source-card">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                '<div>' +
+                '<span class="source-type-badge">' + escapeHtmlGlobal(s.sourceType) + '</span>' +
+                '&nbsp;&nbsp;<strong style="color:var(--text-heading, #3D3A32);">' + escapeHtmlGlobal(s.name) + '</strong>' +
+                '<div style="font-size:0.8rem; color:var(--text-sec, #7A7464); margin-top:0.3rem; word-break:break-all;">' + escapeHtmlGlobal(s.url) + '</div>' +
+                '</div>' +
+                '<div style="display:flex; gap:0.5rem;">' +
+                '<button onclick="generatePost(\'' + s.id + '\')" style="font-size:0.78rem; padding:0.4rem 0.9rem; border:1px solid var(--accent-gold, #C8964A); color:var(--accent-gold, #C8964A); background:transparent; border-radius:2px; cursor:pointer;">AI投稿生成</button>' +
+                '<button onclick="removeSource(\'' + s.id + '\')" style="font-size:0.78rem; padding:0.4rem 0.9rem; border:1px solid #C1574B; color:#C1574B; background:transparent; border-radius:2px; cursor:pointer;">削除</button>' +
+                '</div></div></div>';
+        }).join('');
+    }
+
+    function openAddModal() { document.getElementById('source-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('source-modal').style.display = 'none'; }
+
+    async function addSource(e) {
+        e.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        var body = {
+            name: document.getElementById('source-name').value,
+            url: document.getElementById('source-url').value,
+            sourceType: document.getElementById('source-type').value
+        };
+        try {
+            var response = await fetch('/api/v1/news/sources', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', 'ソースを追加しました');
+                closeModal();
+                loadSources();
+            } else {
+                await showApiError(response, 'ソースの追加に失敗しました');
+            }
+        } catch (err) { showToast('error', 'ソースの追加に失敗しました'); }
+    }
+
+    async function removeSource(id) {
+        if (!confirm('このソースを削除してもよろしいですか？')) return;
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/news/sources/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'ソースを削除しました');
+                loadSources();
+            } else {
+                await showApiError(response, 'ソースの削除に失敗しました');
+            }
+        } catch (err) { showToast('error', 'ソースの削除に失敗しました'); }
+    }
+
+    async function generatePost(sourceId) {
+        var token = localStorage.getItem('accessToken');
+        showToast('info', 'AI投稿を生成中...');
+        try {
+            var response = await fetch('/api/v1/news/sources/' + sourceId + '/generate', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                document.getElementById('generated-news-title').textContent = data.newsTitle;
+                document.getElementById('generated-text').textContent = data.generatedText;
+                var urlEl = document.getElementById('generated-news-url');
+                urlEl.href = data.newsUrl || '#';
+                urlEl.style.display = data.newsUrl ? 'inline' : 'none';
+                document.getElementById('generated-preview').style.display = 'block';
+                showToast('success', 'AI投稿を生成しました');
+            } else {
+                await showApiError(response, 'AI投稿の生成に失敗しました');
+            }
+        } catch (err) { showToast('error', 'AI投稿の生成に失敗しました'); }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

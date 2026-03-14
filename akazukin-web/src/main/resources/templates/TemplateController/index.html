@@ -1,0 +1,246 @@
+{#include base}
+{#title}テンプレート管理 - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/templates" class="active">テンプレート</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/templates" class="active">テンプレート</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">テンプレート管理</h2>
+
+        <!-- 新規テンプレート作成 -->
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem;">
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">新規テンプレート作成</h3>
+            <form id="template-form" onsubmit="return handleCreateTemplate(event)">
+                <div style="margin-bottom: 1rem;">
+                    <label for="template-name" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">テンプレート名</label>
+                    <input type="text" id="template-name" name="name" required placeholder="例: 新商品告知テンプレート"
+                        style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label for="template-content" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">テンプレート内容</label>
+                    <textarea id="template-content" name="content" rows="5" required
+                        placeholder="テンプレートの内容を入力してください... {{変数}} のように変数を埋め込めます"
+                        style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
+                </div>
+                <button type="submit" id="create-template-btn"
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;"
+                    onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
+                    onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">作成</button>
+            </form>
+        </div>
+
+        <!-- テンプレート一覧 -->
+        <div id="templates-list">
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">テンプレートを読み込み中...</p>
+        </div>
+    </main>
+</div>
+
+<style>
+    .template-card {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s;
+    }
+    .template-card:hover {
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+    .template-card-name {
+        font-weight: 600;
+        color: var(--text-heading, var(--ak-text));
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .template-card-content {
+        color: var(--text-body, var(--ak-text));
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 100px;
+        overflow: hidden;
+    }
+    .template-card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .ak-btn-use {
+        background: var(--accent-gold, var(--ak-primary));
+        color: white;
+        border: none;
+        padding: 0.35rem 0.9rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        transition: background 0.2s;
+    }
+    .ak-btn-use:hover {
+        background: var(--accent-gold-hover, var(--ak-primary-hover));
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTemplates();
+    });
+
+    async function loadTemplates() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        try {
+            var response = await fetch('/api/v1/templates', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                document.getElementById('templates-list').innerHTML =
+                    '<div class="ak-card" style="color: var(--status-error);">テンプレートの読み込みに失敗しました。</div>';
+                return;
+            }
+            var templates = await response.json();
+            renderTemplates(Array.isArray(templates) ? templates : (templates.data || []));
+        } catch (err) {
+            document.getElementById('templates-list').innerHTML =
+                '<div class="ak-card" style="color: var(--status-error);">テンプレートの読み込みに失敗しました。</div>';
+            showToast('error', 'テンプレートの読み込みに失敗しました');
+        }
+    }
+
+    function renderTemplates(templates) {
+        var container = document.getElementById('templates-list');
+        if (templates.length === 0) {
+            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 3rem; color: var(--text-muted, var(--ak-text-muted));">テンプレートがまだありません。上のフォームから作成してください。</div>';
+            return;
+        }
+        container.innerHTML = templates.map(function(t) {
+            return '<div class="template-card">' +
+                '<div class="template-card-name">' + escapeHtmlGlobal(t.name || '') + '</div>' +
+                '<div class="template-card-content">' + escapeHtmlGlobal(t.content || '') + '</div>' +
+                '<div class="template-card-actions">' +
+                    '<button class="ak-btn-use" onclick="useTemplate(\'' + escapeHtmlGlobal(t.id) + '\')">投稿に使用</button>' +
+                    '<button class="ak-btn-delete" onclick="deleteTemplate(\'' + escapeHtmlGlobal(t.id) + '\')">削除</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    async function handleCreateTemplate(event) {
+        event.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return false; }
+
+        var btn = document.getElementById('create-template-btn');
+        btn.disabled = true;
+        btn.textContent = '作成中...';
+
+        try {
+            var response = await fetch('/api/v1/templates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    name: document.getElementById('template-name').value,
+                    content: document.getElementById('template-content').value
+                })
+            });
+
+            if (response.status === 401) { window.location.href = '/'; return false; }
+            if (!response.ok) {
+                await showApiError(response, 'テンプレートの作成に失敗しました');
+                return false;
+            }
+
+            showToast('success', 'テンプレートを作成しました');
+            document.getElementById('template-form').reset();
+            loadTemplates();
+        } catch (err) {
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '作成';
+        }
+        return false;
+    }
+
+    async function useTemplate(id) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        try {
+            var response = await fetch('/api/v1/templates/' + id, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) {
+                await showApiError(response, 'テンプレートの取得に失敗しました');
+                return;
+            }
+            var template = await response.json();
+            sessionStorage.setItem('template-content', template.content || '');
+            window.location.href = '/posts/compose';
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    async function deleteTemplate(id) {
+        if (!confirm('このテンプレートを削除してもよろしいですか？')) return;
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/templates/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'テンプレートを削除しました');
+                loadTemplates();
+            } else {
+                await showApiError(response, 'テンプレートの削除に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

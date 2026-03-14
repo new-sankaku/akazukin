@@ -1,0 +1,225 @@
+{#include base}
+{#title}A/Bテスト - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ab-tests" class="active">A/Bテスト</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/calendar">カレンダー</a>
+        <a href="/news">ニュース</a>
+        <a href="/ab-tests" class="active">A/Bテスト</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">A/Bテスト管理</h2>
+            <button onclick="openCreateModal()" style="
+                background-color: var(--accent-gold, #C8964A);
+                border: none;
+                color: #fff;
+                font-size: 0.85rem;
+                padding: 0.5rem 1.2rem;
+                border-radius: 2px;
+                cursor: pointer;
+                letter-spacing: 0.05em;
+            ">新規テスト</button>
+        </div>
+
+        <div id="tests-list">
+            <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Create Modal -->
+<div id="test-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border, #B8B19C); border-radius: 2px; padding: 2rem; width: 90%; max-width: 500px;">
+        <h3 style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">新規A/Bテスト</h3>
+        <form id="test-form" onsubmit="createTest(event)">
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">テスト名</label>
+                <input type="text" id="test-name" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">バリアントA</label>
+                <textarea id="test-variant-a" rows="3" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);"></textarea>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">バリアントB</label>
+                <textarea id="test-variant-b" rows="3" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);"></textarea>
+            </div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button type="button" onclick="closeModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
+                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">作成</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .test-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .test-status {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #fff;
+    }
+    .status-DRAFT { background: #7A7464; }
+    .status-RUNNING { background: #4A8FBA; }
+    .status-COMPLETED { background: #5A9A6A; }
+    .status-CANCELLED { background: #B04040; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() { loadTests(); });
+
+    async function loadTests() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        try {
+            var response = await fetch('/api/v1/ab-tests', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (response.ok) {
+                var tests = await response.json();
+                renderTests(tests);
+            } else {
+                await showApiError(response, 'テストの読み込みに失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'テストの読み込みに失敗しました');
+        }
+    }
+
+    function renderTests(tests) {
+        var container = document.getElementById('tests-list');
+        if (tests.length === 0) {
+            container.innerHTML = '<div class="test-card" style="text-align:center; padding:3rem;"><p style="color: var(--text-sec, #7A7464);">A/Bテストがまだありません</p></div>';
+            return;
+        }
+        container.innerHTML = tests.map(function(t) {
+            var actions = '';
+            if (t.status !== 'COMPLETED') {
+                actions = '<button onclick="completeTest(\'' + t.id + '\', \'A\')" style="font-size:0.78rem; padding:0.3rem 0.7rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; margin-right:0.3rem;">A勝利</button>' +
+                    '<button onclick="completeTest(\'' + t.id + '\', \'B\')" style="font-size:0.78rem; padding:0.3rem 0.7rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; margin-right:0.3rem;">B勝利</button>';
+            }
+            actions += '<button onclick="deleteTest(\'' + t.id + '\')" style="font-size:0.78rem; padding:0.3rem 0.7rem; border:1px solid #C1574B; color:#C1574B; background:transparent; border-radius:2px; cursor:pointer;">削除</button>';
+
+            var winnerInfo = t.winnerVariant ? '<div style="margin-top:0.5rem; color:var(--accent-gold, #C8964A); font-weight:600; font-size:0.85rem;">勝者: バリアント ' + escapeHtmlGlobal(t.winnerVariant) + '</div>' : '';
+
+            return '<div class="test-card">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">' +
+                '<strong style="color:var(--text-heading, #3D3A32);">' + escapeHtmlGlobal(t.name) + '</strong>' +
+                '<span class="test-status status-' + t.status + '">' + t.status + '</span>' +
+                '</div>' +
+                '<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:0.75rem;">' +
+                '<div style="padding:0.75rem; background:var(--bg-base, #F5F0DD); border-radius:2px;">' +
+                '<div style="font-size:0.75rem; color:var(--text-muted, #9B9580); margin-bottom:0.3rem;">バリアントA</div>' +
+                '<div style="font-size:0.85rem; color:var(--text-primary, #4D493E);">' + escapeHtmlGlobal(t.variantA) + '</div></div>' +
+                '<div style="padding:0.75rem; background:var(--bg-base, #F5F0DD); border-radius:2px;">' +
+                '<div style="font-size:0.75rem; color:var(--text-muted, #9B9580); margin-bottom:0.3rem;">バリアントB</div>' +
+                '<div style="font-size:0.85rem; color:var(--text-primary, #4D493E);">' + escapeHtmlGlobal(t.variantB) + '</div></div>' +
+                '</div>' +
+                winnerInfo +
+                '<div style="margin-top:0.75rem; text-align:right;">' + actions + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function openCreateModal() { document.getElementById('test-modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('test-modal').style.display = 'none'; }
+
+    async function createTest(e) {
+        e.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        var body = {
+            name: document.getElementById('test-name').value,
+            variantA: document.getElementById('test-variant-a').value,
+            variantB: document.getElementById('test-variant-b').value
+        };
+        try {
+            var response = await fetch('/api/v1/ab-tests', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', 'A/Bテストを作成しました');
+                closeModal();
+                loadTests();
+            } else {
+                await showApiError(response, 'テストの作成に失敗しました');
+            }
+        } catch (err) { showToast('error', 'テストの作成に失敗しました'); }
+    }
+
+    async function completeTest(id, winner) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/' + id + '/complete?winner=' + winner, {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                showToast('success', 'テストを完了しました');
+                loadTests();
+            } else {
+                await showApiError(response, 'テストの完了に失敗しました');
+            }
+        } catch (err) { showToast('error', 'テストの完了に失敗しました'); }
+    }
+
+    async function deleteTest(id) {
+        if (!confirm('このA/Bテストを削除してもよろしいですか？')) return;
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'テストを削除しました');
+                loadTests();
+            } else {
+                await showApiError(response, 'テストの削除に失敗しました');
+            }
+        } catch (err) { showToast('error', 'テストの削除に失敗しました'); }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

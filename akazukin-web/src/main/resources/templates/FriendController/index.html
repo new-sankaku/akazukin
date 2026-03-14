@@ -1,0 +1,264 @@
+{#include base}
+{#title}フレンド管理 - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/friends" class="active">フレンド管理</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/friends" class="active">フレンド管理</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">フレンド一覧</h2>
+            <button onclick="showAddFriendForm()" style="
+                background-color: var(--accent-gold, #C8964A);
+                border: none;
+                color: #fff;
+                font-size: 0.85rem;
+                padding: 0.5rem 1.2rem;
+                border-radius: 2px;
+                cursor: pointer;
+                letter-spacing: 0.05em;
+                transition: background-color 0.2s ease;
+            ">フレンドを追加</button>
+        </div>
+
+        <!-- Add Friend Form (hidden by default) -->
+        <div id="add-friend-form" style="display: none; margin-bottom: 1.5rem;">
+            <div class="ak-card" style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; padding: 1.5rem;">
+                <h3 style="margin: 0 0 1rem; color: var(--text-heading, #3D3A32); font-size: 1rem;">新しいフレンドを追加</h3>
+                <div style="display: grid; gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">プラットフォーム</label>
+                        <select id="friend-platform" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
+                            <option value="TWITTER">Twitter</option>
+                            <option value="BLUESKY">Bluesky</option>
+                            <option value="MASTODON">Mastodon</option>
+                            <option value="MIXI2">Mixi2</option>
+                            <option value="NOTE">note</option>
+                            <option value="NICONICO">ニコニコ</option>
+                            <option value="THREADS">Threads</option>
+                            <option value="INSTAGRAM">Instagram</option>
+                            <option value="REDDIT">Reddit</option>
+                            <option value="TELEGRAM">Telegram</option>
+                            <option value="VK">VK</option>
+                            <option value="PINTEREST">Pinterest</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">ユーザーID / 識別子</label>
+                        <input id="friend-identifier" type="text" placeholder="@username" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">表示名</label>
+                        <input id="friend-displayname" type="text" placeholder="表示名" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">メモ</label>
+                        <textarea id="friend-notes" rows="2" placeholder="メモ（任意）" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5); resize: vertical;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button onclick="hideAddFriendForm()" style="padding: 0.5rem 1rem; border: 1px solid var(--border, #B8B19C); background: transparent; border-radius: 2px; cursor: pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
+                        <button onclick="addFriend()" style="padding: 0.5rem 1rem; background: var(--accent-gold, #C8964A); border: none; color: #fff; border-radius: 2px; cursor: pointer;">追加</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Friends List -->
+        <div id="friends-list">
+            <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    .friend-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease;
+    }
+    .friend-card:hover {
+        border-color: var(--border, #B8B19C);
+    }
+    .friend-card-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    .friend-platform-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.7rem;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #fff;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .btn-remove {
+        background: transparent;
+        border: 1px solid var(--border, #B8B19C);
+        color: var(--text-sec, #7A7464);
+        font-size: 0.78rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .btn-remove:hover {
+        border-color: #C1574B;
+        color: #C1574B;
+        background: rgba(193, 87, 75, 0.06);
+    }
+</style>
+
+<script>
+    var platformColors = {
+        'TWITTER': '#1DA1F2', 'BLUESKY': '#0085FF', 'MASTODON': '#6364FF',
+        'THREADS': '#000000', 'INSTAGRAM': '#E1306C', 'REDDIT': '#FF4500',
+        'TELEGRAM': '#0088CC', 'VK': '#4A76A8', 'PINTEREST': '#E60023',
+        'MIXI2': '#F7931E', 'NOTE': '#41C9B4', 'NICONICO': '#252525'
+    };
+    var platformNames = {
+        'TWITTER': 'Twitter', 'BLUESKY': 'Bluesky', 'MASTODON': 'Mastodon',
+        'THREADS': 'Threads', 'INSTAGRAM': 'Instagram', 'REDDIT': 'Reddit',
+        'TELEGRAM': 'Telegram', 'VK': 'VK', 'PINTEREST': 'Pinterest',
+        'MIXI2': 'Mixi2', 'NOTE': 'note', 'NICONICO': 'ニコニコ'
+    };
+
+    document.addEventListener('DOMContentLoaded', function() { loadFriends(); });
+
+    function showAddFriendForm() { document.getElementById('add-friend-form').style.display = 'block'; }
+    function hideAddFriendForm() { document.getElementById('add-friend-form').style.display = 'none'; }
+
+    async function loadFriends() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        try {
+            var response = await fetch('/api/v1/friends', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (response.ok) {
+                var friends = await response.json();
+                renderFriends(friends);
+            } else {
+                await showApiError(response, 'フレンドの読み込みに失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'フレンドの読み込みに失敗しました', 'サーバーに接続できません。');
+        }
+    }
+
+    function renderFriends(friends) {
+        var container = document.getElementById('friends-list');
+        if (friends.length === 0) {
+            container.innerHTML = '<div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 3rem 2rem;">' +
+                '<p style="color: var(--text-sec, #7A7464); font-size: 0.95rem;">フレンドがまだ登録されていません</p></div>';
+            return;
+        }
+        container.innerHTML = friends.map(function(f) {
+            var color = platformColors[f.platform] || '#7A7464';
+            var name = platformNames[f.platform] || f.platform;
+            var displayName = escapeHtmlGlobal(f.displayName || f.targetIdentifier);
+            var identifier = f.displayName ? escapeHtmlGlobal(f.targetIdentifier) : '';
+            var notes = f.notes ? '<div style="color: var(--text-muted, #9B9580); font-size: 0.8rem; margin-top: 0.3rem;">' + escapeHtmlGlobal(f.notes) + '</div>' : '';
+            return '<div class="friend-card"><div class="friend-card-inner">' +
+                '<div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 0;">' +
+                '<span class="friend-platform-badge" style="background-color: ' + color + ';">' + escapeHtmlGlobal(name) + '</span>' +
+                '<div style="min-width: 0;">' +
+                '<div style="color: var(--text-primary, #4D493E); font-weight: 600; font-size: 0.95rem;">' + displayName + '</div>' +
+                (identifier ? '<div style="color: var(--text-sec, #7A7464); font-size: 0.8rem;">' + identifier + '</div>' : '') +
+                notes +
+                '</div></div>' +
+                '<button class="btn-remove" onclick="removeFriend(\'' + f.id + '\')">削除</button>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    async function addFriend() {
+        var token = localStorage.getItem('accessToken');
+        var body = {
+            platform: document.getElementById('friend-platform').value,
+            targetIdentifier: document.getElementById('friend-identifier').value,
+            displayName: document.getElementById('friend-displayname').value,
+            notes: document.getElementById('friend-notes').value
+        };
+        if (!body.targetIdentifier) { showToast('error', 'ユーザーIDを入力してください'); return; }
+        try {
+            var response = await fetch('/api/v1/friends', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', 'フレンドを追加しました');
+                hideAddFriendForm();
+                document.getElementById('friend-identifier').value = '';
+                document.getElementById('friend-displayname').value = '';
+                document.getElementById('friend-notes').value = '';
+                loadFriends();
+            } else {
+                await showApiError(response, 'フレンドの追加に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'フレンドの追加に失敗しました');
+        }
+    }
+
+    async function removeFriend(id) {
+        if (!confirm('このフレンドを削除してもよろしいですか？')) return;
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/friends/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'フレンドを削除しました');
+                loadFriends();
+            } else {
+                await showApiError(response, 'フレンドの削除に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'フレンドの削除に失敗しました');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

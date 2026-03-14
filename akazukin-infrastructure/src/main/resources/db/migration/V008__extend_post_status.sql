@@ -1,0 +1,4 @@
+-- PostStatus enum extension: add PENDING_APPROVAL, APPROVED, REJECTED
+-- No schema change needed since status is stored as VARCHAR(20)
+-- This migration serves as documentation of the status extension
+-- Application code handles the new enum values

@@ -1,0 +1,213 @@
+{#include base}
+{#title}AI コンテンツ生成 - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ai" class="active">AI</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ai" class="active">AI</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">AI コンテンツ生成</h2>
+            <a href="/ai/personas" role="button"
+                style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">ペルソナ管理</a>
+        </div>
+
+        <form id="ai-generate-form" onsubmit="return handleGenerate(event)">
+            <!-- ペルソナ選択 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <label for="persona" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">ペルソナ</label>
+                <select id="persona" name="persona"
+                    style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                    <option value="">（ペルソナなし）</option>
+                </select>
+            </div>
+
+            <!-- プロンプト -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <label for="prompt" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">プロンプト</label>
+                <textarea id="prompt" name="prompt" rows="5"
+                    placeholder="生成したいコンテンツの指示を入力してください..."
+                    required
+                    style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
+            </div>
+
+            <!-- パラメータ -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">生成パラメータ</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <label for="temperature" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">
+                            Temperature: <span id="temperature-value">0.7</span>
+                        </label>
+                        <input type="range" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.7"
+                            oninput="document.getElementById('temperature-value').textContent = this.value"
+                            style="width: 100%; cursor: pointer;">
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+                            <small style="color: var(--text-muted, var(--ak-text-muted));">0.0 (正確)</small>
+                            <small style="color: var(--text-muted, var(--ak-text-muted));">2.0 (創造的)</small>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="maxTokens" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">最大トークン数</label>
+                        <input type="number" id="maxTokens" name="maxTokens" value="1024" min="64" max="4096" step="64"
+                            style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 生成ボタン -->
+            <button type="submit" id="generate-btn"
+                style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
+                onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
+                onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">
+                生成する
+            </button>
+        </form>
+
+        <!-- 生成結果 -->
+        <div id="ai-result" class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 1.5rem; display: none;">
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">生成結果</h3>
+            <div id="ai-result-content" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button type="button" onclick="copyResult()"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; letter-spacing: 0.03em;">コピー</button>
+                <button type="button" onclick="useAsPost()"
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; letter-spacing: 0.03em;">投稿に使用</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPersonas();
+    });
+
+    async function loadPersonas() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+        try {
+            var response = await fetch('/api/v1/ai/personas', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var personas = await response.json();
+            var select = document.getElementById('persona');
+            personas.forEach(function(p) {
+                var option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.name + ' (' + (p.tone || '') + ' / ' + (p.language || '') + ')';
+                select.appendChild(option);
+            });
+        } catch (err) {
+            // personas load failed silently
+        }
+    }
+
+    async function handleGenerate(event) {
+        event.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return false;
+        }
+
+        var btn = document.getElementById('generate-btn');
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        btn.textContent = '生成中...';
+
+        var personaId = document.getElementById('persona').value || null;
+        var prompt = document.getElementById('prompt').value;
+        var temperature = parseFloat(document.getElementById('temperature').value);
+        var maxTokens = parseInt(document.getElementById('maxTokens').value);
+
+        try {
+            var response = await fetch('/api/v1/ai/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    personaId: personaId,
+                    prompt: prompt,
+                    temperature: temperature,
+                    maxTokens: maxTokens
+                })
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return false;
+            }
+
+            if (!response.ok) {
+                await showApiError(response, 'コンテンツの生成に失敗しました');
+                return false;
+            }
+
+            var result = await response.json();
+            var resultDiv = document.getElementById('ai-result');
+            var resultContent = document.getElementById('ai-result-content');
+            resultContent.textContent = result.content || result.text || '';
+            resultDiv.style.display = 'block';
+            showToast('success', 'コンテンツを生成しました');
+        } catch (err) {
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+        } finally {
+            btn.disabled = false;
+            btn.removeAttribute('aria-busy');
+            btn.textContent = '生成する';
+        }
+        return false;
+    }
+
+    function copyResult() {
+        var text = document.getElementById('ai-result-content').textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            showToast('success', 'クリップボードにコピーしました');
+        }).catch(function() {
+            showToast('error', 'コピーに失敗しました');
+        });
+    }
+
+    function useAsPost() {
+        var text = document.getElementById('ai-result-content').textContent;
+        sessionStorage.setItem('ai-generated-content', text);
+        window.location.href = '/posts/compose';
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

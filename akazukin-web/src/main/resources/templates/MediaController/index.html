@@ -1,0 +1,264 @@
+{#include base}
+{#title}メディアライブラリ - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/media" class="active">メディア</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/media" class="active">メディア</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">メディアライブラリ</h2>
+
+        <!-- アップロードエリア -->
+        <div id="upload-area" class="ak-card"
+            style="background: var(--bg-surface, var(--ak-bg-secondary)); border: 2px dashed var(--border, var(--ak-border)); border-radius: 8px; padding: 3rem 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 1.5rem;"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event)"
+            onclick="document.getElementById('file-input').click()">
+            <div style="color: var(--text-muted, var(--ak-text-muted)); font-size: 1.1rem; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                ファイルをドラッグ＆ドロップ
+            </div>
+            <div style="color: var(--text-muted, var(--ak-text-muted)); font-size: 0.85rem;">
+                またはクリックしてファイルを選択
+            </div>
+            <input type="file" id="file-input" style="display: none;" accept="image/*,video/*" onchange="handleFileSelect(event)" multiple>
+        </div>
+
+        <!-- アップロード進捗 -->
+        <div id="upload-progress" style="display: none; margin-bottom: 1.5rem;">
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="color: var(--text-body, var(--ak-text));" aria-busy="true">アップロード中...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- メディアグリッド -->
+        <div id="media-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+            <p style="color: var(--text-muted, var(--ak-text-muted)); grid-column: 1 / -1;" aria-busy="true">メディアを読み込み中...</p>
+        </div>
+
+        <div id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;"></div>
+    </main>
+</div>
+
+<style>
+    .media-card {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 8px;
+        overflow: hidden;
+        transition: border-color 0.2s;
+        position: relative;
+    }
+    .media-card:hover {
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+    .media-card-image {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+        background: var(--bg-subtle, #1a1a1a);
+    }
+    .media-card-info {
+        padding: 0.75rem;
+    }
+    .media-card-name {
+        font-size: 0.8rem;
+        color: var(--text-body, var(--ak-text));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.25rem;
+    }
+    .media-card-meta {
+        font-size: 0.7rem;
+        color: var(--text-muted, var(--ak-text-muted));
+    }
+    .media-card-delete {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .media-card:hover .media-card-delete {
+        opacity: 1;
+    }
+    #upload-area.drag-over {
+        border-color: var(--accent-gold, var(--ak-primary));
+        background: rgba(200, 150, 74, 0.05);
+    }
+</style>
+
+<script>
+    var currentPage = 0;
+    var pageSize = 20;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadMedia(0);
+    });
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        document.getElementById('upload-area').classList.add('drag-over');
+    }
+
+    function handleDragLeave(event) {
+        event.preventDefault();
+        document.getElementById('upload-area').classList.remove('drag-over');
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        document.getElementById('upload-area').classList.remove('drag-over');
+        var files = event.dataTransfer.files;
+        uploadFiles(files);
+    }
+
+    function handleFileSelect(event) {
+        var files = event.target.files;
+        uploadFiles(files);
+    }
+
+    async function uploadFiles(files) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var progress = document.getElementById('upload-progress');
+        progress.style.display = 'block';
+
+        for (var i = 0; i < files.length; i++) {
+            var formData = new FormData();
+            formData.append('file', files[i]);
+
+            try {
+                var response = await fetch('/api/v1/media', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+
+                if (response.status === 401) { window.location.href = '/'; return; }
+                if (!response.ok) {
+                    await showApiError(response, files[i].name + ' のアップロードに失敗しました');
+                }
+            } catch (err) {
+                showToast('error', 'アップロードエラー', files[i].name + ' のアップロードに失敗しました');
+            }
+        }
+
+        progress.style.display = 'none';
+        document.getElementById('file-input').value = '';
+        showToast('success', 'アップロードが完了しました');
+        loadMedia(currentPage);
+    }
+
+    async function loadMedia(page) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        currentPage = page;
+
+        try {
+            var response = await fetch('/api/v1/media?page=' + page + '&size=' + pageSize, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                document.getElementById('media-grid').innerHTML =
+                    '<p style="color: var(--status-error); grid-column: 1 / -1;">メディアの読み込みに失敗しました。</p>';
+                return;
+            }
+            var data = await response.json();
+            var mediaList = Array.isArray(data) ? data : (data.data || []);
+            renderMedia(mediaList);
+        } catch (err) {
+            document.getElementById('media-grid').innerHTML =
+                '<p style="color: var(--status-error); grid-column: 1 / -1;">メディアの読み込みに失敗しました。</p>';
+            showToast('error', 'メディアの読み込みに失敗しました');
+        }
+    }
+
+    function renderMedia(mediaList) {
+        var container = document.getElementById('media-grid');
+        if (mediaList.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-muted, var(--ak-text-muted)); grid-column: 1 / -1;">メディアがまだありません。上のエリアからアップロードしてください。</div>';
+            return;
+        }
+        container.innerHTML = mediaList.map(function(m) {
+            var imgSrc = m.url || m.thumbnailUrl || '';
+            return '<div class="media-card">' +
+                '<button class="media-card-delete" onclick="deleteMedia(\'' + escapeHtmlGlobal(m.id) + '\')" title="削除">&times;</button>' +
+                (imgSrc ? '<img class="media-card-image" src="' + escapeHtmlGlobal(imgSrc) + '" alt="' + escapeHtmlGlobal(m.fileName || '') + '" loading="lazy">' : '<div class="media-card-image" style="display: flex; align-items: center; justify-content: center; color: var(--text-muted);">No Preview</div>') +
+                '<div class="media-card-info">' +
+                    '<div class="media-card-name">' + escapeHtmlGlobal(m.fileName || m.name || '') + '</div>' +
+                    '<div class="media-card-meta">' + escapeHtmlGlobal(m.contentType || '') + '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    async function deleteMedia(id) {
+        if (!confirm('このメディアを削除してもよろしいですか？')) return;
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/media/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'メディアを削除しました');
+                loadMedia(currentPage);
+            } else {
+                await showApiError(response, 'メディアの削除に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

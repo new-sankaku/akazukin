@@ -1,0 +1,291 @@
+{#include base}
+{#title}AI エージェント パイプライン - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ai">AI</a>
+        <a href="/agents" class="active">エージェント</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/ai">AI</a>
+        <a href="/agents" class="active">エージェント</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">AI エージェント パイプライン</h2>
+
+        <form id="pipeline-form" onsubmit="return handlePipeline(event)">
+            <!-- トピック入力 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <label for="topic" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">トピック</label>
+                <textarea id="topic" name="topic" rows="3"
+                    placeholder="投稿したいトピックやテーマを入力してください..."
+                    required
+                    style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
+            </div>
+
+            <!-- プラットフォーム選択 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <label style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.75rem; letter-spacing: 0.05em;">対象プラットフォーム</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="TWITTER"> X (Twitter)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="BLUESKY"> Bluesky
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="MASTODON"> Mastodon
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="THREADS"> Threads
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="INSTAGRAM"> Instagram
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="REDDIT"> Reddit
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="TELEGRAM"> Telegram
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="VK"> VK
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
+                        <input type="checkbox" name="platforms" value="PINTEREST"> Pinterest
+                    </label>
+                </div>
+            </div>
+
+            <!-- 実行ボタン -->
+            <button type="submit" id="pipeline-btn"
+                style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
+                onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
+                onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">
+                パイプライン実行
+            </button>
+        </form>
+
+        <!-- 結果表示 -->
+        <div id="pipeline-results" style="display: none; margin-top: 2rem;">
+            <!-- 分析結果 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">分析結果 (Analyst)</h3>
+                <div id="result-analysis" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            </div>
+
+            <!-- 生成コンテンツ -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">生成コンテンツ (Composer)</h3>
+                <div id="result-content" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            </div>
+
+            <!-- プラットフォーム別コンテンツ -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">プラットフォーム別 (Transformer)</h3>
+                <div id="result-platforms" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8;"></div>
+            </div>
+
+            <!-- リスク評価 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">リスク評価 (Sentinel)</h3>
+                <div id="result-risk" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            </div>
+
+            <!-- コンプライアンス -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">コンプライアンス (Compliance)</h3>
+                <div id="result-compliance" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            </div>
+
+            <!-- スケジュール提案 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">投稿スケジュール (Scheduler)</h3>
+                <div id="result-schedule" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            </div>
+        </div>
+
+        <!-- タスク履歴 -->
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 2rem;">
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">タスク履歴</h3>
+            <div id="task-history" style="color: var(--text-body, var(--ak-text)); font-size: 0.9rem;"></div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTaskHistory();
+    });
+
+    async function handlePipeline(event) {
+        event.preventDefault();
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return false;
+        }
+
+        var topic = document.getElementById('topic').value;
+        var checkboxes = document.querySelectorAll('input[name="platforms"]:checked');
+        var platforms = Array.from(checkboxes).map(function(cb) { return cb.value; });
+
+        if (platforms.length === 0) {
+            showToast('warning', 'プラットフォームを1つ以上選択してください');
+            return false;
+        }
+
+        var btn = document.getElementById('pipeline-btn');
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        btn.textContent = '実行中...';
+
+        try {
+            var response = await fetch('/api/v1/agents/pipeline', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    topic: topic,
+                    targetPlatforms: platforms
+                })
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return false;
+            }
+
+            if (!response.ok) {
+                await showApiError(response, 'パイプラインの実行に失敗しました');
+                return false;
+            }
+
+            var result = await response.json();
+            displayResults(result);
+            showToast('success', 'パイプラインが正常に完了しました');
+            loadTaskHistory();
+        } catch (err) {
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+        } finally {
+            btn.disabled = false;
+            btn.removeAttribute('aria-busy');
+            btn.textContent = 'パイプライン実行';
+        }
+        return false;
+    }
+
+    function displayResults(result) {
+        var resultsDiv = document.getElementById('pipeline-results');
+        resultsDiv.style.display = 'block';
+
+        document.getElementById('result-analysis').textContent = result.analysis || '';
+        document.getElementById('result-content').textContent = result.content || '';
+        document.getElementById('result-risk').textContent = result.riskAssessment || '';
+        document.getElementById('result-compliance').textContent = result.complianceReport || '';
+        document.getElementById('result-schedule').textContent = result.scheduleSuggestion || '';
+
+        var platformsDiv = document.getElementById('result-platforms');
+        platformsDiv.innerHTML = '';
+        if (result.platformContent) {
+            result.platformContent.forEach(function(pc) {
+                var block = document.createElement('div');
+                block.style.marginBottom = '1rem';
+                block.style.padding = '0.75rem';
+                block.style.borderLeft = '3px solid var(--accent-gold, var(--ak-primary))';
+                block.style.background = 'var(--bg-field, var(--ak-bg))';
+                block.style.borderRadius = '0 4px 4px 0';
+
+                var label = document.createElement('strong');
+                label.textContent = pc.platform;
+                label.style.display = 'block';
+                label.style.marginBottom = '0.5rem';
+                label.style.color = 'var(--accent-gold, var(--ak-primary))';
+
+                var content = document.createElement('div');
+                content.style.whiteSpace = 'pre-wrap';
+                content.style.wordBreak = 'break-word';
+                content.textContent = pc.adaptedContent || '';
+
+                block.appendChild(label);
+                block.appendChild(content);
+                platformsDiv.appendChild(block);
+            });
+        }
+    }
+
+    async function loadTaskHistory() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/agents/tasks?limit=10', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var tasks = await response.json();
+            var historyDiv = document.getElementById('task-history');
+
+            if (tasks.length === 0) {
+                historyDiv.innerHTML = '<p style="color: var(--text-muted, var(--ak-text-muted));">まだタスクはありません。</p>';
+                return;
+            }
+
+            var html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="border-bottom: 1px solid var(--border, var(--ak-border));">';
+            html += '<th style="text-align: left; padding: 0.5rem;">エージェント</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">ステータス</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">作成日時</th>';
+            html += '</tr></thead><tbody>';
+
+            tasks.forEach(function(task) {
+                var statusColor = task.status === 'COMPLETED' ? 'var(--status-success, #408040)' :
+                                  task.status === 'FAILED' ? 'var(--status-error, #B04040)' :
+                                  task.status === 'RUNNING' ? 'var(--accent-gold, var(--ak-primary))' :
+                                  'var(--text-muted, var(--ak-text-muted))';
+                html += '<tr style="border-bottom: 1px solid var(--border-lt, var(--ak-border));">';
+                html += '<td style="padding: 0.5rem;">' + escapeHtmlGlobal(task.agentType) + '</td>';
+                html += '<td style="padding: 0.5rem; color: ' + statusColor + ';">' + escapeHtmlGlobal(task.status) + '</td>';
+                html += '<td style="padding: 0.5rem;">' + new Date(task.createdAt).toLocaleString('ja-JP') + '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            historyDiv.innerHTML = html;
+        } catch (err) {
+            // task history load failed silently
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

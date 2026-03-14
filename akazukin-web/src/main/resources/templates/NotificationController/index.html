@@ -1,0 +1,210 @@
+{#include base}
+{#title}通知 - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/notifications" class="active">通知</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/notifications" class="active">通知</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">通知</h2>
+            <button type="button" onclick="markAllRead()" id="mark-all-btn"
+                style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;">すべて既読にする</button>
+        </div>
+
+        <div id="notifications-list">
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">通知を読み込み中...</p>
+        </div>
+
+        <div id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;"></div>
+    </main>
+</div>
+
+<style>
+    .notification-item {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 0.75rem;
+        transition: border-color 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .notification-item:hover {
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+    .notification-item.unread {
+        border-left: 3px solid var(--accent-gold, var(--ak-primary));
+    }
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .notification-title {
+        font-weight: 600;
+        color: var(--text-heading, var(--ak-text));
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+    }
+    .notification-body {
+        color: var(--text-body, var(--ak-text));
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 0.25rem;
+    }
+    .notification-date {
+        color: var(--text-muted, var(--ak-text-muted));
+        font-size: 0.75rem;
+    }
+    .notification-date-group {
+        color: var(--text-sec, var(--ak-text-muted));
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        margin: 1.5rem 0 0.75rem 0;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--border-lt, var(--ak-border));
+    }
+    .notification-date-group:first-child {
+        margin-top: 0;
+    }
+</style>
+
+<script>
+    var currentPage = 0;
+    var pageSize = 20;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotifications(0);
+    });
+
+    async function loadNotifications(page) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        currentPage = page;
+
+        try {
+            var response = await fetch('/api/v1/notifications?page=' + page + '&size=' + pageSize, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                document.getElementById('notifications-list').innerHTML =
+                    '<div class="ak-card" style="color: var(--status-error);">通知の読み込みに失敗しました。</div>';
+                return;
+            }
+            var data = await response.json();
+            var notifications = Array.isArray(data) ? data : (data.data || []);
+            renderNotifications(notifications);
+        } catch (err) {
+            document.getElementById('notifications-list').innerHTML =
+                '<div class="ak-card" style="color: var(--status-error);">通知の読み込みに失敗しました。</div>';
+            showToast('error', '通知の読み込みに失敗しました');
+        }
+    }
+
+    function renderNotifications(notifications) {
+        var container = document.getElementById('notifications-list');
+        if (notifications.length === 0) {
+            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 3rem; color: var(--text-muted, var(--ak-text-muted));">通知はありません</div>';
+            return;
+        }
+
+        // Group by date
+        var groups = {};
+        notifications.forEach(function(n) {
+            var dateKey = n.createdAt ? new Date(n.createdAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }) : '日付不明';
+            if (!groups[dateKey]) groups[dateKey] = [];
+            groups[dateKey].push(n);
+        });
+
+        var html = '';
+        Object.keys(groups).forEach(function(dateKey) {
+            html += '<div class="notification-date-group">' + escapeHtmlGlobal(dateKey) + '</div>';
+            groups[dateKey].forEach(function(n) {
+                var unreadClass = n.read ? '' : ' unread';
+                var time = n.createdAt ? new Date(n.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+                html += '<div class="notification-item' + unreadClass + '">' +
+                    '<div class="notification-content">' +
+                        '<div class="notification-title">' + escapeHtmlGlobal(n.title || '') + '</div>' +
+                        '<div class="notification-body">' + escapeHtmlGlobal(n.message || n.body || '') + '</div>' +
+                        '<div class="notification-date">' + escapeHtmlGlobal(time) + '</div>' +
+                    '</div>' +
+                    (!n.read ? '<button onclick="markRead(\'' + escapeHtmlGlobal(n.id) + '\')" style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.3rem 0.7rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap;">既読</button>' : '') +
+                '</div>';
+            });
+        });
+        container.innerHTML = html;
+    }
+
+    async function markRead(id) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/notifications/' + id + '/read', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                loadNotifications(currentPage);
+            } else {
+                await showApiError(response, '既読処理に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    async function markAllRead() {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/notifications/read-all', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 204) {
+                showToast('success', 'すべての通知を既読にしました');
+                loadNotifications(currentPage);
+            } else {
+                await showApiError(response, '既読処理に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

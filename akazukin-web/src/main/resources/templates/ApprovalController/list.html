@@ -1,0 +1,213 @@
+{#include base}
+{#title}承認待ち一覧 - Akazukin{/title}
+{#body}
+<header class="ak-header">
+    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
+    <h1>Akazukin</h1>
+    <nav>
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/approvals" class="active">承認</a>
+        <a href="/audit-logs">監査ログ</a>
+        <a href="#" onclick="logout()">ログアウト</a>
+    </nav>
+</header>
+
+<div class="ak-layout">
+    <aside class="ak-sidebar">
+        <a href="/dashboard">ダッシュボード</a>
+        <a href="/posts">投稿一覧</a>
+        <a href="/posts/compose">新規投稿</a>
+        <a href="/accounts">アカウント管理</a>
+        <a href="/approvals" class="active">承認</a>
+        <a href="/audit-logs">監査ログ</a>
+    </aside>
+
+    <main class="ak-main">
+        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">承認待ち一覧</h2>
+
+        <div id="approvals-list">
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">承認リクエストを読み込み中...</p>
+        </div>
+
+        <div id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;"></div>
+    </main>
+</div>
+
+<style>
+    .approval-card {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s;
+    }
+    .approval-card:hover {
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+    .approval-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    .approval-card-content {
+        color: var(--text-body, var(--ak-text));
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+        word-break: break-word;
+    }
+    .approval-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-muted, var(--ak-text-muted));
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+    }
+    .approval-card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .ak-btn-approve {
+        background: rgba(106, 168, 106, 0.1);
+        color: #4A7A4A;
+        border: 1px solid #8AB88A;
+        padding: 0.35rem 0.9rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        transition: background 0.2s, color 0.2s;
+    }
+    .ak-btn-approve:hover {
+        background: #4A7A4A;
+        color: white;
+    }
+    .ak-btn-reject {
+        background: transparent;
+        color: var(--status-error, #B04040);
+        border: 1px solid var(--status-error, #B04040);
+        padding: 0.35rem 0.9rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        transition: background 0.2s, color 0.2s;
+    }
+    .ak-btn-reject:hover {
+        background: var(--status-error, #B04040);
+        color: white;
+    }
+</style>
+
+<script>
+    var currentPage = 0;
+    var pageSize = 20;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadApprovals(0);
+    });
+
+    async function loadApprovals(page) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        currentPage = page;
+
+        try {
+            var response = await fetch('/api/v1/approvals/pending?page=' + page + '&size=' + pageSize, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                document.getElementById('approvals-list').innerHTML =
+                    '<div class="ak-card" style="color: var(--status-error);">承認リクエストの読み込みに失敗しました。</div>';
+                return;
+            }
+            var approvals = await response.json();
+            renderApprovals(Array.isArray(approvals) ? approvals : (approvals.data || []));
+        } catch (err) {
+            document.getElementById('approvals-list').innerHTML =
+                '<div class="ak-card" style="color: var(--status-error);">承認リクエストの読み込みに失敗しました。</div>';
+            showToast('error', '承認リクエストの読み込みに失敗しました');
+        }
+    }
+
+    function renderApprovals(approvals) {
+        var container = document.getElementById('approvals-list');
+        if (approvals.length === 0) {
+            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 3rem; color: var(--text-muted, var(--ak-text-muted));">承認待ちのリクエストはありません</div>';
+            return;
+        }
+        container.innerHTML = approvals.map(function(a) {
+            var content = a.postContent || a.content || '';
+            if (content.length > 120) content = content.substring(0, 120) + '...';
+            var date = a.requestedAt ? new Date(a.requestedAt).toLocaleDateString('ja-JP', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '';
+            return '<div class="approval-card">' +
+                '<div class="approval-card-header">' +
+                    '<span style="font-weight: 600; color: var(--text-heading, var(--ak-text));">承認リクエスト</span>' +
+                '</div>' +
+                '<div class="approval-card-content">' + escapeHtmlGlobal(content) + '</div>' +
+                '<div class="approval-card-meta">' +
+                    '<span>申請者: ' + escapeHtmlGlobal(a.requesterName || a.requesterId || '-') + '</span>' +
+                    '<span>' + escapeHtmlGlobal(date) + '</span>' +
+                '</div>' +
+                '<div class="approval-card-actions">' +
+                    '<a href="/approvals/' + escapeHtmlGlobal(a.id) + '/review" class="ak-btn-detail">詳細</a>' +
+                    '<button class="ak-btn-approve" onclick="quickDecide(\'' + escapeHtmlGlobal(a.id) + '\', \'APPROVED\')">承認</button>' +
+                    '<button class="ak-btn-reject" onclick="quickDecide(\'' + escapeHtmlGlobal(a.id) + '\', \'REJECTED\')">却下</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    async function quickDecide(id, decision) {
+        var comment = '';
+        if (decision === 'REJECTED') {
+            comment = prompt('却下理由を入力してください:');
+            if (comment === null) return;
+        }
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/approvals/' + id + '/decide', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ decision: decision, comment: comment })
+            });
+            if (!response.ok) {
+                await showApiError(response, '処理に失敗しました');
+                return;
+            }
+            showToast('success', decision === 'APPROVED' ? '承認しました' : '却下しました');
+            loadApprovals(currentPage);
+        } catch (err) {
+            showToast('error', 'ネットワークエラー');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}
