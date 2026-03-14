@@ -43,6 +43,9 @@ dependencies {
     // Validation
     implementation("io.quarkus:quarkus-hibernate-validator")
 
+    // Rate limiting
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+
     // AWS Lambda HTTP adapter
     implementation("io.quarkus:quarkus-amazon-lambda-http")
 

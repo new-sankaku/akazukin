@@ -16,5 +16,8 @@ dependencies {
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
     implementation("software.amazon.awssdk:scheduler:2.25.27")
 
+    implementation("io.quarkus:quarkus-redis-client")
+    implementation("io.quarkus:quarkus-cache")
+
     testImplementation("io.quarkus:quarkus-junit5")
 }
