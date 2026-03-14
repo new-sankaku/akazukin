@@ -46,6 +46,11 @@ dependencies {
     // AWS Lambda HTTP adapter
     implementation("io.quarkus:quarkus-amazon-lambda-http")
 
+    // Observability
+    implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
+    implementation("io.quarkus:quarkus-opentelemetry")
+    implementation("io.quarkus:quarkus-logging-json")
+
     // AWS services
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:3.15.0")
