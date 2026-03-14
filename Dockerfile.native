@@ -1,0 +1,40 @@
+FROM ghcr.io/graalvm/graalvm-community:21 AS build
+
+RUN microdnf install -y findutils && microdnf clean all
+
+WORKDIR /app
+
+COPY gradlew settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY gradle/ gradle/
+
+COPY akazukin-domain/ akazukin-domain/
+COPY akazukin-application/ akazukin-application/
+COPY akazukin-infrastructure/ akazukin-infrastructure/
+COPY akazukin-sdk/ akazukin-sdk/
+COPY akazukin-adapter-sns/ akazukin-adapter-sns/
+COPY akazukin-web/ akazukin-web/
+COPY akazukin-ai/ akazukin-ai/
+COPY akazukin-worker/ akazukin-worker/
+
+RUN chmod +x gradlew \
+    && ./gradlew :akazukin-web:build -Dquarkus.native.enabled=true -Dquarkus.package.jar.enabled=false --no-daemon
+
+FROM quay.io/quarkus/quarkus-micro-image:2.0
+
+WORKDIR /deployments
+
+RUN chown 1001:root /deployments \
+    && chmod "g+rwX" /deployments
+
+COPY --from=build --chown=1001:root /app/akazukin-web/build/*-runner /deployments/application
+
+RUN chmod 775 /deployments/application
+
+USER 1001
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -sf http://localhost:8080/q/health/ready || exit 1
+
+ENTRYPOINT ["/deployments/application", "-Dquarkus.http.host=0.0.0.0"]

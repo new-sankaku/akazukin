@@ -1,5 +1,6 @@
 plugins {
     java
+    id("org.owasp.dependencycheck") version "12.1.0"
 }
 
 subprojects {
@@ -26,5 +27,16 @@ subprojects {
     dependencies {
         testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    }
+}
+
+dependencyCheck {
+    scanConfigurations = listOf("runtimeClasspath")
+    failBuildOnCVSS = 9.0f
+    formats = listOf("HTML", "JSON")
+    outputDirectory = layout.buildDirectory.dir("reports").get().asFile.absolutePath
+    nvd {
+        apiKey = System.getenv("NVD_API_KEY") ?: ""
+        delay = 2000
     }
 }
