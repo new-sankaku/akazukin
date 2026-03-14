@@ -18,5 +18,8 @@ dependencies {
     implementation("software.amazon.awssdk:scheduler:2.25.27")
     implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
 
+    implementation("io.quarkus:quarkus-redis-client")
+    implementation("io.quarkus:quarkus-cache")
+
     testImplementation("io.quarkus:quarkus-junit5")
 }
