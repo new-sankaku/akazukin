@@ -1,0 +1,10 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "db/migration/.*\\.sql"},
+      {"pattern": "messages/msg.*\\.properties"},
+      {"pattern": "META-INF/services/.*"},
+      {"pattern": "templates/.*\\.html"}
+    ]
+  }
+}
