@@ -2,23 +2,23 @@
 {#title}Dashboard - Akazukin{/title}
 {#body}
 <header class="ak-header">
-    <h1>Akazukin</h1>
+    <h1>{msg:app_title}</h1>
     <nav>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/posts">Posts</a>
-        <a href="/posts/compose">Compose</a>
-        <a href="/accounts">Accounts</a>
-        <a href="#" onclick="toggleTheme()">Theme</a>
-        <a href="#" onclick="logout()">Logout</a>
+        <a href="/dashboard">{msg:nav_dashboard}</a>
+        <a href="/posts">{msg:nav_posts}</a>
+        <a href="/posts/compose">{msg:nav_compose}</a>
+        <a href="/accounts">{msg:nav_accounts}</a>
+        <a href="#" onclick="toggleTheme()">{msg:nav_theme}</a>
+        <a href="#" onclick="logout()">{msg:nav_logout}</a>
     </nav>
 </header>
 
 <div class="ak-layout">
     <aside class="ak-sidebar">
-        <a href="/dashboard" class="active">Dashboard</a>
-        <a href="/posts">Posts</a>
-        <a href="/posts/compose">Compose</a>
-        <a href="/accounts">Accounts</a>
+        <a href="/dashboard" class="active">{msg:nav_dashboard}</a>
+        <a href="/posts">{msg:nav_posts}</a>
+        <a href="/posts/compose">{msg:nav_compose}</a>
+        <a href="/accounts">{msg:nav_accounts}</a>
     </aside>
 
     <main class="ak-main">

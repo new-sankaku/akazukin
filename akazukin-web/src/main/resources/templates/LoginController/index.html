@@ -1,24 +1,24 @@
 {#include base}
-{#title}Login - Akazukin{/title}
+{#title}{msg:login_title} - {msg:app_title}{/title}
 {#body}
 <div class="ak-auth-container">
-    <h2>Akazukin</h2>
-    <p style="text-align: center; color: var(--ak-text-muted);">Multi-SNS Management Tool</p>
+    <h2>{msg:app_title}</h2>
+    <p style="text-align: center; color: var(--ak-text-muted);">{msg:app_subtitle}</p>
 
     <div id="login-error" class="ak-card" style="display: none; border-color: var(--ak-primary); color: var(--ak-primary);"></div>
 
     <form id="login-form" onsubmit="return handleLogin(event)">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+        <label for="username">{msg:login_username}</label>
+        <input type="text" id="username" name="username" placeholder="{msg:login_username_placeholder}" required>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        <label for="password">{msg:login_password}</label>
+        <input type="password" id="password" name="password" placeholder="{msg:login_password_placeholder}" required>
 
-        <button type="submit" class="contrast">Sign In</button>
+        <button type="submit" class="contrast">{msg:login_submit}</button>
     </form>
 
     <p style="text-align: center; margin-top: 1rem;">
-        Don't have an account? <a href="/register">Register</a>
+        {msg:login_no_account} <a href="/register">{msg:login_register_link}</a>
     </p>
 </div>
 

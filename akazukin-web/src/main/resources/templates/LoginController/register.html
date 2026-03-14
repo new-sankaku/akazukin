@@ -1,30 +1,30 @@
 {#include base}
-{#title}Register - Akazukin{/title}
+{#title}{msg:register_title} - {msg:app_title}{/title}
 {#body}
 <div class="ak-auth-container">
-    <h2>Create Account</h2>
-    <p style="text-align: center; color: var(--ak-text-muted);">Join Akazukin to manage your SNS accounts</p>
+    <h2>{msg:register_title}</h2>
+    <p style="text-align: center; color: var(--ak-text-muted);">{msg:register_subtitle}</p>
 
     <div id="register-error" class="ak-card" style="display: none; border-color: var(--ak-primary); color: var(--ak-primary);"></div>
 
     <form id="register-form" onsubmit="return handleRegister(event)">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Choose a username" required minlength="3">
+        <label for="username">{msg:login_username}</label>
+        <input type="text" id="username" name="username" placeholder="{msg:login_username_placeholder}" required minlength="3">
 
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        <label for="email">{msg:register_email}</label>
+        <input type="email" id="email" name="email" placeholder="{msg:register_email_placeholder}" required>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Choose a password" required minlength="8">
+        <label for="password">{msg:login_password}</label>
+        <input type="password" id="password" name="password" placeholder="{msg:login_password_placeholder}" required minlength="8">
 
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+        <label for="confirmPassword">{msg:register_confirm_password}</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="{msg:register_confirm_password_placeholder}" required>
 
-        <button type="submit" class="contrast">Create Account</button>
+        <button type="submit" class="contrast">{msg:register_submit}</button>
     </form>
 
     <p style="text-align: center; margin-top: 1rem;">
-        Already have an account? <a href="/">Sign In</a>
+        {msg:register_has_account} <a href="/">{msg:register_login_link}</a>
     </p>
 </div>
 
