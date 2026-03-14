@@ -34,3 +34,4 @@ include("akazukin-adapter-sns:akazukin-adapter-vk")
 include("akazukin-adapter-sns:akazukin-adapter-pinterest")
 
 include("akazukin-web")
+include("akazukin-worker")

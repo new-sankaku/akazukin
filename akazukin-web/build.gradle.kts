@@ -12,6 +12,7 @@ dependencies {
     // Project dependencies
     implementation(project(":akazukin-application"))
     implementation(project(":akazukin-infrastructure"))
+    implementation(project(":akazukin-worker"))
     implementation(project(":akazukin-adapter-sns:akazukin-adapter-core"))
     implementation(project(":akazukin-adapter-sns:akazukin-adapter-twitter"))
     implementation(project(":akazukin-adapter-sns:akazukin-adapter-bluesky"))
