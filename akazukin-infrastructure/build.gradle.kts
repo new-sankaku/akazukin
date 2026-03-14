@@ -15,6 +15,7 @@ dependencies {
     implementation("io.quarkus:quarkus-flyway")
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
     implementation("software.amazon.awssdk:scheduler:2.25.27")
+    implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
 
     testImplementation("io.quarkus:quarkus-junit5")
 }
