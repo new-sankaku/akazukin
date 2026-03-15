@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.owasp.dependencycheck") version "12.1.0"
+    id("org.owasp.dependencycheck") version "12.2.0"
 }
 
 subprojects {
