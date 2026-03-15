@@ -73,8 +73,8 @@ dependencies {
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:3.15.0")
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-secretsmanager:3.15.0")
-    implementation("software.amazon.awssdk:url-connection-client:2.25.27")
-    implementation("software.amazon.awssdk:scheduler:2.25.27")
+    implementation("software.amazon.awssdk:url-connection-client:2.42.13")
+    implementation("software.amazon.awssdk:scheduler:2.42.13")
 
     // H2 for dev mode
     implementation("io.quarkus:quarkus-jdbc-h2")
