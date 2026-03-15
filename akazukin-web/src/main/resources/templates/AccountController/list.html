@@ -1,49 +1,255 @@
 {#include base}
-{#title}Accounts - Akazukin{/title}
+{#title}アカウント管理 - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <h1>{msg:app_title}</h1>
-    <nav>
-        <a href="/dashboard">{msg:nav_dashboard}</a>
-        <a href="/posts">{msg:nav_posts}</a>
-        <a href="/posts/compose">{msg:nav_compose}</a>
-        <a href="/accounts">{msg:nav_accounts}</a>
-        <a href="#" onclick="toggleTheme()">{msg:nav_theme}</a>
-        <a href="#" onclick="logout()">{msg:nav_logout}</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">{msg:nav_dashboard}</a>
-        <a href="/posts">{msg:nav_posts}</a>
-        <a href="/posts/compose">{msg:nav_compose}</a>
-        <a href="/accounts" class="active">{msg:nav_accounts}</a>
-    </aside>
+    {#sidebar active="accounts" /}
 
     <main class="ak-main">
-        <h2>Connected Accounts</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">連携アカウント一覧</h2>
+            <a href="/accounts/connect" role="button" style="
+                background-color: var(--accent-gold, #C8964A);
+                border-color: var(--accent-gold, #C8964A);
+                color: #fff;
+                font-size: 0.85rem;
+                padding: 0.5rem 1.2rem;
+                border-radius: 2px;
+                text-decoration: none;
+                letter-spacing: 0.05em;
+                transition: background-color 0.2s ease;
+            " onmouseover="this.style.backgroundColor='var(--accent-gold-hover, #B5853E)'" onmouseout="this.style.backgroundColor='var(--accent-gold, #C8964A)'">新しいアカウントを連携</a>
+        </div>
 
+        <!-- Account Summary -->
+        <div id="account-summary" class="ak-card" style="
+            background: var(--bg-elevated, #F0EBD8);
+            border: 1px solid var(--border-lt, #CCC5AE);
+            border-radius: 2px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <div id="platform-counts" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;"></div>
+                <div id="total-count" style="color: var(--text-heading, #3D3A32); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.04em;"></div>
+            </div>
+        </div>
+
+        <!-- Account List -->
         <div id="accounts-list">
-            <p style="color: var(--ak-text-muted);">Loading accounts...</p>
+            <div class="ak-card" style="
+                background: var(--bg-surface, #EDE8D5);
+                border: 1px solid var(--border-lt, #CCC5AE);
+                border-radius: 2px;
+                text-align: center;
+                padding: 2rem;
+            ">
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+            </div>
         </div>
     </main>
 </div>
 
+<style>
+    .account-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .account-card:hover {
+        border-color: var(--border, #B8B19C);
+        box-shadow: 0 2px 8px rgba(61, 58, 50, 0.08);
+    }
+
+    .account-card-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .account-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .account-platform-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.2rem 0.7rem;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #fff;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .account-details {
+        min-width: 0;
+    }
+
+    .account-display-name {
+        color: var(--text-primary, #4D493E);
+        font-weight: 600;
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-identifier {
+        color: var(--text-sec, #7A7464);
+        font-size: 0.8rem;
+        margin-top: 0.15rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-date {
+        color: var(--text-muted, #9B9580);
+        font-size: 0.75rem;
+        margin-top: 0.3rem;
+        letter-spacing: 0.03em;
+    }
+
+    .btn-disconnect {
+        background: transparent;
+        border: 1px solid var(--border, #B8B19C);
+        color: var(--text-sec, #7A7464);
+        font-size: 0.78rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .btn-disconnect:hover {
+        border-color: #C1574B;
+        color: #C1574B;
+        background: rgba(193, 87, 75, 0.06);
+    }
+
+    .empty-state {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .empty-state-decoration {
+        width: 64px;
+        height: 2px;
+        background: var(--border, #B8B19C);
+        margin: 0 auto 1.5rem;
+    }
+
+    .empty-state-message {
+        color: var(--text-sec, #7A7464);
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.04em;
+    }
+
+    .btn-first-connect {
+        display: inline-block;
+        background-color: var(--accent-gold, #C8964A);
+        border: none;
+        color: #fff;
+        font-size: 0.85rem;
+        padding: 0.6rem 1.5rem;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.05em;
+        text-decoration: none;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-first-connect:hover {
+        background-color: var(--accent-gold-hover, #B5853E);
+        color: #fff;
+    }
+
+    .summary-platform-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 2px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        color: #fff;
+    }
+
+    @media (max-width: 600px) {
+        .account-card-inner {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-disconnect {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+
 <script>
+    var platformColors = {
+        'TWITTER': '#1DA1F2',
+        'BLUESKY': '#0085FF',
+        'MASTODON': '#6364FF',
+        'THREADS': '#000000',
+        'INSTAGRAM': '#E1306C',
+        'REDDIT': '#FF4500',
+        'TELEGRAM': '#0088CC',
+        'VK': '#4A76A8',
+        'PINTEREST': '#E60023'
+    };
+
+    var platformNames = {
+        'TWITTER': 'Twitter',
+        'BLUESKY': 'Bluesky',
+        'MASTODON': 'Mastodon',
+        'THREADS': 'Threads',
+        'INSTAGRAM': 'Instagram',
+        'REDDIT': 'Reddit',
+        'TELEGRAM': 'Telegram',
+        'VK': 'VK',
+        'PINTEREST': 'Pinterest'
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         loadAccounts();
     });
 
     async function loadAccounts() {
-        const token = localStorage.getItem('accessToken');
+        var token = localStorage.getItem('accessToken');
         if (!token) {
             window.location.href = '/';
             return;
         }
 
         try {
-            const response = await fetch('/api/v1/accounts', {
+            var response = await fetch('/api/v1/accounts', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
 
@@ -53,64 +259,126 @@
             }
 
             if (response.ok) {
-                const accounts = await response.json();
+                var accounts = await response.json();
+                renderSummary(accounts);
                 renderAccounts(accounts);
+            } else {
+                await showApiError(response, 'アカウントの読み込みに失敗しました');
             }
         } catch (err) {
             document.getElementById('accounts-list').innerHTML =
-                '<div class="ak-card" style="color: var(--ak-primary);">Failed to load accounts.</div>';
+                '<div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">' +
+                '<p style="color: #C1574B; margin: 0;">サーバーに接続できませんでした</p></div>';
+            showToast('error', 'アカウントの読み込みに失敗しました', 'サーバーに接続できません。ネットワーク接続を確認してください。');
         }
     }
 
-    function renderAccounts(accounts) {
-        const container = document.getElementById('accounts-list');
+    function renderSummary(accounts) {
+        var summaryEl = document.getElementById('account-summary');
+        var countsEl = document.getElementById('platform-counts');
+        var totalEl = document.getElementById('total-count');
+
         if (accounts.length === 0) {
-            container.innerHTML = '<div class="ak-card"><p style="color: var(--ak-text-muted);">No connected accounts yet. Connect your first SNS account to get started.</p></div>';
+            summaryEl.style.display = 'none';
+            return;
+        }
+
+        summaryEl.style.display = 'block';
+
+        var counts = {};
+        accounts.forEach(function(a) {
+            var p = a.platform;
+            counts[p] = (counts[p] || 0) + 1;
+        });
+
+        var tagsHtml = '';
+        Object.keys(counts).forEach(function(platform) {
+            var color = platformColors[platform] || '#7A7464';
+            var name = platformNames[platform] || platform;
+            tagsHtml += '<span class="summary-platform-tag" style="background-color: ' + color + ';">' +
+                name + ': ' + counts[platform] + '</span>';
+        });
+
+        countsEl.innerHTML = tagsHtml;
+        totalEl.textContent = '合計 ' + accounts.length + ' アカウント連携済み';
+    }
+
+    function renderAccounts(accounts) {
+        var container = document.getElementById('accounts-list');
+
+        if (accounts.length === 0) {
+            container.innerHTML =
+                '<div class="empty-state">' +
+                '<div class="empty-state-decoration"></div>' +
+                '<p class="empty-state-message">SNSアカウントがまだ連携されていません</p>' +
+                '<a href="/accounts/connect" class="btn-first-connect">最初のアカウントを連携する</a>' +
+                '</div>';
             return;
         }
 
         container.innerHTML = accounts.map(function(account) {
-            const date = new Date(account.connectedAt).toLocaleString();
-            return '<div class="ak-card">' +
-                '<div style="display: flex; justify-content: space-between; align-items: center;">' +
-                '<div>' +
-                '<strong>' + escapeHtml(account.platform) + '</strong>' +
-                '<br><span>' + escapeHtml(account.displayName || account.accountIdentifier) + '</span>' +
-                '<br><small style="color: var(--ak-text-muted);">Connected: ' + date + '</small>' +
+            var platform = account.platform;
+            var color = platformColors[platform] || '#7A7464';
+            var name = platformNames[platform] || platform;
+            var displayName = escapeHtmlGlobal(account.displayName || account.accountIdentifier);
+            var identifier = account.displayName ? escapeHtmlGlobal(account.accountIdentifier) : '';
+            var dateStr = formatJapaneseDate(account.connectedAt);
+
+            return '<div class="account-card">' +
+                '<div class="account-card-inner">' +
+                '<div class="account-info">' +
+                '<span class="account-platform-badge" style="background-color: ' + color + ';">' + escapeHtmlGlobal(name) + '</span>' +
+                '<div class="account-details">' +
+                '<div class="account-display-name">' + displayName + '</div>' +
+                (identifier ? '<div class="account-identifier">' + identifier + '</div>' : '') +
+                '<div class="account-date">連携日: ' + dateStr + '</div>' +
                 '</div>' +
-                '<button class="secondary outline" onclick="deleteAccount(\'' + account.id + '\')">Disconnect</button>' +
+                '</div>' +
+                '<button class="btn-disconnect" onclick="deleteAccount(\'' + account.id + '\')">連携解除</button>' +
                 '</div></div>';
         }).join('');
     }
 
-    async function deleteAccount(id) {
-        if (!confirm('Are you sure you want to disconnect this account?')) return;
+    function formatJapaneseDate(dateStr) {
+        if (!dateStr) return '--';
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '--';
+        var year = d.getFullYear();
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        return year + '年' + month + '月' + day + '日';
+    }
 
-        const token = localStorage.getItem('accessToken');
+    async function deleteAccount(id) {
+        if (!confirm('このアカウントの連携を解除してもよろしいですか？')) return;
+
+        var token = localStorage.getItem('accessToken');
         try {
-            const response = await fetch('/api/v1/accounts/' + id, {
+            var response = await fetch('/api/v1/accounts/' + id, {
                 method: 'DELETE',
                 headers: { 'Authorization': 'Bearer ' + token }
             });
 
             if (response.ok || response.status === 204) {
+                showToast('success', 'アカウントの連携を解除しました');
                 loadAccounts();
+            } else {
+                await showApiError(response, 'アカウントの連携解除に失敗しました');
             }
         } catch (err) {
-            console.error('Failed to disconnect account', err);
+            showToast('error', 'アカウントの連携解除に失敗しました', 'サーバーに接続できません。もう一度お試しください。');
         }
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

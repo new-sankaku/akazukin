@@ -8,6 +8,7 @@ import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.CalendarEntryRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -37,6 +38,7 @@ public class CalendarUseCase {
                 .toList();
     }
 
+    @Transactional
     public CalendarEntryDto createEntry(UUID userId, CalendarEntryRequestDto request) {
         if (request.title() == null || request.title().isBlank()) {
             throw new DomainException("INVALID_INPUT", "Title is required");
@@ -68,6 +70,7 @@ public class CalendarUseCase {
         return toDto(saved);
     }
 
+    @Transactional
     public CalendarEntryDto updateEntry(UUID entryId, UUID userId, CalendarEntryRequestDto request) {
         CalendarEntry entry = calendarEntryRepository.findById(entryId)
                 .orElseThrow(() -> new DomainException("ENTRY_NOT_FOUND",
@@ -96,6 +99,7 @@ public class CalendarUseCase {
         return toDto(saved);
     }
 
+    @Transactional
     public void deleteEntry(UUID entryId, UUID userId) {
         CalendarEntry entry = calendarEntryRepository.findById(entryId)
                 .orElseThrow(() -> new DomainException("ENTRY_NOT_FOUND",

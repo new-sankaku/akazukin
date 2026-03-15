@@ -9,7 +9,9 @@ import com.akazukin.domain.port.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,7 +47,7 @@ class AuthUseCaseTest {
     }
 
     @Test
-    void register_throwsDuplicateUsernameWhenUsernameExists() {
+    void register_throwsDuplicateUserWhenUsernameExists() {
         RegisterRequestDto first = new RegisterRequestDto("testuser", "first@example.com", "password");
         authUseCase.register(first);
 
@@ -53,11 +55,11 @@ class AuthUseCaseTest {
 
         DomainException exception = assertThrows(DomainException.class,
                 () -> authUseCase.register(duplicate));
-        assertEquals("DUPLICATE_USERNAME", exception.getErrorCode());
+        assertEquals("DUPLICATE_USER", exception.getErrorCode());
     }
 
     @Test
-    void register_throwsDuplicateEmailWhenEmailExists() {
+    void register_throwsDuplicateUserWhenEmailExists() {
         RegisterRequestDto first = new RegisterRequestDto("user1", "test@example.com", "password");
         authUseCase.register(first);
 
@@ -65,7 +67,7 @@ class AuthUseCaseTest {
 
         DomainException exception = assertThrows(DomainException.class,
                 () -> authUseCase.register(duplicate));
-        assertEquals("DUPLICATE_EMAIL", exception.getErrorCode());
+        assertEquals("DUPLICATE_USER", exception.getErrorCode());
     }
 
     @Test
@@ -156,6 +158,14 @@ class AuthUseCaseTest {
             return store.values().stream()
                     .filter(user -> user.getEmail().equals(email))
                     .findFirst();
+        }
+
+        @Override
+        public List<User> findAllByIds(Collection<UUID> ids) {
+            return ids.stream()
+                    .map(store::get)
+                    .filter(user -> user != null)
+                    .toList();
         }
 
         @Override

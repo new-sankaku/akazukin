@@ -164,35 +164,6 @@ function initHtmxInterceptors(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Theme Toggle
-// ---------------------------------------------------------------------------
-
-function initTheme(): void {
-    const saved = localStorage.getItem("theme");
-    if (saved) {
-        document.documentElement.setAttribute("data-theme", saved);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.documentElement.setAttribute("data-theme", "dark");
-    }
-}
-
-function toggleTheme(): void {
-    const html = document.documentElement;
-    const current = html.getAttribute("data-theme");
-    const next = current === "dark" ? "light" : "dark";
-    html.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
-
-    const icon = document.getElementById("theme-icon");
-    if (icon) {
-        icon.textContent = next === "dark" ? "Light" : "Dark";
-    }
-}
-
-// Expose globally for onclick handlers in templates
-(window as Record<string, unknown>)["toggleTheme"] = toggleTheme;
-
-// ---------------------------------------------------------------------------
 // Toast Notification System
 // ---------------------------------------------------------------------------
 
@@ -267,7 +238,8 @@ function showToast(options: ToastOptions): void {
     }, duration);
 }
 
-(window as Record<string, unknown>)["showToast"] = showToast;
+// Do not export showToast globally — base.html defines the canonical version
+// that all HTML templates use (with signature: showToast(type, title, detail, durationMs)).
 
 // ---------------------------------------------------------------------------
 // Form Submission Helpers
@@ -468,8 +440,6 @@ function logout(): void {
 // ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------
-
-initTheme();
 
 document.addEventListener("DOMContentLoaded", () => {
     initHtmxInterceptors();

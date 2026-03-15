@@ -36,10 +36,11 @@ public class MediaAssetRepositoryImpl implements MediaAssetRepository, PanacheRe
     @Transactional
     public MediaAsset save(MediaAsset mediaAsset) {
         MediaAssetEntity entity = MediaAssetMapper.toEntity(mediaAsset);
-        if (entity.id != null) {
-            entity = getEntityManager().merge(entity);
-        } else {
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
             persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
         }
         return MediaAssetMapper.toDomain(entity);
     }

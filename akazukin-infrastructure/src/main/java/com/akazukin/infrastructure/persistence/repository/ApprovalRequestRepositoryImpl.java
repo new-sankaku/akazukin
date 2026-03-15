@@ -97,10 +97,11 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository,
         long perfStart = System.nanoTime();
         try {
             ApprovalRequestEntity entity = ApprovalRequestMapper.toEntity(approvalRequest);
-            if (entity.id != null) {
-                entity = getEntityManager().merge(entity);
-            } else {
+            if (entity.id == null) {
+                entity.id = UUID.randomUUID();
                 persist(entity);
+            } else {
+                entity = getEntityManager().merge(entity);
             }
             return ApprovalRequestMapper.toDomain(entity);
         } finally {

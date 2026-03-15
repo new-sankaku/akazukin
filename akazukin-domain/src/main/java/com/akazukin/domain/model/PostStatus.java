@@ -5,5 +5,8 @@ public enum PostStatus {
     SCHEDULED,
     PUBLISHING,
     PUBLISHED,
-    FAILED
+    FAILED,
+    PENDING_APPROVAL,
+    APPROVED,
+    REJECTED
 }

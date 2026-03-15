@@ -49,6 +49,12 @@ public class InMemoryCircuitBreakerRegistry implements CircuitBreakerRegistry {
         pcs.recordFailure();
     }
 
+    @Override
+    public boolean isCallPermitted(SnsPlatform platform) {
+        CircuitBreakerState cbState = getState(platform);
+        return cbState.state() != CircuitState.OPEN;
+    }
+
     private static final class PlatformCircuitState {
 
         private final AtomicInteger failureCount = new AtomicInteger(0);

@@ -18,6 +18,7 @@ public class DashboardController extends Controller {
     }
 
     @GET
+    @Path("")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance index() {
         return Templates.index();

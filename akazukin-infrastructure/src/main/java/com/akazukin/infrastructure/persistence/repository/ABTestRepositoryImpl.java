@@ -35,19 +35,12 @@ public class ABTestRepositoryImpl implements ABTestRepository, PanacheRepository
     @Transactional
     public ABTest save(ABTest abTest) {
         ABTestEntity entity = ABTestMapper.toEntity(abTest);
-        ABTestEntity existing = find("id", entity.id).firstResult();
-        if (existing != null) {
-            existing.name = entity.name;
-            existing.variantA = entity.variantA;
-            existing.variantB = entity.variantB;
-            existing.status = entity.status;
-            existing.startedAt = entity.startedAt;
-            existing.completedAt = entity.completedAt;
-            existing.winnerVariant = entity.winnerVariant;
-            persist(existing);
-            return ABTestMapper.toDomain(existing);
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
+            persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
         }
-        persist(entity);
         return ABTestMapper.toDomain(entity);
     }
 

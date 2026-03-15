@@ -45,10 +45,11 @@ public class NotificationRepositoryImpl implements NotificationRepository, Panac
     @Transactional
     public Notification save(Notification notification) {
         NotificationEntity entity = NotificationMapper.toEntity(notification);
-        if (entity.id != null) {
-            entity = getEntityManager().merge(entity);
-        } else {
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
             persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
         }
         return NotificationMapper.toDomain(entity);
     }

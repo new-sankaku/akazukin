@@ -1,146 +1,279 @@
 {#include base}
-{#title}Connect Account - Akazukin{/title}
+{#title}SNSアカウント連携 - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu">&#9776;</button>
-    <h1>Akazukin</h1>
-    <nav>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/posts">Posts</a>
-        <a href="/posts/compose">Compose</a>
-        <a href="/accounts">Accounts</a>
-        <a href="#" onclick="toggleTheme()" id="theme-icon">Theme</a>
-        <a href="#" onclick="logout()">Logout</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">Dashboard</a>
-        <a href="/posts">Posts</a>
-        <a href="/posts/compose">Compose</a>
-        <a href="/accounts" class="active">Accounts</a>
-    </aside>
+    {#sidebar active="accounts" /}
 
     <main class="ak-main">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Connect SNS Account</h2>
-            <a href="/accounts" role="button" class="secondary outline">Back to Accounts</a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">SNSアカウント連携</h2>
+            <a href="/accounts" role="button" style="
+                background: transparent;
+                border: 1px solid var(--border, #B8B19C);
+                color: var(--text-sec, #7A7464);
+                font-size: 0.8rem;
+                padding: 0.45rem 1rem;
+                border-radius: 2px;
+                text-decoration: none;
+                letter-spacing: 0.04em;
+                transition: all 0.2s ease;
+            " onmouseover="this.style.borderColor='var(--text-sec, #7A7464)';this.style.color='var(--text-primary, #4D493E)'" onmouseout="this.style.borderColor='var(--border, #B8B19C)';this.style.color='var(--text-sec, #7A7464)'">アカウント一覧に戻る</a>
         </div>
 
-        <p style="color: var(--ak-text-muted); margin-bottom: 1.5rem;">
-            Select a platform to connect your account. You will be redirected to authorize Akazukin.
+        <p style="color: var(--text-sec, #7A7464); margin-bottom: 2rem; font-size: 0.9rem; letter-spacing: 0.03em;">
+            連携するプラットフォームを選択してください。認証画面にリダイレクトされます。
         </p>
 
         <div id="connect-status"></div>
 
         <div class="ak-platform-grid">
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #1da1f2;">X</div>
+            <div class="ak-platform-card" data-platform="TWITTER">
+                <div class="ak-platform-icon" style="background-color: #000000;"><i class="fa-brands fa-x-twitter"></i></div>
                 <h3>Twitter / X</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post tweets and threads</p>
-                <button onclick="connectPlatform('TWITTER')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">ツイートやスレッドを投稿</p>
+                <button onclick="connectPlatform('TWITTER')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #0085ff;">BS</div>
+            <div class="ak-platform-card" data-platform="BLUESKY">
+                <div class="ak-platform-icon" style="background-color: #0085FF;"><i class="fa-brands fa-bluesky"></i></div>
                 <h3>Bluesky</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to AT Protocol network</p>
-                <button onclick="connectPlatform('BLUESKY')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">ATプロトコルネットワークに投稿</p>
+                <button onclick="connectPlatform('BLUESKY')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #6364ff;">MD</div>
+            <div class="ak-platform-card" data-platform="MASTODON">
+                <div class="ak-platform-icon" style="background-color: #6364FF;"><i class="fa-brands fa-mastodon"></i></div>
                 <h3>Mastodon</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to the fediverse</p>
-                <button onclick="connectPlatform('MASTODON')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">Fediverseに投稿</p>
+                <button onclick="connectPlatform('MASTODON')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #000000;">TH</div>
+            <div class="ak-platform-card" data-platform="THREADS">
+                <div class="ak-platform-icon" style="background-color: #000000;"><i class="fa-brands fa-threads"></i></div>
                 <h3>Threads</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to Meta Threads</p>
-                <button onclick="connectPlatform('THREADS')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">Meta Threadsに投稿</p>
+                <button onclick="connectPlatform('THREADS')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #e1306c;">IG</div>
+            <div class="ak-platform-card" data-platform="INSTAGRAM">
+                <div class="ak-platform-icon" style="background-color: #E1306C;"><i class="fa-brands fa-instagram"></i></div>
                 <h3>Instagram</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Share photos and stories</p>
-                <button onclick="connectPlatform('INSTAGRAM')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">写真やストーリーを共有</p>
+                <button onclick="connectPlatform('INSTAGRAM')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #ff4500;">RD</div>
+            <div class="ak-platform-card" data-platform="REDDIT">
+                <div class="ak-platform-icon" style="background-color: #FF4500;"><i class="fa-brands fa-reddit-alien"></i></div>
                 <h3>Reddit</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to subreddits</p>
-                <button onclick="connectPlatform('REDDIT')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">サブレディットに投稿</p>
+                <button onclick="connectPlatform('REDDIT')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #0088cc;">TG</div>
+            <div class="ak-platform-card" data-platform="TELEGRAM">
+                <div class="ak-platform-icon" style="background-color: #0088CC;"><i class="fa-brands fa-telegram"></i></div>
                 <h3>Telegram</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to channels and groups</p>
-                <button onclick="connectPlatform('TELEGRAM')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">チャンネルやグループに投稿</p>
+                <button onclick="connectPlatform('TELEGRAM')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #4a76a8;">VK</div>
+            <div class="ak-platform-card" data-platform="VK">
+                <div class="ak-platform-icon" style="background-color: #4A76A8;"><i class="fa-brands fa-vk"></i></div>
                 <h3>VK</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Post to VKontakte</p>
-                <button onclick="connectPlatform('VK')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">VKontakteに投稿</p>
+                <button onclick="connectPlatform('VK')" class="ak-connect-btn">連携する</button>
             </div>
 
-            <div class="ak-card ak-platform-card">
-                <div class="ak-platform-icon" style="background-color: #e60023;">PI</div>
+            <div class="ak-platform-card" data-platform="PINTEREST">
+                <div class="ak-platform-icon" style="background-color: #E60023;"><i class="fa-brands fa-pinterest-p"></i></div>
                 <h3>Pinterest</h3>
-                <p style="color: var(--ak-text-muted); font-size: 0.85rem;">Create pins and boards</p>
-                <button onclick="connectPlatform('PINTEREST')" class="contrast">Connect</button>
+                <p class="ak-platform-desc">ピンやボードを作成</p>
+                <button onclick="connectPlatform('PINTEREST')" class="ak-connect-btn">連携する</button>
             </div>
         </div>
-
-        <style>
-            .ak-platform-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 1.5rem;
-            }
-
-            .ak-platform-card {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                padding: 1.5rem 1rem;
-            }
-
-            .ak-platform-card h3 {
-                margin: 0.75rem 0 0.25rem;
-                font-size: 1.1rem;
-            }
-
-            .ak-platform-card button {
-                margin-top: auto;
-                padding-top: 0.75rem;
-                width: 100%;
-            }
-
-            .ak-platform-icon {
-                width: 56px;
-                height: 56px;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: 700;
-                font-size: 1.1rem;
-            }
-        </style>
     </main>
 </div>
 
+<style>
+    .ak-platform-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .ak-platform-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.75rem 1.25rem 1.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        cursor: default;
+    }
+
+    .ak-platform-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(61, 58, 50, 0.1);
+        border-color: var(--border, #B8B19C);
+    }
+
+    .ak-platform-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .ak-platform-card h3 {
+        margin: 0.9rem 0 0.3rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-heading, #3D3A32);
+        letter-spacing: 0.04em;
+    }
+
+    .ak-platform-desc {
+        color: var(--text-muted, #9B9580);
+        font-size: 0.8rem;
+        line-height: 1.4;
+        margin: 0 0 1rem;
+        letter-spacing: 0.02em;
+        flex: 1;
+    }
+
+    .ak-connect-btn {
+        width: 100%;
+        background-color: var(--accent-gold, #C8964A);
+        border: none;
+        color: #fff;
+        font-size: 0.82rem;
+        padding: 0.55rem 1rem;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.06em;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        margin-top: auto;
+    }
+
+    .ak-connect-btn:hover {
+        background-color: var(--accent-gold-hover, #B5853E);
+    }
+
+    .ak-connect-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .ak-connect-btn[aria-busy="true"]::before {
+        content: '';
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: ak-spin 0.6s linear infinite;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+    }
+
+    @keyframes ak-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    #connect-status:not(:empty) {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem;
+        font-size: 0.85rem;
+        color: var(--text-sec, #7A7464);
+        letter-spacing: 0.03em;
+    }
+
+    .ak-platform-card.connected {
+        border-color: var(--status-success, #6B8B4A);
+        background: var(--status-success-bg, #D5DDCA);
+    }
+
+    .ak-platform-card.connected .ak-connect-btn {
+        background-color: var(--status-success, #6B8B4A);
+        cursor: default;
+    }
+
+    .ak-platform-card.connected .ak-connect-btn:hover {
+        background-color: var(--status-success, #6B8B4A);
+    }
+
+    .ak-connected-label {
+        font-size: 0.75rem;
+        color: var(--status-success, #6B8B4A);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 540px) {
+        .ak-platform-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <script>
+    var platformNamesJp = {
+        'TWITTER': 'Twitter / X',
+        'BLUESKY': 'Bluesky',
+        'MASTODON': 'Mastodon',
+        'THREADS': 'Threads',
+        'INSTAGRAM': 'Instagram',
+        'REDDIT': 'Reddit',
+        'TELEGRAM': 'Telegram',
+        'VK': 'VK',
+        'PINTEREST': 'Pinterest'
+    };
+
+    // On load, mark connected platforms
+    document.addEventListener('DOMContentLoaded', function() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+        fetch('/api/v1/accounts', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function(res) {
+            if (!res.ok) return;
+            return res.json();
+        }).then(function(accounts) {
+            if (!accounts) return;
+            accounts.forEach(function(account) {
+                var platform = account.platform;
+                var card = document.querySelector('[data-platform="' + platform + '"]');
+                if (card) {
+                    card.classList.add('connected');
+                    var btn = card.querySelector('.ak-connect-btn');
+                    if (btn) {
+                        btn.textContent = '連携済み';
+                        btn.disabled = true;
+                    }
+                    var label = document.createElement('div');
+                    label.className = 'ak-connected-label';
+                    label.textContent = account.displayName || account.accountIdentifier || '';
+                    card.appendChild(label);
+                }
+            });
+        }).catch(function() { /* ignore */ });
+    });
+
     async function connectPlatform(platform) {
         var token = localStorage.getItem('accessToken');
         if (!token) {
@@ -148,18 +281,35 @@
             return;
         }
 
+        // BlueSkyはhandle + app passwordで直接連携
+        if (platform === 'BLUESKY') {
+            showBlueskyModal();
+            return;
+        }
+
         var statusDiv = document.getElementById('connect-status');
         statusDiv.innerHTML = '';
 
-        var buttons = document.querySelectorAll('.ak-platform-card button');
-        buttons.forEach(function(btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); });
+        var buttons = document.querySelectorAll('.ak-connect-btn');
+        buttons.forEach(function(btn) {
+            btn.disabled = true;
+            btn.setAttribute('aria-busy', 'true');
+        });
+
+        var clickedCard = document.querySelector('[data-platform="' + platform + '"]');
+        if (clickedCard) {
+            var clickedBtn = clickedCard.querySelector('.ak-connect-btn');
+            if (clickedBtn) {
+                clickedBtn.textContent = '接続中...';
+            }
+        }
 
         try {
-            var response = await fetch('/api/v1/accounts/connect/' + platform, {
-                method: 'POST',
+            var callbackUrl = window.location.origin + '/accounts/connect';
+            var response = await fetch('/api/v1/accounts/' + platform.toLowerCase() + '/auth?callbackUrl=' + encodeURIComponent(callbackUrl), {
+                method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
+                    'Authorization': 'Bearer ' + token
                 }
             });
 
@@ -171,28 +321,104 @@
             if (response.ok) {
                 var data = await response.json();
                 if (data.authorizationUrl) {
+                    statusDiv.innerHTML = escapeHtmlGlobal(platformNamesJp[platform] || platform) + ' の認証画面にリダイレクトしています...';
                     window.location.href = data.authorizationUrl;
                     return;
                 }
-                statusDiv.innerHTML = '<div class="ak-card" style="border-color: #2d6a4f; color: #2d6a4f;">' +
-                    'Successfully connected to ' + escapeHtml(platform) + '!</div>';
+                showToast('success', (platformNamesJp[platform] || platform) + ' との連携に成功しました');
             } else {
-                var errorData = await response.json();
-                statusDiv.innerHTML = '<div class="ak-card" style="border-color: var(--ak-primary); color: var(--ak-primary);">' +
-                    escapeHtml(errorData.message || 'Failed to connect to ' + platform) + '</div>';
+                await showApiError(response, (platformNamesJp[platform] || platform) + ' への接続に失敗しました');
             }
         } catch (err) {
-            statusDiv.innerHTML = '<div class="ak-card" style="border-color: var(--ak-primary); color: var(--ak-primary);">' +
-                'Network error. Please try again.</div>';
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できません。もう一度お試しください。');
         } finally {
-            buttons.forEach(function(btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); });
+            buttons.forEach(function(btn) {
+                btn.disabled = false;
+                btn.removeAttribute('aria-busy');
+            });
+            if (clickedCard) {
+                var clickedBtn = clickedCard.querySelector('.ak-connect-btn');
+                if (clickedBtn) {
+                    clickedBtn.textContent = '連携する';
+                }
+            }
         }
     }
 
-    function escapeHtml(text) {
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    function showBlueskyModal() {
+        // Remove existing modal if any
+        var existing = document.getElementById('bluesky-modal');
+        if (existing) existing.remove();
+
+        var modal = document.createElement('div');
+        modal.id = 'bluesky-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        modal.innerHTML = '<div style="background:var(--bg-surface,#EDE8D5);border-radius:4px;padding:2rem;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">' +
+            '<h3 style="margin:0 0 0.5rem;color:var(--text-heading,#3D3A32);">Bluesky アカウント連携</h3>' +
+            '<p style="color:var(--text-sec,#7A7464);font-size:0.85rem;margin-bottom:1.25rem;">ハンドルとアプリパスワードを入力してください。</p>' +
+            '<label style="display:block;margin-bottom:0.25rem;font-size:0.85rem;color:var(--text-body,#5A5548);">ハンドル</label>' +
+            '<input type="text" id="bs-handle" placeholder="例: user.bsky.social" style="width:100%;padding:0.5rem;margin-bottom:0.75rem;border:1px solid var(--border,#B8B19C);border-radius:2px;background:var(--bg-field,#DDD6BB);box-sizing:border-box;">' +
+            '<label style="display:block;margin-bottom:0.25rem;font-size:0.85rem;color:var(--text-body,#5A5548);">アプリパスワード</label>' +
+            '<input type="password" id="bs-apppass" placeholder="xxxx-xxxx-xxxx-xxxx" style="width:100%;padding:0.5rem;margin-bottom:1.25rem;border:1px solid var(--border,#B8B19C);border-radius:2px;background:var(--bg-field,#DDD6BB);box-sizing:border-box;">' +
+            '<div style="display:flex;gap:0.75rem;justify-content:flex-end;">' +
+            '<button onclick="document.getElementById(\'bluesky-modal\').remove()" style="padding:0.5rem 1rem;background:transparent;border:1px solid var(--border,#B8B19C);border-radius:2px;cursor:pointer;color:var(--text-sec,#7A7464);">キャンセル</button>' +
+            '<button onclick="submitBluesky()" id="bs-submit-btn" style="padding:0.5rem 1rem;background:var(--accent-gold,#C8964A);border:none;border-radius:2px;color:#fff;cursor:pointer;">連携する</button>' +
+            '</div></div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        document.getElementById('bs-handle').focus();
+    }
+
+    async function submitBluesky() {
+        var handle = document.getElementById('bs-handle').value.trim();
+        var appPass = document.getElementById('bs-apppass').value.trim();
+        if (!handle || !appPass) {
+            showToast('warning', '入力エラー', 'ハンドルとアプリパスワードを入力してください。');
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        var btn = document.getElementById('bs-submit-btn');
+        btn.disabled = true;
+        btn.textContent = '接続中...';
+
+        try {
+            var callbackUrl = handle;
+            var response = await fetch('/api/v1/accounts/bluesky/callback?callbackUrl=' + encodeURIComponent(callbackUrl), {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: appPass })
+            });
+
+            if (response.ok) {
+                document.getElementById('bluesky-modal').remove();
+                showToast('success', 'Bluesky連携完了', handle + ' との連携に成功しました');
+                var statusDiv = document.getElementById('connect-status');
+                statusDiv.innerHTML = '<span style="color: var(--ak-success, #2d6a4f);">Bluesky (' + escapeHtmlGlobal(handle) + ') との連携が完了しました</span>';
+            } else {
+                await showApiError(response, 'Bluesky への接続に失敗しました');
+                btn.disabled = false;
+                btn.textContent = '連携する';
+            }
+        } catch (err) {
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できません。');
+            btn.disabled = false;
+            btn.textContent = '連携する';
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

@@ -1,0 +1,27 @@
+<aside class="ak-sidebar" id="sidebar">
+    <div class="ak-sidebar-section">メイン</div>
+    <a href="/dashboard" class="{#if active == 'dashboard'}active{/if}">ダッシュボード</a>
+    <a href="/dashboard/analytics" class="{#if active == 'analytics'}active{/if}">アナリティクス</a>
+    <div class="ak-sidebar-section">コンテンツ</div>
+    <a href="/posts" class="{#if active == 'posts'}active{/if}">投稿一覧</a>
+    <a href="/posts/compose" class="{#if active == 'compose'}active{/if}">新規投稿</a>
+    <a href="/templates" class="{#if active == 'templates'}active{/if}">テンプレート</a>
+    <a href="/media" class="{#if active == 'media'}active{/if}">メディア</a>
+    <a href="/calendar" class="{#if active == 'calendar'}active{/if}">カレンダー</a>
+    <div class="ak-sidebar-section">AI・自動化</div>
+    <a href="/ai" class="{#if active == 'ai'}active{/if}">AI</a>
+    <a href="/agents" class="{#if active == 'agents'}active{/if}">エージェント</a>
+    <a href="/news" class="{#if active == 'news'}active{/if}">ニュース</a>
+    <a href="/ab-tests" class="{#if active == 'ab-tests'}active{/if}">A/Bテスト</a>
+    <div class="ak-sidebar-section">ソーシャル</div>
+    <a href="/accounts" class="{#if active == 'accounts'}active{/if}">アカウント管理</a>
+    <a href="/friends" class="{#if active == 'friends'}active{/if}">フレンド管理</a>
+    <div class="ak-sidebar-section">チーム</div>
+    <a href="/teams" class="{#if active == 'teams'}active{/if}">チーム</a>
+    <a href="/approvals" class="{#if active == 'approvals'}active{/if}">承認</a>
+    <div class="ak-sidebar-section">システム</div>
+    <a href="/notifications" class="{#if active == 'notifications'}active{/if}">通知</a>
+    <a href="/audit-logs" class="{#if active == 'audit-logs'}active{/if}">監査ログ</a>
+    <div class="ak-sidebar-section">設定</div>
+    <a href="#" onclick="logout(); return false;">ログアウト</a>
+</aside>

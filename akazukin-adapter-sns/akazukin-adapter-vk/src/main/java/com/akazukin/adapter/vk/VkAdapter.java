@@ -72,21 +72,14 @@ public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
     @Override
     public String getAuthorizationUrl(String callbackUrl, String state) {
-        try {
-            checkRateLimit();
-            String url = AUTH_URL
-                + "?client_id=" + encode(clientId)
-                + "&redirect_uri=" + encode(callbackUrl)
-                + "&display=page"
-                + "&scope=" + encode("wall,offline")
-                + "&response_type=code"
-                + "&state=" + encode(state)
-                + "&v=" + API_VERSION;
-            recordApiCall();
-            return url;
-        } catch (RuntimeException e) {
-            throw wrapException("getAuthorizationUrl", e);
-        }
+        return AUTH_URL
+            + "?client_id=" + encode(clientId)
+            + "&redirect_uri=" + encode(callbackUrl)
+            + "&display=page"
+            + "&scope=" + encode("wall,offline")
+            + "&response_type=code"
+            + "&state=" + encode(state)
+            + "&v=" + API_VERSION;
     }
 
     @Override
@@ -144,6 +137,10 @@ public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        SnsProfile cached = getCachedProfile(accessToken);
+        if (cached != null) {
+            return cached;
+        }
         try {
             checkRateLimit();
             String body = "access_token=" + encode(accessToken)
@@ -175,12 +172,14 @@ public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
             String displayName = (firstName + " " + lastName).trim();
             int followersCount = user.path("counters").path("followers").asInt(0);
 
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 String.valueOf(user.path("id").asLong()),
                 displayName,
                 user.path("photo_200").asText(null),
                 followersCount
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();

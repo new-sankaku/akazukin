@@ -8,6 +8,7 @@ import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.PostTemplateRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -27,6 +28,7 @@ public class TemplateUseCase {
         this.postTemplateRepository = postTemplateRepository;
     }
 
+    @Transactional
     public PostTemplateDto createTemplate(UUID userId, PostTemplateRequestDto request) {
         if (request.name() == null || request.name().isBlank()) {
             throw new DomainException("INVALID_INPUT", "Template name is required");
@@ -76,6 +78,7 @@ public class TemplateUseCase {
         return toPostTemplateDto(template);
     }
 
+    @Transactional
     public void deleteTemplate(UUID templateId, UUID userId) {
         PostTemplate template = postTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new DomainException("TEMPLATE_NOT_FOUND",
@@ -89,6 +92,7 @@ public class TemplateUseCase {
         LOG.log(Level.INFO, "Post template deleted: {0}", templateId);
     }
 
+    @Transactional
     public void recordUsage(UUID templateId) {
         postTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new DomainException("TEMPLATE_NOT_FOUND",

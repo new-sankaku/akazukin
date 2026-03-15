@@ -5,7 +5,6 @@ import com.akazukin.application.dto.AnalyticsResponseDto;
 import com.akazukin.domain.exception.PostNotFoundException;
 import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.DashboardSummary;
-import com.akazukin.domain.model.Post;
 import com.akazukin.domain.model.PostStatus;
 import com.akazukin.domain.model.PostTarget;
 import com.akazukin.domain.model.SnsAccount;
@@ -20,16 +19,21 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class AnalyticsUseCase {
+
+    private static final Logger LOG = Logger.getLogger(AnalyticsUseCase.class.getName());
 
     private final PostRepository postRepository;
     private final PostTargetRepository postTargetRepository;
@@ -51,91 +55,130 @@ public class AnalyticsUseCase {
     }
 
     public DashboardSummary getDashboardSummary(UUID userId) {
-        long totalPosts = postRepository.countByUserId(userId);
-        long publishedPosts = postRepository.countByUserIdAndStatus(userId, PostStatus.PUBLISHED);
-        long failedPosts = postRepository.countByUserIdAndStatus(userId, PostStatus.FAILED);
-        long scheduledPosts = postRepository.countByUserIdAndStatus(userId, PostStatus.SCHEDULED);
+        long perfStart = System.nanoTime();
+        try {
+            long totalPosts = postRepository.countByUserId(userId);
+            long publishedPosts = postRepository.countByUserIdAndStatus(userId, PostStatus.PUBLISHED);
+            long failedPosts = postRepository.countByUserIdAndStatus(userId, PostStatus.FAILED);
+            long scheduledPosts = postRepository.countByUserIdAndStatus(userId, PostStatus.SCHEDULED);
 
-        List<SnsAccount> accounts = snsAccountRepository.findByUserId(userId);
-        int connectedAccounts = accounts.size();
+            List<SnsAccount> accounts = snsAccountRepository.findByUserId(userId);
+            int connectedAccounts = accounts.size();
 
-        Map<SnsPlatform, Integer> postCountByPlatform = calculatePostCountByPlatform(userId);
+            Map<SnsPlatform, Integer> postCountByPlatform = calculatePostCountByPlatform(userId);
 
-        List<AccountStats> accountStats = fetchAccountStats(accounts);
+            List<AccountStats> accountStats = fetchAccountStats(accounts);
 
-        return new DashboardSummary(
-                (int) totalPosts,
-                (int) publishedPosts,
-                (int) failedPosts,
-                (int) scheduledPosts,
-                connectedAccounts,
-                postCountByPlatform,
-                accountStats
-        );
+            return new DashboardSummary(
+                    (int) totalPosts,
+                    (int) publishedPosts,
+                    (int) failedPosts,
+                    (int) scheduledPosts,
+                    connectedAccounts,
+                    postCountByPlatform,
+                    accountStats
+            );
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AnalyticsUseCase.getDashboardSummary", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AnalyticsUseCase.getDashboardSummary", perfMs});
+            }
+        }
     }
 
     public AnalyticsResponseDto getAnalytics(UUID userId) {
-        DashboardSummary summary = getDashboardSummary(userId);
+        long perfStart = System.nanoTime();
+        try {
+            DashboardSummary summary = getDashboardSummary(userId);
 
-        Map<String, Integer> platformCounts = summary.postCountByPlatform().entrySet().stream()
-                .collect(Collectors.toMap(
-                        e -> e.getKey().name(),
-                        Map.Entry::getValue
-                ));
+            Map<String, Integer> platformCounts = summary.postCountByPlatform().entrySet().stream()
+                    .collect(Collectors.toMap(
+                            e -> e.getKey().name(),
+                            Map.Entry::getValue
+                    ));
 
-        List<AccountStatsDto> accountStatsDtos = summary.accountStats().stream()
-                .map(stats -> new AccountStatsDto(
-                        stats.platform().name(),
-                        stats.accountIdentifier(),
-                        stats.followerCount(),
-                        stats.followingCount(),
-                        stats.postCount(),
-                        stats.fetchedAt()
-                ))
-                .toList();
+            List<AccountStatsDto> accountStatsDtos = summary.accountStats().stream()
+                    .map(stats -> new AccountStatsDto(
+                            stats.platform().name(),
+                            stats.accountIdentifier(),
+                            stats.followerCount(),
+                            stats.followingCount(),
+                            stats.postCount(),
+                            stats.fetchedAt()
+                    ))
+                    .toList();
 
-        return new AnalyticsResponseDto(
-                summary.totalPosts(),
-                summary.publishedPosts(),
-                summary.failedPosts(),
-                summary.scheduledPosts(),
-                summary.connectedAccounts(),
-                platformCounts,
-                accountStatsDtos
-        );
+            return new AnalyticsResponseDto(
+                    summary.totalPosts(),
+                    summary.publishedPosts(),
+                    summary.failedPosts(),
+                    summary.scheduledPosts(),
+                    summary.connectedAccounts(),
+                    platformCounts,
+                    accountStatsDtos
+            );
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AnalyticsUseCase.getAnalytics", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AnalyticsUseCase.getAnalytics", perfMs});
+            }
+        }
     }
 
     public List<SnsPostStats> getPostAnalytics(UUID postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException(postId));
+        long perfStart = System.nanoTime();
+        try {
+            postRepository.findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException(postId));
 
-        List<PostTarget> targets = postTargetRepository.findByPostId(postId);
-        List<SnsPostStats> statsList = new ArrayList<>();
+            List<PostTarget> targets = postTargetRepository.findByPostId(postId);
 
-        for (PostTarget target : targets) {
-            if (target.getPlatformPostId() == null) {
-                continue;
+            List<PostTarget> validTargets = targets.stream()
+                    .filter(t -> t.getPlatformPostId() != null)
+                    .filter(t -> analyticsAdapters.containsKey(t.getPlatform()))
+                    .toList();
+
+            if (validTargets.isEmpty()) {
+                return List.of();
             }
 
-            SnsAnalyticsAdapter adapter = analyticsAdapters.get(target.getPlatform());
-            if (adapter == null) {
-                continue;
-            }
+            List<UUID> accountIds = validTargets.stream()
+                    .map(PostTarget::getSnsAccountId)
+                    .distinct()
+                    .toList();
+            Map<UUID, SnsAccount> accountMap = snsAccountRepository.findAllByIds(accountIds).stream()
+                    .collect(Collectors.toMap(SnsAccount::getId, Function.identity()));
 
-            SnsAccount account = snsAccountRepository.findById(target.getSnsAccountId())
-                    .orElse(null);
-            if (account == null) {
-                continue;
-            }
+            List<CompletableFuture<Optional<SnsPostStats>>> futures = validTargets.stream()
+                    .filter(target -> accountMap.containsKey(target.getSnsAccountId()))
+                    .map(target -> {
+                        SnsAccount account = accountMap.get(target.getSnsAccountId());
+                        SnsAnalyticsAdapter adapter = analyticsAdapters.get(target.getPlatform());
+                        return CompletableFuture.supplyAsync(() ->
+                                adapter.getPostStats(account.getAccessToken(), target.getPlatformPostId())
+                        );
+                    })
+                    .toList();
 
-            Optional<SnsPostStats> stats = adapter.getPostStats(
-                    account.getAccessToken(),
-                    target.getPlatformPostId()
-            );
-            stats.ifPresent(statsList::add);
+            CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+            return futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .toList();
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AnalyticsUseCase.getPostAnalytics", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AnalyticsUseCase.getPostAnalytics", perfMs});
+            }
         }
-
-        return statsList;
     }
 
     private Map<SnsPlatform, Integer> calculatePostCountByPlatform(UUID userId) {
@@ -148,33 +191,30 @@ public class AnalyticsUseCase {
     }
 
     private List<AccountStats> fetchAccountStats(List<SnsAccount> accounts) {
-        List<AccountStats> statsList = new ArrayList<>();
+        List<CompletableFuture<AccountStats>> futures = accounts.stream()
+                .map(account -> {
+                    SnsAnalyticsAdapter adapter = analyticsAdapters.get(account.getPlatform());
+                    AccountStats fallback = new AccountStats(
+                            account.getPlatform(),
+                            account.getAccountIdentifier(),
+                            0,
+                            0,
+                            0,
+                            Instant.now()
+                    );
+                    if (adapter == null) {
+                        return CompletableFuture.completedFuture(fallback);
+                    }
+                    return CompletableFuture.supplyAsync(() ->
+                            adapter.getAccountStats(account.getAccessToken()).orElse(fallback)
+                    );
+                })
+                .toList();
 
-        for (SnsAccount account : accounts) {
-            SnsAnalyticsAdapter adapter = analyticsAdapters.get(account.getPlatform());
-            if (adapter == null) {
-                statsList.add(new AccountStats(
-                        account.getPlatform(),
-                        account.getAccountIdentifier(),
-                        0,
-                        0,
-                        0,
-                        Instant.now()
-                ));
-                continue;
-            }
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
-            Optional<AccountStats> stats = adapter.getAccountStats(account.getAccessToken());
-            statsList.add(stats.orElse(new AccountStats(
-                    account.getPlatform(),
-                    account.getAccountIdentifier(),
-                    0,
-                    0,
-                    0,
-                    Instant.now()
-            )));
-        }
-
-        return statsList;
+        return futures.stream()
+                .map(CompletableFuture::join)
+                .toList();
     }
 }

@@ -19,8 +19,12 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BlueskyClient implements AutoCloseable {
+
+    private static final Logger LOG = Logger.getLogger(BlueskyClient.class.getName());
 
     private static final int HTTP_CLIENT_ERROR = 400;
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
@@ -52,98 +56,123 @@ public class BlueskyClient implements AutoCloseable {
     }
 
     public SessionResponse createSession(String identifier, String password) {
-        Map<String, String> payload = Map.of(
-            "identifier", identifier,
-            "password", password
-        );
-        String jsonBody = toJson(payload);
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, String> payload = Map.of(
+                "identifier", identifier,
+                "password", password
+            );
+            String jsonBody = toJson(payload);
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(xrpcBaseUrl + "/com.atproto.server.createSession"))
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/com.atproto.server.createSession"))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, SessionResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, SessionResponse.class);
+        } finally {
+            perfLog("BlueskyClient.createSession", perfStart);
+        }
     }
 
     public SessionResponse refreshSession(String refreshJwt) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(xrpcBaseUrl + "/com.atproto.server.refreshSession"))
-            .header("Authorization", "Bearer " + refreshJwt)
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/com.atproto.server.refreshSession"))
+                .header("Authorization", "Bearer " + refreshJwt)
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, SessionResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, SessionResponse.class);
+        } finally {
+            perfLog("BlueskyClient.refreshSession", perfStart);
+        }
     }
 
     public PostResponse createPost(String accessJwt, String did, String text) {
-        String createdAt = DateTimeFormatter.ISO_INSTANT.format(Instant.now().atOffset(ZoneOffset.UTC));
+        long perfStart = System.nanoTime();
+        try {
+            String createdAt = DateTimeFormatter.ISO_INSTANT.format(Instant.now().atOffset(ZoneOffset.UTC));
 
-        Map<String, Object> record = Map.of(
-            "$type", "app.bsky.feed.post",
-            "text", text,
-            "createdAt", createdAt
-        );
+            Map<String, Object> record = Map.of(
+                "$type", "app.bsky.feed.post",
+                "text", text,
+                "createdAt", createdAt
+            );
 
-        Map<String, Object> payload = Map.of(
-            "repo", did,
-            "collection", "app.bsky.feed.post",
-            "record", record
-        );
+            Map<String, Object> payload = Map.of(
+                "repo", did,
+                "collection", "app.bsky.feed.post",
+                "record", record
+            );
 
-        String jsonBody = toJson(payload);
+            String jsonBody = toJson(payload);
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(xrpcBaseUrl + "/com.atproto.repo.createRecord"))
-            .header("Authorization", "Bearer " + accessJwt)
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/com.atproto.repo.createRecord"))
+                .header("Authorization", "Bearer " + accessJwt)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, PostResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, PostResponse.class);
+        } finally {
+            perfLog("BlueskyClient.createPost", perfStart);
+        }
     }
 
     public void deletePost(String accessJwt, String did, String rkey) {
-        Map<String, String> payload = Map.of(
-            "repo", did,
-            "collection", "app.bsky.feed.post",
-            "rkey", rkey
-        );
-        String jsonBody = toJson(payload);
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, String> payload = Map.of(
+                "repo", did,
+                "collection", "app.bsky.feed.post",
+                "rkey", rkey
+            );
+            String jsonBody = toJson(payload);
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(xrpcBaseUrl + "/com.atproto.repo.deleteRecord"))
-            .header("Authorization", "Bearer " + accessJwt)
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/com.atproto.repo.deleteRecord"))
+                .header("Authorization", "Bearer " + accessJwt)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        sendRequest(request);
+            sendRequest(request);
+        } finally {
+            perfLog("BlueskyClient.deletePost", perfStart);
+        }
     }
 
     public ProfileResponse getProfile(String accessJwt, String actor) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(xrpcBaseUrl + "/app.bsky.actor.getProfile?actor=" + actor))
-            .header("Authorization", "Bearer " + accessJwt)
-            .header("Accept", "application/json")
-            .GET()
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/app.bsky.actor.getProfile?actor=" + actor))
+                .header("Authorization", "Bearer " + accessJwt)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, ProfileResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, ProfileResponse.class);
+        } finally {
+            perfLog("BlueskyClient.getProfile", perfStart);
+        }
     }
 
     @Override
@@ -153,31 +182,45 @@ public class BlueskyClient implements AutoCloseable {
         }
     }
 
+    private void perfLog(String methodName, long startNanos) {
+        long perfMs = (System.nanoTime() - startNanos) / 1_000_000;
+        if (perfMs >= 100) {
+            LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{methodName, perfMs});
+        } else {
+            LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{methodName, perfMs});
+        }
+    }
+
     private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler)
             throws IOException, InterruptedException {
+        long perfStart = System.nanoTime();
         int maxRetries = 3;
         long delayMs = 1000;
         IOException lastException = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-                HttpResponse<T> response = httpClient.send(request, handler);
-                if (response.statusCode() == 429 && attempt < maxRetries) {
-                    String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
-                    long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
-                    Thread.sleep(Math.min(waitMs, 30000));
-                    delayMs *= 2;
-                    continue;
-                }
-                return response;
-            } catch (IOException e) {
-                lastException = e;
-                if (attempt < maxRetries) {
-                    Thread.sleep(delayMs);
-                    delayMs *= 2;
+        try {
+            for (int attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    HttpResponse<T> response = httpClient.send(request, handler);
+                    if (response.statusCode() == 429 && attempt < maxRetries) {
+                        String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
+                        long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
+                        Thread.sleep(Math.min(waitMs, 30000));
+                        delayMs *= 2;
+                        continue;
+                    }
+                    return response;
+                } catch (IOException e) {
+                    lastException = e;
+                    if (attempt < maxRetries) {
+                        Thread.sleep(delayMs);
+                        delayMs *= 2;
+                    }
                 }
             }
+            throw lastException;
+        } finally {
+            perfLog("BlueskyClient.sendWithRetry", perfStart);
         }
-        throw lastException;
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) {

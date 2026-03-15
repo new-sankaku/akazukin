@@ -6,11 +6,8 @@ public record PinterestConfig(
     String redirectUri
 ) {
     public PinterestConfig {
-        if (appId == null || appId.isBlank()) {
-            throw new IllegalArgumentException("appId required");
-        }
-        if (appSecret == null || appSecret.isBlank()) {
-            throw new IllegalArgumentException("appSecret required");
-        }
+        appId = appId != null ? appId : "";
+        appSecret = appSecret != null ? appSecret : "";
+        redirectUri = redirectUri != null ? redirectUri : "";
     }
 }

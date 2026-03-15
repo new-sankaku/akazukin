@@ -77,6 +77,7 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
 
     @Override
     public SnsAuthToken exchangeToken(String code, String callbackUrl) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String identifier = callbackUrl;
@@ -112,11 +113,14 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
             throw wrapException("exchangeToken", e);
         } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
+        } finally {
+            perfLog("BlueskyAdapter.exchangeToken", perfStart);
         }
     }
 
     @Override
     public SnsAuthToken refreshToken(String refreshToken) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             HttpRequest request = HttpRequest.newBuilder()
@@ -145,12 +149,19 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
             throw wrapException("refreshToken", e);
         } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
+        } finally {
+            perfLog("BlueskyAdapter.refreshToken", perfStart);
         }
     }
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        long perfStart = System.nanoTime();
         try {
+            SnsProfile cached = getCachedProfile(accessToken);
+            if (cached != null) {
+                return cached;
+            }
             checkRateLimit();
             String did = extractDidFromToken(accessToken);
             HttpRequest request = HttpRequest.newBuilder()
@@ -167,12 +178,14 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
             JsonNode json = objectMapper.readTree(response.body());
             recordApiCall();
 
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 json.path("handle").asText(),
                 json.path("displayName").asText(""),
                 json.path("avatar").asText(null),
                 json.path("followersCount").asInt(0)
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -180,11 +193,14 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
             throw wrapException("getProfile", e);
         } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
+        } finally {
+            perfLog("BlueskyAdapter.getProfile", perfStart);
         }
     }
 
     @Override
     public PostResult post(String accessToken, PostRequest request) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String did = extractDidFromToken(accessToken);
@@ -226,11 +242,14 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
             throw wrapException("post", e);
         } catch (RuntimeException e) {
             throw wrapException("post", e);
+        } finally {
+            perfLog("BlueskyAdapter.post", perfStart);
         }
     }
 
     @Override
     public void deletePost(String accessToken, String postId) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String did = extractDidFromToken(accessToken);
@@ -259,6 +278,8 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
             throw wrapException("deletePost", e);
         } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
+        } finally {
+            perfLog("BlueskyAdapter.deletePost", perfStart);
         }
     }
 

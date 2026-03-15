@@ -110,7 +110,7 @@ public class AiContentUseCase {
             }
 
             Instant now = Instant.now();
-            ContentTone tone = ContentTone.valueOf(request.tone().toUpperCase());
+            ContentTone tone = parseTone(request.tone());
 
             AiPersona persona = new AiPersona(
                     UUID.randomUUID(),
@@ -155,7 +155,7 @@ public class AiContentUseCase {
                 throw new DomainException("INVALID_INPUT", "Persona name is required");
             }
 
-            ContentTone tone = ContentTone.valueOf(request.tone().toUpperCase());
+            ContentTone tone = parseTone(request.tone());
 
             persona.setName(request.name());
             persona.setSystemPrompt(request.systemPrompt());
@@ -199,6 +199,17 @@ public class AiContentUseCase {
             } else {
                 LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AiContentUseCase.deletePersona", perfMs});
             }
+        }
+    }
+
+    private ContentTone parseTone(String tone) {
+        if (tone == null || tone.isBlank()) {
+            throw new DomainException("INVALID_INPUT", "Tone is required");
+        }
+        try {
+            return ContentTone.valueOf(tone.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new DomainException("INVALID_INPUT", "Invalid tone: " + tone);
         }
     }
 

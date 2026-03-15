@@ -9,5 +9,9 @@ public enum SnsPlatform {
     REDDIT,
     TELEGRAM,
     VK,
-    PINTEREST
+    PINTEREST,
+    MIXI2,
+    NOTE,
+    NICONICO,
+    TIKTOK
 }

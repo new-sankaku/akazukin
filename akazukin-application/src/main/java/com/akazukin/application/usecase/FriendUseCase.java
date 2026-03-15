@@ -8,6 +8,7 @@ import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.FriendTargetRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,6 +31,7 @@ public class FriendUseCase {
                 .toList();
     }
 
+    @Transactional
     public FriendTargetDto addFriend(UUID userId, FriendTargetRequestDto request) {
         SnsPlatform platform;
         try {
@@ -57,6 +59,7 @@ public class FriendUseCase {
         return toDto(saved);
     }
 
+    @Transactional
     public void removeFriend(UUID friendId, UUID userId) {
         FriendTarget friend = friendTargetRepository.findById(friendId)
                 .orElseThrow(() -> new DomainException("NOT_FOUND", "Friend target not found: " + friendId));

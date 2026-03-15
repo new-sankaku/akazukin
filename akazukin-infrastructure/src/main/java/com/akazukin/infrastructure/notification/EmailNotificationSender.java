@@ -29,10 +29,14 @@ public class EmailNotificationSender implements NotificationSender {
             return;
         }
 
+        String sanitizedTitle = notification.getTitle()
+                .replace("\r", "")
+                .replace("\n", "");
+
         Mail mail = Mail.withText(
                 recipient,
-                "[Akazukin] " + notification.getTitle(),
-                notification.getMessage()
+                "[Akazukin] " + sanitizedTitle,
+                notification.getBody()
         );
 
         mailer.send(mail)

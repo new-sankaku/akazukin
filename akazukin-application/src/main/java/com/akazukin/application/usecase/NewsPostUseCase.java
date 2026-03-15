@@ -14,6 +14,7 @@ import com.akazukin.domain.port.NewsItemRepository;
 import com.akazukin.domain.port.NewsSourceRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -42,6 +43,7 @@ public class NewsPostUseCase {
         this.aiTextGenerator = aiTextGenerator;
     }
 
+    @Transactional
     public NewsPostGeneratedDto fetchAndGeneratePost(UUID userId, UUID sourceId) {
         long perfStart = System.nanoTime();
         try {
@@ -118,6 +120,7 @@ public class NewsPostUseCase {
         }
     }
 
+    @Transactional
     public NewsSourceDto addSource(UUID userId, NewsSourceRequestDto request) {
         long perfStart = System.nanoTime();
         try {
@@ -153,6 +156,7 @@ public class NewsPostUseCase {
         }
     }
 
+    @Transactional
     public void removeSource(UUID sourceId, UUID userId) {
         long perfStart = System.nanoTime();
         try {

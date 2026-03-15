@@ -1,92 +1,543 @@
 {#include base}
-{#title}Dashboard - Akazukin{/title}
+{#title}ダッシュボード - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <h1>{msg:app_title}</h1>
-    <nav>
-        <a href="/dashboard">{msg:nav_dashboard}</a>
-        <a href="/posts">{msg:nav_posts}</a>
-        <a href="/posts/compose">{msg:nav_compose}</a>
-        <a href="/accounts">{msg:nav_accounts}</a>
-        <a href="#" onclick="toggleTheme()">{msg:nav_theme}</a>
-        <a href="#" onclick="logout()">{msg:nav_logout}</a>
-    </nav>
-</header>
+<style>
+    /* Dashboard Stats — Terminal Readout */
+    .dashboard-stats-strip {
+        display: flex;
+        align-items: stretch;
+        border: 1px solid var(--border-lt);
+        background: var(--bg-elevated);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .dashboard-stats-strip::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent-gold), var(--border-lt) 50%, var(--accent-gold));
+    }
+    .dashboard-stat-cell {
+        flex: 1;
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 1rem 1.25rem;
+        position: relative;
+        transition: background 0.2s ease;
+    }
+    .dashboard-stat-cell:hover {
+        background: var(--bg-subtle);
+    }
+    .dashboard-stat-cell + .dashboard-stat-cell::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 20%;
+        height: 60%;
+        width: 1px;
+        background: var(--border-lt);
+    }
+    .dashboard-stat-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .dashboard-stat-value {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--text-heading);
+        line-height: 1;
+        letter-spacing: -0.02em;
+        font-family: 'Consolas', 'SF Mono', 'Fira Code', monospace;
+    }
+    @media (max-width: 768px) {
+        .dashboard-stats-strip {
+            flex-wrap: wrap;
+        }
+        .dashboard-stat-cell {
+            flex: 1 1 50%;
+            min-width: 0;
+        }
+        .dashboard-stat-cell:nth-child(3)::before {
+            display: none;
+        }
+    }
+    @media (max-width: 480px) {
+        .dashboard-stats-strip {
+            flex-direction: column;
+        }
+        .dashboard-stat-cell + .dashboard-stat-cell::before {
+            top: 0;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+        }
+    }
+
+    /* Welcome Section */
+    .dashboard-welcome {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-lt);
+    }
+    .dashboard-welcome h2 {
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: var(--text-heading);
+        letter-spacing: 0.08em;
+        margin-bottom: 0.35rem;
+    }
+    .dashboard-welcome p {
+        font-size: 0.875rem;
+        color: var(--text-sec);
+        letter-spacing: 0.02em;
+    }
+
+    /* Quick Actions */
+    .quick-actions-group {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    .quick-actions-group .btn-primary {
+        display: inline-block;
+        padding: 0.65rem 1.5rem;
+        background: var(--accent-gold);
+        color: #fff;
+        border: 1px solid var(--accent-gold);
+        text-decoration: none;
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+        transition: background 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+    .quick-actions-group .btn-primary:hover {
+        background: var(--accent-gold-hover);
+        border-color: var(--accent-gold-hover);
+    }
+    .quick-actions-group .btn-secondary {
+        display: inline-block;
+        padding: 0.65rem 1.5rem;
+        background: var(--bg-surface);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        text-decoration: none;
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+        transition: background 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+    .quick-actions-group .btn-secondary:hover {
+        background: var(--bg-elevated);
+        border-color: var(--accent-gold);
+    }
+    .quick-actions-group .btn-outline {
+        display: inline-block;
+        padding: 0.65rem 1.5rem;
+        background: transparent;
+        color: var(--text-sec);
+        border: 1px solid var(--border-lt);
+        text-decoration: none;
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+        transition: color 0.2s ease, border-color 0.2s ease;
+        cursor: pointer;
+    }
+    .quick-actions-group .btn-outline:hover {
+        color: var(--text-primary);
+        border-color: var(--accent-gold);
+    }
+
+    /* Section Cards */
+    .dashboard-section-title {
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        color: var(--text-sec);
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-lt);
+    }
+
+    /* Recent Posts */
+    .recent-post-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.875rem 0;
+        border-bottom: 1px solid var(--border-lt);
+        transition: background 0.2s ease;
+    }
+    .recent-post-item:last-child {
+        border-bottom: none;
+    }
+    .recent-post-item:hover {
+        background: var(--bg-subtle);
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    .recent-post-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .recent-post-text {
+        font-size: 0.875rem;
+        color: var(--text-body);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.25rem;
+    }
+    .recent-post-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        font-weight: 500;
+        border: 1px solid;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .status-badge.draft {
+        color: var(--text-sec);
+        border-color: var(--border);
+        background: var(--bg-surface);
+    }
+    .status-badge.scheduled {
+        color: #8B7530;
+        border-color: var(--accent-gold);
+        background: rgba(200, 150, 74, 0.1);
+    }
+    .status-badge.published {
+        color: #4A7A4A;
+        border-color: #8AB88A;
+        background: rgba(106, 168, 106, 0.1);
+    }
+    .status-badge.failed {
+        color: #8B4040;
+        border-color: #C08080;
+        background: rgba(180, 100, 100, 0.1);
+    }
+
+    /* Platform Badges */
+    .platform-badge {
+        display: inline-block;
+        padding: 0.3rem 0.7rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        border: 1px solid var(--border-lt);
+        color: var(--text-body);
+        background: var(--bg-surface);
+        margin: 0.2rem;
+        transition: border-color 0.2s ease;
+    }
+    .platform-badge:hover {
+        border-color: var(--accent-gold);
+    }
+    .platform-badge.twitter { border-left: 3px solid #1DA1F2; }
+    .platform-badge.bluesky { border-left: 3px solid #0085FF; }
+    .platform-badge.mastodon { border-left: 3px solid #6364FF; }
+    .platform-badge.threads { border-left: 3px solid #000000; }
+    .platform-badge.instagram { border-left: 3px solid #E4405F; }
+    .platform-badge.reddit { border-left: 3px solid #FF4500; }
+    .platform-badge.telegram { border-left: 3px solid #0088CC; }
+    .platform-badge.vk { border-left: 3px solid #4A76A8; }
+    .platform-badge.pinterest { border-left: 3px solid #BD081C; }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        letter-spacing: 0.03em;
+    }
+    .empty-state::before {
+        content: '---';
+        display: block;
+        letter-spacing: 0.5em;
+        color: var(--border-lt);
+        margin-bottom: 0.75rem;
+    }
+
+    /* Section Link */
+    .section-footer-link {
+        display: block;
+        text-align: right;
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-lt);
+        font-size: 0.8rem;
+        color: var(--accent-gold);
+        text-decoration: none;
+        letter-spacing: 0.05em;
+        transition: color 0.2s ease;
+    }
+    .section-footer-link:hover {
+        color: var(--accent-gold-hover);
+    }
+
+    /* Content Grid for bottom sections */
+    .dashboard-content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-top: 1.25rem;
+    }
+    @media (max-width: 768px) {
+        .dashboard-content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+        background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-elevated) 50%, var(--bg-subtle) 75%);
+        background-size: 200% 100%;
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes skeleton-pulse {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+</style>
+
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard" class="active">{msg:nav_dashboard}</a>
-        <a href="/posts">{msg:nav_posts}</a>
-        <a href="/posts/compose">{msg:nav_compose}</a>
-        <a href="/accounts">{msg:nav_accounts}</a>
-    </aside>
+    {#sidebar active="dashboard" /}
 
     <main class="ak-main">
-        <h2>Dashboard</h2>
+        <!-- Welcome -->
+        <div class="dashboard-welcome">
+            <h2>ダッシュボード</h2>
+            <p>SNSアカウントの管理と投稿の状況を確認できます</p>
+        </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"
-             id="dashboard-stats"
-             hx-get="/api/v1/dashboard/summary"
-             hx-trigger="load"
-             hx-headers='js:{"Authorization": "Bearer " + localStorage.getItem("accessToken")}'
-             hx-swap="innerHTML">
-            <div class="ak-card ak-stat">
-                <h3>--</h3>
-                <p>Total Posts</p>
+        <!-- Stats Strip -->
+        <div class="dashboard-stats-strip" id="dashboard-stats">
+            <div class="dashboard-stat-cell">
+                <span class="dashboard-stat-label">総投稿</span>
+                <span class="dashboard-stat-value" id="stat-total">--</span>
             </div>
-            <div class="ak-card ak-stat">
-                <h3>--</h3>
-                <p>Connected Accounts</p>
+            <div class="dashboard-stat-cell">
+                <span class="dashboard-stat-label">公開済</span>
+                <span class="dashboard-stat-value" id="stat-published">--</span>
+            </div>
+            <div class="dashboard-stat-cell">
+                <span class="dashboard-stat-label">下書き</span>
+                <span class="dashboard-stat-value" id="stat-drafts">--</span>
+            </div>
+            <div class="dashboard-stat-cell">
+                <span class="dashboard-stat-label">連携</span>
+                <span class="dashboard-stat-value" id="stat-accounts">--</span>
             </div>
         </div>
 
-        <div class="ak-card" style="margin-top: 2rem;">
-            <h3>Quick Actions</h3>
-            <p>
-                <a href="/posts/compose" role="button">Compose New Post</a>
-                <a href="/accounts" role="button" class="secondary">Manage Accounts</a>
-            </p>
+        <!-- Quick Actions -->
+        <div class="ak-card" style="margin-bottom: 1.25rem;">
+            <div class="dashboard-section-title">クイックアクション</div>
+            <div class="quick-actions-group">
+                <a href="/posts/compose" class="btn-primary">新規投稿を作成</a>
+                <a href="/accounts/connect" class="btn-secondary">アカウントを連携</a>
+                <a href="/posts" class="btn-outline">投稿一覧を表示</a>
+            </div>
+        </div>
+
+        <!-- Bottom Content Grid -->
+        <div class="dashboard-content-grid">
+            <!-- Recent Posts -->
+            <div class="ak-card">
+                <div class="dashboard-section-title">最近の投稿</div>
+                <div id="recent-posts">
+                    <div class="empty-state">読み込み中...</div>
+                </div>
+                <a href="/posts" class="section-footer-link">すべての投稿を見る</a>
+            </div>
+
+            <!-- Connected Accounts -->
+            <div class="ak-card">
+                <div class="dashboard-section-title">連携済みアカウント</div>
+                <div id="connected-accounts">
+                    <div class="empty-state">読み込み中...</div>
+                </div>
+                <a href="/accounts/connect" class="section-footer-link">新しいアカウントを連携</a>
+            </div>
         </div>
     </main>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        loadDashboard();
-    });
-
-    async function loadDashboard() {
-        const token = localStorage.getItem('accessToken');
+        var token = localStorage.getItem('accessToken');
         if (!token) {
             window.location.href = '/';
             return;
         }
+        loadDashboardStats(token);
+        loadRecentPosts(token);
+        loadConnectedAccounts(token);
+    });
 
+    function handleAuthError(status) {
+        if (status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            window.location.href = '/';
+            return true;
+        }
+        return false;
+    }
+
+    async function loadDashboardStats(token) {
         try {
-            const response = await fetch('/api/v1/dashboard/summary', {
+            var response = await fetch('/api/v1/dashboard/summary', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-
-            if (response.status === 401) {
-                window.location.href = '/';
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                showApiError(response);
                 return;
             }
-
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById('dashboard-stats').innerHTML =
-                    '<div class="ak-card ak-stat"><h3>' + data.totalPosts + '</h3><p>Total Posts</p></div>' +
-                    '<div class="ak-card ak-stat"><h3>' + data.totalAccounts + '</h3><p>Connected Accounts</p></div>';
-            }
+            var data = await response.json();
+            document.getElementById('stat-total').textContent = data.totalPosts != null ? data.totalPosts : 0;
+            document.getElementById('stat-published').textContent = data.publishedPosts != null ? data.publishedPosts : 0;
+            document.getElementById('stat-drafts').textContent = data.draftPosts != null ? data.draftPosts : 0;
+            document.getElementById('stat-accounts').textContent = data.connectedAccounts != null ? data.connectedAccounts : 0;
         } catch (err) {
-            console.error('Failed to load dashboard', err);
+            showToast('error', 'データ取得エラー', 'ダッシュボード情報を読み込めませんでした');
         }
+    }
+
+    async function loadRecentPosts(token) {
+        var container = document.getElementById('recent-posts');
+        try {
+            var response = await fetch('/api/v1/posts?page=0&size=5', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                container.innerHTML = '<div class="empty-state">投稿の読み込みに失敗しました</div>';
+                showApiError(response);
+                return;
+            }
+            var data = await response.json();
+            var posts = data.content || data;
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div class="empty-state">まだ投稿がありません。最初の投稿を作成しましょう！</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < posts.length; i++) {
+                var post = posts[i];
+                var statusClass = (post.status || '').toLowerCase();
+                var statusLabel = getStatusLabel(post.status);
+                var dateStr = formatDate(post.createdAt || post.scheduledAt);
+                var content = escapeHtmlGlobal(truncate(post.content || post.body || '', 60));
+                html += '<div class="recent-post-item">' +
+                    '<span class="status-badge ' + statusClass + '">' + escapeHtmlGlobal(statusLabel) + '</span>' +
+                    '<div class="recent-post-content">' +
+                    '<div class="recent-post-text">' + content + '</div>' +
+                    '<div class="recent-post-meta">' + escapeHtmlGlobal(dateStr) + '</div>' +
+                    '</div></div>';
+            }
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = '<div class="empty-state">投稿の読み込みに失敗しました</div>';
+            showToast('error', '通信エラー', '投稿情報を取得できませんでした');
+        }
+    }
+
+    async function loadConnectedAccounts(token) {
+        var container = document.getElementById('connected-accounts');
+        try {
+            var response = await fetch('/api/v1/accounts', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                container.innerHTML = '<div class="empty-state">アカウント情報の読み込みに失敗しました</div>';
+                showApiError(response);
+                return;
+            }
+            var accounts = await response.json();
+            if (!accounts || accounts.length === 0) {
+                container.innerHTML = '<div class="empty-state">SNSアカウントが連携されていません</div>';
+                return;
+            }
+            var html = '<div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">';
+            for (var i = 0; i < accounts.length; i++) {
+                var account = accounts[i];
+                var platform = (account.platform || account.snsPlatform || '').toLowerCase();
+                var displayName = escapeHtmlGlobal(account.displayName || account.username || platform);
+                html += '<span class="platform-badge ' + escapeHtmlGlobal(platform) + '">' + displayName + '</span>';
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = '<div class="empty-state">アカウント情報の読み込みに失敗しました</div>';
+            showToast('error', '通信エラー', 'アカウント情報を取得できませんでした');
+        }
+    }
+
+    function getStatusLabel(status) {
+        var labels = {
+            'DRAFT': '下書き',
+            'SCHEDULED': '予約済み',
+            'PUBLISHED': '公開済み',
+            'FAILED': '失敗'
+        };
+        return labels[status] || status || '不明';
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+            var d = new Date(dateStr);
+            return d.getFullYear() + '/' +
+                String(d.getMonth() + 1).padStart(2, '0') + '/' +
+                String(d.getDate()).padStart(2, '0') + ' ' +
+                String(d.getHours()).padStart(2, '0') + ':' +
+                String(d.getMinutes()).padStart(2, '0');
+        } catch (e) {
+            return dateStr;
+        }
+    }
+
+    function truncate(str, len) {
+        if (!str) return '';
+        return str.length > len ? str.substring(0, len) + '...' : str;
     }
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('ak-sidebar--open');
+        }
     }
 </script>
 {/body}

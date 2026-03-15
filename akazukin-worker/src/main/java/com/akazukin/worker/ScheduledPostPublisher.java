@@ -4,6 +4,7 @@ import com.akazukin.application.usecase.PostPublishUseCase;
 import com.akazukin.domain.model.Post;
 import com.akazukin.domain.port.PostRepository;
 import io.quarkus.scheduler.Scheduled;
+import io.quarkus.scheduler.Scheduled.ConcurrentExecution;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -27,7 +28,8 @@ public class ScheduledPostPublisher {
         this.postPublishUseCase = postPublishUseCase;
     }
 
-    @Scheduled(every = "1m", identity = "scheduled-post-publisher")
+    @Scheduled(every = "1m", identity = "scheduled-post-publisher",
+            concurrentExecution = ConcurrentExecution.SKIP)
     void publishScheduledPosts() {
         List<Post> scheduledPosts = postRepository.findScheduledBefore(Instant.now());
         if (scheduledPosts.isEmpty()) {

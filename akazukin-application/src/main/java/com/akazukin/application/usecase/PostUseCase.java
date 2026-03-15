@@ -16,6 +16,7 @@ import com.akazukin.domain.port.PostTargetRepository;
 import com.akazukin.domain.port.SnsAccountRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -47,161 +48,255 @@ public class PostUseCase {
         this.postPublisher = postPublisher;
     }
 
+    @Transactional
     public PostResponseDto createPost(UUID userId, PostRequestDto request) {
-        if (request.content() == null || request.content().isBlank()) {
-            throw new DomainException("INVALID_INPUT", "Post content is required");
+        long perfStart = System.nanoTime();
+        try {
+            if (request.content() == null || request.content().isBlank()) {
+                throw new DomainException("INVALID_INPUT", "Post content is required");
+            }
+            if (request.targetPlatforms() == null || request.targetPlatforms().isEmpty()) {
+                throw new DomainException("INVALID_INPUT",
+                        "At least one target platform is required");
+            }
+
+            Instant now = Instant.now();
+            boolean isScheduled = request.scheduledAt() != null;
+
+            if (isScheduled && !request.scheduledAt().isAfter(now)) {
+                throw new DomainException("INVALID_SCHEDULE",
+                        "Scheduled time must be in the future");
+            }
+
+            PostStatus postStatus = isScheduled ? PostStatus.SCHEDULED : PostStatus.PUBLISHING;
+
+            Post post = new Post(
+                    UUID.randomUUID(),
+                    userId,
+                    request.content(),
+                    request.mediaUrls() != null ? request.mediaUrls() : List.of(),
+                    postStatus,
+                    request.scheduledAt(),
+                    now,
+                    now
+            );
+
+            Post savedPost = postRepository.save(post);
+
+            List<PostTarget> targets = createTargets(
+                    savedPost, userId, request.targetPlatforms(), postStatus, now);
+
+            try {
+                if (isScheduled) {
+                    postPublisher.schedulePost(savedPost.getId(), request.scheduledAt());
+                    LOG.log(Level.INFO, "Post {0} scheduled for {1}",
+                            new Object[]{savedPost.getId(), request.scheduledAt()});
+                } else {
+                    postPublisher.publishForProcessing(savedPost.getId());
+                    LOG.log(Level.INFO, "Post {0} sent for immediate processing",
+                            savedPost.getId());
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Failed to publish post {0} to queue, will retry later: {1}",
+                        new Object[]{savedPost.getId(), e.getMessage()});
+            }
+
+            return toPostResponseDto(savedPost, targets);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.createPost", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.createPost", perfMs});
+            }
         }
-        if (request.targetPlatforms() == null || request.targetPlatforms().isEmpty()) {
-            throw new DomainException("INVALID_INPUT",
-                    "At least one target platform is required");
-        }
-
-        Instant now = Instant.now();
-        boolean isScheduled = request.scheduledAt() != null;
-
-        if (isScheduled && !request.scheduledAt().isAfter(now)) {
-            throw new DomainException("INVALID_SCHEDULE",
-                    "Scheduled time must be in the future");
-        }
-
-        PostStatus postStatus = isScheduled ? PostStatus.SCHEDULED : PostStatus.PUBLISHING;
-
-        Post post = new Post(
-                UUID.randomUUID(),
-                userId,
-                request.content(),
-                request.mediaUrls() != null ? request.mediaUrls() : List.of(),
-                postStatus,
-                request.scheduledAt(),
-                now,
-                now
-        );
-
-        Post savedPost = postRepository.save(post);
-
-        List<PostTarget> targets = createTargets(
-                savedPost, userId, request.targetPlatforms(), postStatus, now);
-
-        if (isScheduled) {
-            postPublisher.schedulePost(savedPost.getId(), request.scheduledAt());
-            LOG.log(Level.INFO, "Post {0} scheduled for {1}",
-                    new Object[]{savedPost.getId(), request.scheduledAt()});
-        } else {
-            postPublisher.publishForProcessing(savedPost.getId());
-            LOG.log(Level.INFO, "Post {0} sent for immediate processing",
-                    savedPost.getId());
-        }
-
-        return toPostResponseDto(savedPost, targets);
     }
 
+    @Transactional
     public PostResponseDto updatePost(UUID postId, UUID userId, PostRequestDto request) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException(postId));
+        long perfStart = System.nanoTime();
+        try {
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException(postId));
 
-        if (!post.getUserId().equals(userId)) {
-            throw new DomainException("FORBIDDEN", "You do not own this post");
+            if (!post.getUserId().equals(userId)) {
+                throw new DomainException("FORBIDDEN", "You do not own this post");
+            }
+
+            if (!post.isEditable()) {
+                throw new DomainException("POST_NOT_EDITABLE",
+                        "Post cannot be updated in status: " + post.getStatus());
+            }
+
+            if (request.content() == null || request.content().isBlank()) {
+                throw new DomainException("INVALID_INPUT", "Post content is required");
+            }
+            if (request.targetPlatforms() == null || request.targetPlatforms().isEmpty()) {
+                throw new DomainException("INVALID_INPUT",
+                        "At least one target platform is required");
+            }
+
+            Instant now = Instant.now();
+            boolean wasScheduled = post.getStatus() == PostStatus.SCHEDULED;
+            boolean isScheduled = request.scheduledAt() != null;
+
+            if (isScheduled && !request.scheduledAt().isAfter(now)) {
+                throw new DomainException("INVALID_SCHEDULE",
+                        "Scheduled time must be in the future");
+            }
+
+            try {
+                if (wasScheduled) {
+                    postPublisher.cancelScheduledPost(postId);
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Failed to cancel scheduled post {0}: {1}",
+                        new Object[]{postId, e.getMessage()});
+            }
+
+            PostStatus newStatus = isScheduled ? PostStatus.SCHEDULED : PostStatus.PUBLISHING;
+
+            post.setContent(request.content());
+            post.setMediaUrls(request.mediaUrls() != null ? request.mediaUrls() : List.of());
+            post.setStatus(newStatus);
+            post.setScheduledAt(request.scheduledAt());
+            post.setUpdatedAt(now);
+
+            Post savedPost = postRepository.save(post);
+
+            postTargetRepository.deleteByPostId(postId);
+            List<PostTarget> targets = createTargets(
+                    savedPost, userId, request.targetPlatforms(), newStatus, now);
+
+            try {
+                if (isScheduled) {
+                    postPublisher.schedulePost(savedPost.getId(), request.scheduledAt());
+                    LOG.log(Level.INFO, "Post {0} rescheduled for {1}",
+                            new Object[]{savedPost.getId(), request.scheduledAt()});
+                } else {
+                    postPublisher.publishForProcessing(savedPost.getId());
+                    LOG.log(Level.INFO, "Post {0} sent for immediate processing after update",
+                            savedPost.getId());
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Failed to publish post {0} to queue, will retry later: {1}",
+                        new Object[]{savedPost.getId(), e.getMessage()});
+            }
+
+            return toPostResponseDto(savedPost, targets);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.updatePost", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.updatePost", perfMs});
+            }
         }
-
-        if (!post.isEditable()) {
-            throw new DomainException("POST_NOT_EDITABLE",
-                    "Post cannot be updated in status: " + post.getStatus());
-        }
-
-        if (request.content() == null || request.content().isBlank()) {
-            throw new DomainException("INVALID_INPUT", "Post content is required");
-        }
-        if (request.targetPlatforms() == null || request.targetPlatforms().isEmpty()) {
-            throw new DomainException("INVALID_INPUT",
-                    "At least one target platform is required");
-        }
-
-        Instant now = Instant.now();
-        boolean wasScheduled = post.getStatus() == PostStatus.SCHEDULED;
-        boolean isScheduled = request.scheduledAt() != null;
-
-        if (isScheduled && !request.scheduledAt().isAfter(now)) {
-            throw new DomainException("INVALID_SCHEDULE",
-                    "Scheduled time must be in the future");
-        }
-
-        if (wasScheduled) {
-            postPublisher.cancelScheduledPost(postId);
-        }
-
-        PostStatus newStatus = isScheduled ? PostStatus.SCHEDULED : PostStatus.PUBLISHING;
-
-        post.setContent(request.content());
-        post.setMediaUrls(request.mediaUrls() != null ? request.mediaUrls() : List.of());
-        post.setStatus(newStatus);
-        post.setScheduledAt(request.scheduledAt());
-        post.setUpdatedAt(now);
-
-        Post savedPost = postRepository.save(post);
-
-        postTargetRepository.deleteByPostId(postId);
-        List<PostTarget> targets = createTargets(
-                savedPost, userId, request.targetPlatforms(), newStatus, now);
-
-        if (isScheduled) {
-            postPublisher.schedulePost(savedPost.getId(), request.scheduledAt());
-            LOG.log(Level.INFO, "Post {0} rescheduled for {1}",
-                    new Object[]{savedPost.getId(), request.scheduledAt()});
-        } else {
-            postPublisher.publishForProcessing(savedPost.getId());
-            LOG.log(Level.INFO, "Post {0} sent for immediate processing after update",
-                    savedPost.getId());
-        }
-
-        return toPostResponseDto(savedPost, targets);
     }
 
     public PostResponseDto getPost(UUID postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException(postId));
+        long perfStart = System.nanoTime();
+        try {
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException(postId));
 
-        List<PostTarget> targets = postTargetRepository.findByPostId(postId);
+            List<PostTarget> targets = postTargetRepository.findByPostId(postId);
 
-        return toPostResponseDto(post, targets);
+            return toPostResponseDto(post, targets);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.getPost", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.getPost", perfMs});
+            }
+        }
     }
 
     public List<PostResponseDto> listPosts(UUID userId, int page, int size) {
-        int offset = page * size;
-        List<Post> posts = postRepository.findByUserId(userId, offset, size);
+        long perfStart = System.nanoTime();
+        try {
+            int offset = page * size;
+            List<Post> posts = postRepository.findByUserId(userId, offset, size);
 
-        List<UUID> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
-        List<PostTarget> allTargets = postTargetRepository.findByPostIds(postIds);
-        Map<UUID, List<PostTarget>> targetsByPostId = allTargets.stream()
-                .collect(Collectors.groupingBy(PostTarget::getPostId));
+            List<UUID> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+            List<PostTarget> allTargets = postTargetRepository.findByPostIds(postIds);
+            Map<UUID, List<PostTarget>> targetsByPostId = allTargets.stream()
+                    .collect(Collectors.groupingBy(PostTarget::getPostId));
 
-        List<PostResponseDto> result = new ArrayList<>();
-        for (Post post : posts) {
-            List<PostTarget> targets = targetsByPostId.getOrDefault(post.getId(), List.of());
-            result.add(toPostResponseDto(post, targets));
+            List<PostResponseDto> result = new ArrayList<>();
+            for (Post post : posts) {
+                List<PostTarget> targets = targetsByPostId.getOrDefault(post.getId(), List.of());
+                result.add(toPostResponseDto(post, targets));
+            }
+
+            return result;
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.listPosts", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.listPosts", perfMs});
+            }
         }
-
-        return result;
     }
 
+    @Transactional
+    public void submitForApproval(UUID postId, UUID userId) {
+        long perfStart = System.nanoTime();
+        try {
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException(postId));
+            if (!post.getUserId().equals(userId)) {
+                throw new DomainException("FORBIDDEN", "You do not own this post");
+            }
+            if (post.getStatus() != PostStatus.DRAFT) {
+                throw new DomainException("INVALID_STATUS",
+                        "Only draft posts can be submitted for approval");
+            }
+            post.setStatus(PostStatus.PENDING_APPROVAL);
+            post.setUpdatedAt(Instant.now());
+            postRepository.save(post);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.submitForApproval", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.submitForApproval", perfMs});
+            }
+        }
+    }
+
+    @Transactional
     public void deletePost(UUID postId, UUID userId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException(postId));
+        long perfStart = System.nanoTime();
+        try {
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new PostNotFoundException(postId));
 
-        if (!post.getUserId().equals(userId)) {
-            throw new DomainException("FORBIDDEN", "You do not own this post");
+            if (!post.getUserId().equals(userId)) {
+                throw new DomainException("FORBIDDEN", "You do not own this post");
+            }
+
+            if (!post.isEditable()) {
+                throw new DomainException("POST_NOT_EDITABLE",
+                        "Post cannot be deleted in status: " + post.getStatus());
+            }
+
+            if (post.getStatus() == PostStatus.SCHEDULED) {
+                postPublisher.cancelScheduledPost(postId);
+            }
+
+            postTargetRepository.deleteByPostId(postId);
+            postRepository.deleteById(postId);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.deletePost", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostUseCase.deletePost", perfMs});
+            }
         }
-
-        if (!post.isEditable()) {
-            throw new DomainException("POST_NOT_EDITABLE",
-                    "Post cannot be deleted in status: " + post.getStatus());
-        }
-
-        if (post.getStatus() == PostStatus.SCHEDULED) {
-            postPublisher.cancelScheduledPost(postId);
-        }
-
-        postTargetRepository.deleteByPostId(postId);
-        postRepository.deleteById(postId);
     }
 
     private List<PostTarget> createTargets(Post post, UUID userId,

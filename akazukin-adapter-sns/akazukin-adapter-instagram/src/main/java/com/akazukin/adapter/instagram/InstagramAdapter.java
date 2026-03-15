@@ -71,19 +71,12 @@ public class InstagramAdapter extends AbstractSnsAdapter implements AutoCloseabl
 
     @Override
     public String getAuthorizationUrl(String callbackUrl, String state) {
-        try {
-            checkRateLimit();
-            String url = AUTH_URL
-                + "?client_id=" + encode(clientId)
-                + "&redirect_uri=" + encode(callbackUrl)
-                + "&scope=" + encode("instagram_basic,instagram_content_publish")
-                + "&response_type=code"
-                + "&state=" + encode(state);
-            recordApiCall();
-            return url;
-        } catch (RuntimeException e) {
-            throw wrapException("getAuthorizationUrl", e);
-        }
+        return AUTH_URL
+            + "?client_id=" + encode(clientId)
+            + "&redirect_uri=" + encode(callbackUrl)
+            + "&scope=" + encode("instagram_basic,instagram_content_publish")
+            + "&response_type=code"
+            + "&state=" + encode(state);
     }
 
     @Override
@@ -171,6 +164,10 @@ public class InstagramAdapter extends AbstractSnsAdapter implements AutoCloseabl
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        SnsProfile cached = getCachedProfile(accessToken);
+        if (cached != null) {
+            return cached;
+        }
         try {
             checkRateLimit();
             String url = GRAPH_API_BASE + "/me"
@@ -189,12 +186,14 @@ public class InstagramAdapter extends AbstractSnsAdapter implements AutoCloseabl
             JsonNode json = objectMapper.readTree(response.body());
             recordApiCall();
 
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 json.path("username").asText(),
                 json.path("name").asText(""),
                 json.path("profile_picture_url").asText(null),
                 json.path("followers_count").asInt(0)
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();

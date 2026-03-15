@@ -1,6 +1,5 @@
 package com.akazukin.worker;
 
-import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.SnsAccountRepository;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,23 +20,12 @@ public class MetricsAggregator {
         this.snsAccountRepository = snsAccountRepository;
     }
 
+    // TODO: replace countAll() with countGroupByPlatform() to eliminate N+1 queries
     @Scheduled(every = "1h", identity = "metrics-aggregator")
     void aggregateMetrics() {
-        LOG.log(Level.INFO, "Starting hourly metrics aggregation");
-
         try {
             long totalAccounts = snsAccountRepository.countAll();
             LOG.log(Level.INFO, "Total connected SNS accounts: {0}", totalAccounts);
-
-            for (SnsPlatform platform : SnsPlatform.values()) {
-                long accountCount = snsAccountRepository.countByPlatform(platform);
-                if (accountCount > 0) {
-                    LOG.log(Level.INFO, "Platform {0}: {1} connected accounts",
-                            new Object[]{platform, accountCount});
-                }
-            }
-
-            LOG.log(Level.INFO, "Metrics aggregation completed");
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Metrics aggregation failed", e);
         }

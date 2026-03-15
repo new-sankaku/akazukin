@@ -7,7 +7,9 @@ import com.akazukin.domain.port.CircuitBreakerRegistry;
 
 import io.smallrye.faulttolerance.api.CircuitBreakerMaintenance;
 
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
@@ -19,6 +21,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ApplicationScoped
+@Alternative
+@Priority(100)
 @Named("smallRye")
 public class SmallRyeCircuitBreakerRegistry implements CircuitBreakerRegistry {
 
@@ -60,6 +64,13 @@ public class SmallRyeCircuitBreakerRegistry implements CircuitBreakerRegistry {
         lastFailureTimes.put(platform, Instant.now());
     }
 
+    @Override
+    public boolean isCallPermitted(SnsPlatform platform) {
+        String cbName = toCircuitBreakerName(platform);
+        CircuitState state = readState(cbName);
+        return state != CircuitState.OPEN;
+    }
+
     private CircuitState readState(String cbName) {
         try {
             io.smallrye.faulttolerance.api.CircuitBreakerState srState = maintenance.currentState(cbName);
@@ -69,7 +80,7 @@ public class SmallRyeCircuitBreakerRegistry implements CircuitBreakerRegistry {
                 case HALF_OPEN -> CircuitState.HALF_OPEN;
             };
         } catch (IllegalArgumentException e) {
-            LOG.log(Level.FINE, "Circuit breaker not found: {0}, assuming CLOSED", cbName);
+            LOG.log(Level.WARNING, "Circuit breaker not yet registered: {0}, returning CLOSED (initial state)", cbName);
             return CircuitState.CLOSED;
         }
     }

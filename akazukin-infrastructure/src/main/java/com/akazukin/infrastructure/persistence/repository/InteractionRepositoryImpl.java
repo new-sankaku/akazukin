@@ -39,10 +39,11 @@ public class InteractionRepositoryImpl implements InteractionRepository, Panache
     @Transactional
     public Interaction save(Interaction interaction) {
         InteractionEntity entity = InteractionMapper.toEntity(interaction);
-        if (entity.id != null) {
-            entity = getEntityManager().merge(entity);
-        } else {
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
             persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
         }
         return InteractionMapper.toDomain(entity);
     }

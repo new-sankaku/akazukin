@@ -16,6 +16,7 @@ public class StaleDataCleaner {
 
     private static final Logger LOG = Logger.getLogger(StaleDataCleaner.class.getName());
     private static final int BATCH_SIZE = 1000;
+    private static final int MAX_ITERATIONS = 1000;
 
     private final DataRetentionPort dataRetentionPort;
     private final Duration auditLogRetention;
@@ -67,11 +68,19 @@ public class StaleDataCleaner {
 
     private int purgeInBatches(PurgeOperation operation) {
         int totalDeleted = 0;
+        int iterations = 0;
         int deleted;
         do {
             deleted = operation.execute();
             totalDeleted += deleted;
-        } while (deleted == BATCH_SIZE);
+            iterations++;
+        } while (deleted == BATCH_SIZE && iterations < MAX_ITERATIONS);
+
+        if (iterations >= MAX_ITERATIONS) {
+            LOG.log(Level.WARNING,
+                    "Purge stopped after {0} iterations ({1} records deleted), remaining data will be cleaned next run",
+                    new Object[]{iterations, totalDeleted});
+        }
         return totalDeleted;
     }
 

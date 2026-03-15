@@ -33,16 +33,23 @@ public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final String BOT_FATHER_URL = "https://t.me/BotFather";
-    private static final String API_BASE = "https://api.telegram.org";
+    private static final String DEFAULT_API_BASE = "https://api.telegram.org";
 
+    private final String apiBase;
     private final String defaultChatId;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public TelegramAdapter(String defaultChatId, HttpClient httpClient, ObjectMapper objectMapper) {
+    public TelegramAdapter(String defaultChatId, HttpClient httpClient, ObjectMapper objectMapper,
+                           String apiBase) {
         this.defaultChatId = Objects.requireNonNull(defaultChatId, "defaultChatId must not be null");
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient must not be null");
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper must not be null");
+        this.apiBase = Objects.requireNonNull(apiBase, "apiBase must not be null");
+    }
+
+    public TelegramAdapter(String defaultChatId, HttpClient httpClient, ObjectMapper objectMapper) {
+        this(defaultChatId, httpClient, objectMapper, DEFAULT_API_BASE);
     }
 
     public TelegramAdapter(String defaultChatId) {
@@ -90,10 +97,14 @@ public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        SnsProfile cached = getCachedProfile(accessToken);
+        if (cached != null) {
+            return cached;
+        }
         try {
             checkRateLimit();
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE + "/bot" + accessToken + "/getMe"))
+                .uri(URI.create(apiBase + "/bot" + accessToken + "/getMe"))
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .timeout(READ_TIMEOUT)
@@ -108,13 +119,15 @@ public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable
             JsonNode result = json.path("result");
             String username = result.path("username").asText("");
 
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 username,
                 result.path("first_name").asText("")
                     + (result.has("last_name") ? " " + result.path("last_name").asText("") : ""),
                 null,
                 0
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -152,7 +165,7 @@ public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable
             String body = "chat_id=" + encode(chatId) + "&text=" + encode(text);
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE + "/bot" + accessToken + "/sendMessage"))
+                .uri(URI.create(apiBase + "/bot" + accessToken + "/sendMessage"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -203,7 +216,7 @@ public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable
             String body = "chat_id=" + encode(chatId) + "&message_id=" + encode(messageId);
 
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE + "/bot" + accessToken + "/deleteMessage"))
+                .uri(URI.create(apiBase + "/bot" + accessToken + "/deleteMessage"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))

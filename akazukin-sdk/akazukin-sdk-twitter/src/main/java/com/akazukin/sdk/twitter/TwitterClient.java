@@ -18,12 +18,16 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TwitterClient implements AutoCloseable {
 
-    private static final String API_BASE_URL = "https://api.twitter.com/2";
-    private static final String AUTH_URL = "https://twitter.com/i/oauth2/authorize";
-    private static final String TOKEN_URL = "https://api.twitter.com/2/oauth2/token";
+    private static final Logger LOG = Logger.getLogger(TwitterClient.class.getName());
+
+    private static final String DEFAULT_API_BASE_URL = "https://api.twitter.com/2";
+    private static final String DEFAULT_AUTH_URL = "https://twitter.com/i/oauth2/authorize";
+    private static final String DEFAULT_TOKEN_URL = "https://api.twitter.com/2/oauth2/token";
     private static final int HTTP_CLIENT_ERROR = 400;
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
@@ -40,11 +44,18 @@ public class TwitterClient implements AutoCloseable {
     private final TwitterConfig config;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final String apiBaseUrl;
+    private final String authBaseUrl;
+    private final String tokenUrl;
 
-    private TwitterClient(TwitterConfig config, HttpClient httpClient, ObjectMapper objectMapper) {
+    private TwitterClient(TwitterConfig config, HttpClient httpClient, ObjectMapper objectMapper,
+                          String apiBaseUrl, String authBaseUrl, String tokenUrl) {
         this.config = config;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+        this.apiBaseUrl = apiBaseUrl;
+        this.authBaseUrl = authBaseUrl;
+        this.tokenUrl = tokenUrl;
     }
 
     public static Builder builder() {
@@ -52,7 +63,7 @@ public class TwitterClient implements AutoCloseable {
     }
 
     public String getAuthorizationUrl(String state, String codeChallenge) {
-        return AUTH_URL
+        return authBaseUrl
             + "?response_type=code"
             + "&client_id=" + encode(config.clientId())
             + "&redirect_uri=" + encode(config.redirectUri())
@@ -63,86 +74,250 @@ public class TwitterClient implements AutoCloseable {
     }
 
     public TokenResponse exchangeToken(String code, String codeVerifier) {
-        String body = "grant_type=authorization_code"
-            + "&code=" + encode(code)
-            + "&redirect_uri=" + encode(config.redirectUri())
-            + "&code_verifier=" + encode(codeVerifier)
-            + "&client_id=" + encode(config.clientId());
+        long perfStart = System.nanoTime();
+        try {
+            String body = "grant_type=authorization_code"
+                + "&code=" + encode(code)
+                + "&redirect_uri=" + encode(config.redirectUri())
+                + "&code_verifier=" + encode(codeVerifier)
+                + "&client_id=" + encode(config.clientId());
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(TOKEN_URL))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, TokenResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, TokenResponse.class);
+        } finally {
+            perfLog("TwitterClient.exchangeToken", perfStart);
+        }
     }
 
     public TokenResponse refreshToken(String refreshToken) {
-        String body = "grant_type=refresh_token"
-            + "&refresh_token=" + encode(refreshToken)
-            + "&client_id=" + encode(config.clientId());
+        long perfStart = System.nanoTime();
+        try {
+            String body = "grant_type=refresh_token"
+                + "&refresh_token=" + encode(refreshToken)
+                + "&client_id=" + encode(config.clientId());
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(TOKEN_URL))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, TokenResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, TokenResponse.class);
+        } finally {
+            perfLog("TwitterClient.refreshToken", perfStart);
+        }
     }
 
     public TweetResponse postTweet(String accessToken, String text) {
-        Map<String, String> payload = Map.of("text", text);
-        String jsonBody = toJson(payload);
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, String> payload = Map.of("text", text);
+            String jsonBody = toJson(payload);
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/tweets"))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/tweets"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        JsonNode root = parseJsonTree(response);
-        JsonNode data = root.get("data");
-        if (data == null) {
-            throw new TwitterApiException(response.statusCode(), "UNKNOWN",
-                "Unexpected response: missing 'data' field", response.body());
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode data = root.get("data");
+            if (data == null) {
+                throw new TwitterApiException(response.statusCode(), "UNKNOWN",
+                    "Unexpected response: missing 'data' field", response.body());
+            }
+            return fromJson(data, TweetResponse.class);
+        } finally {
+            perfLog("TwitterClient.postTweet", perfStart);
         }
-        return fromJson(data, TweetResponse.class);
+    }
+
+    public TweetResponse postTweet(String accessToken, String accessTokenSecret, String text) {
+        long perfStart = System.nanoTime();
+        try {
+            String url = apiBaseUrl + "/tweets";
+            Map<String, String> payload = Map.of("text", text);
+            String jsonBody = toJson(payload);
+            OAuth1Signer signer = new OAuth1Signer(config.clientId(), config.clientSecret(),
+                accessToken, accessTokenSecret);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", signer.buildAuthorizationHeader("POST", url))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode data = root.get("data");
+            if (data == null) {
+                throw new TwitterApiException(response.statusCode(), "UNKNOWN",
+                    "Unexpected response: missing 'data' field", response.body());
+            }
+            return fromJson(data, TweetResponse.class);
+        } finally {
+            perfLog("TwitterClient.postTweet(OAuth1)", perfStart);
+        }
+    }
+
+    public TweetResponse getTweetById(String bearerToken, String tweetId) {
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/tweets/" + tweetId))
+                .header("Authorization", "Bearer " + bearerToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode data = root.get("data");
+            if (data == null) {
+                throw new TwitterApiException(response.statusCode(), "UNKNOWN",
+                    "Unexpected response: missing 'data' field", response.body());
+            }
+            return fromJson(data, TweetResponse.class);
+        } finally {
+            perfLog("TwitterClient.getTweetById", perfStart);
+        }
+    }
+
+    public TwitterUser getUserByUsername(String bearerToken, String username) {
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/users/by/username/" + username
+                    + "?user.fields=profile_image_url,public_metrics"))
+                .header("Authorization", "Bearer " + bearerToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode data = root.get("data");
+            if (data == null) {
+                throw new TwitterApiException(response.statusCode(), "UNKNOWN",
+                    "Unexpected response: missing 'data' field", response.body());
+            }
+
+            JsonNode metrics = data.get("public_metrics");
+            int followersCount = metrics != null ? metrics.path("followers_count").asInt(0) : 0;
+            int followingCount = metrics != null ? metrics.path("following_count").asInt(0) : 0;
+
+            return new TwitterUser(
+                data.path("id").asText(),
+                data.path("username").asText(),
+                data.path("name").asText(),
+                data.path("profile_image_url").asText(null),
+                followersCount,
+                followingCount
+            );
+        } finally {
+            perfLog("TwitterClient.getUserByUsername", perfStart);
+        }
     }
 
     public void deleteTweet(String accessToken, String tweetId) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/tweets/" + tweetId))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Accept", "application/json")
-            .DELETE()
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/tweets/" + tweetId))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .DELETE()
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        sendRequest(request);
+            sendRequest(request);
+        } finally {
+            perfLog("TwitterClient.deleteTweet", perfStart);
+        }
+    }
+
+    public void deleteTweet(String accessToken, String accessTokenSecret, String tweetId) {
+        long perfStart = System.nanoTime();
+        try {
+            String url = apiBaseUrl + "/tweets/" + tweetId;
+            OAuth1Signer signer = new OAuth1Signer(config.clientId(), config.clientSecret(),
+                accessToken, accessTokenSecret);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", signer.buildAuthorizationHeader("DELETE", url))
+                .header("Accept", "application/json")
+                .DELETE()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            sendRequest(request);
+        } finally {
+            perfLog("TwitterClient.deleteTweet(OAuth1)", perfStart);
+        }
     }
 
     public TwitterUser getMe(String accessToken) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/users/me?user.fields=profile_image_url,public_metrics"))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Accept", "application/json")
-            .GET()
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/users/me?user.fields=profile_image_url,public_metrics"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
+            HttpResponse<String> response = sendRequest(request);
+            return parseMeResponse(response);
+        } finally {
+            perfLog("TwitterClient.getMe", perfStart);
+        }
+    }
+
+    public TwitterUser getMe(String accessToken, String accessTokenSecret) {
+        long perfStart = System.nanoTime();
+        try {
+            String url = apiBaseUrl + "/users/me?user.fields=profile_image_url,public_metrics";
+            OAuth1Signer signer = new OAuth1Signer(config.clientId(), config.clientSecret(),
+                accessToken, accessTokenSecret);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", signer.buildAuthorizationHeader("GET", url))
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            return parseMeResponse(response);
+        } finally {
+            perfLog("TwitterClient.getMe(OAuth1)", perfStart);
+        }
+    }
+
+    private TwitterUser parseMeResponse(HttpResponse<String> response) {
         JsonNode root = parseJsonTree(response);
         JsonNode data = root.get("data");
         if (data == null) {
@@ -171,31 +346,45 @@ public class TwitterClient implements AutoCloseable {
         }
     }
 
+    private void perfLog(String methodName, long startNanos) {
+        long perfMs = (System.nanoTime() - startNanos) / 1_000_000;
+        if (perfMs >= 100) {
+            LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{methodName, perfMs});
+        } else {
+            LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{methodName, perfMs});
+        }
+    }
+
     private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler)
             throws IOException, InterruptedException {
+        long perfStart = System.nanoTime();
         int maxRetries = 3;
         long delayMs = 1000;
         IOException lastException = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-                HttpResponse<T> response = httpClient.send(request, handler);
-                if (response.statusCode() == 429 && attempt < maxRetries) {
-                    String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
-                    long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
-                    Thread.sleep(Math.min(waitMs, 30000));
-                    delayMs *= 2;
-                    continue;
-                }
-                return response;
-            } catch (IOException e) {
-                lastException = e;
-                if (attempt < maxRetries) {
-                    Thread.sleep(delayMs);
-                    delayMs *= 2;
+        try {
+            for (int attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    HttpResponse<T> response = httpClient.send(request, handler);
+                    if (response.statusCode() == 429 && attempt < maxRetries) {
+                        String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
+                        long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
+                        Thread.sleep(Math.min(waitMs, 30000));
+                        delayMs *= 2;
+                        continue;
+                    }
+                    return response;
+                } catch (IOException e) {
+                    lastException = e;
+                    if (attempt < maxRetries) {
+                        Thread.sleep(delayMs);
+                        delayMs *= 2;
+                    }
                 }
             }
+            throw lastException;
+        } finally {
+            perfLog("TwitterClient.sendWithRetry", perfStart);
         }
-        throw lastException;
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) {
@@ -284,6 +473,9 @@ public class TwitterClient implements AutoCloseable {
         private TwitterConfig config;
         private HttpClient httpClient;
         private ObjectMapper objectMapper;
+        private String apiBaseUrl;
+        private String authBaseUrl;
+        private String tokenUrl;
 
         private Builder() {
         }
@@ -303,6 +495,21 @@ public class TwitterClient implements AutoCloseable {
             return this;
         }
 
+        public Builder apiBaseUrl(String apiBaseUrl) {
+            this.apiBaseUrl = apiBaseUrl;
+            return this;
+        }
+
+        public Builder authBaseUrl(String authBaseUrl) {
+            this.authBaseUrl = authBaseUrl;
+            return this;
+        }
+
+        public Builder tokenUrl(String tokenUrl) {
+            this.tokenUrl = tokenUrl;
+            return this;
+        }
+
         public TwitterClient build() {
             if (config == null) {
                 throw new IllegalStateException("TwitterConfig must be provided");
@@ -313,7 +520,16 @@ public class TwitterClient implements AutoCloseable {
             if (objectMapper == null) {
                 objectMapper = DEFAULT_OBJECT_MAPPER;
             }
-            return new TwitterClient(config, httpClient, objectMapper);
+            if (apiBaseUrl == null) {
+                apiBaseUrl = DEFAULT_API_BASE_URL;
+            }
+            if (authBaseUrl == null) {
+                authBaseUrl = DEFAULT_AUTH_URL;
+            }
+            if (tokenUrl == null) {
+                tokenUrl = DEFAULT_TOKEN_URL;
+            }
+            return new TwitterClient(config, httpClient, objectMapper, apiBaseUrl, authBaseUrl, tokenUrl);
         }
     }
 }

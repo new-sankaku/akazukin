@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import com.akazukin.application.dto.ErrorResponseDto;
 
@@ -34,9 +35,12 @@ public class AccountResource {
     @Inject
     AccountUseCase accountUseCase;
 
+    @Inject
+    JsonWebToken jwt;
+
     @GET
     public Response listAccounts(@Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         List<AccountResponseDto> accounts = accountUseCase.listAccounts(userId);
         return Response.ok(accounts).build();
     }
@@ -45,7 +49,7 @@ public class AccountResource {
     @Path("/{id}")
     public Response deleteAccount(@PathParam("id") UUID id,
                                   @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         accountUseCase.deleteAccount(id, userId);
         return Response.noContent().build();
     }
@@ -60,7 +64,7 @@ public class AccountResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "callbackUrl parameter is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         SnsPlatform snsPlatform;
         try {
             snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());
@@ -85,7 +89,7 @@ public class AccountResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "callbackUrl parameter is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         SnsPlatform snsPlatform;
         try {
             snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());

@@ -57,23 +57,22 @@ public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable 
 
     @Override
     public String getAuthorizationUrl(String callbackUrl, String state) {
+        long perfStart = System.nanoTime();
         try {
-            checkRateLimit();
             cleanupExpiredVerifiers();
             String codeVerifier = OAuth2PkceFlow.generateCodeVerifier();
             String codeChallenge = OAuth2PkceFlow.generateCodeChallenge(codeVerifier);
             codeVerifiers.put(callbackUrl,
                 new AbstractMap.SimpleImmutableEntry<>(codeVerifier, Instant.now()));
-            String url = client.getAuthorizationUrl(state, codeChallenge);
-            recordApiCall();
-            return url;
-        } catch (RuntimeException e) {
-            throw wrapException("getAuthorizationUrl", e);
+            return client.getAuthorizationUrl(state, codeChallenge);
+        } finally {
+            perfLog("TwitterAdapter.getAuthorizationUrl", perfStart);
         }
     }
 
     @Override
     public SnsAuthToken exchangeToken(String code, String callbackUrl) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             cleanupExpiredVerifiers();
@@ -89,11 +88,14 @@ public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable 
             return toSnsAuthToken(response);
         } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
+        } finally {
+            perfLog("TwitterAdapter.exchangeToken", perfStart);
         }
     }
 
     @Override
     public SnsAuthToken refreshToken(String refreshToken) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             TokenResponse response = client.refreshToken(refreshToken);
@@ -101,28 +103,40 @@ public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable 
             return toSnsAuthToken(response);
         } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
+        } finally {
+            perfLog("TwitterAdapter.refreshToken", perfStart);
         }
     }
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        long perfStart = System.nanoTime();
         try {
+            SnsProfile cached = getCachedProfile(accessToken);
+            if (cached != null) {
+                return cached;
+            }
             checkRateLimit();
             TwitterUser user = client.getMe(accessToken);
             recordApiCall();
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 user.username(),
                 user.name(),
                 user.profileImageUrl(),
                 user.followersCount()
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
+        } finally {
+            perfLog("TwitterAdapter.getProfile", perfStart);
         }
     }
 
     @Override
     public PostResult post(String accessToken, PostRequest request) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             TweetResponse response = client.postTweet(accessToken, request.content());
@@ -134,17 +148,22 @@ public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable 
             );
         } catch (RuntimeException e) {
             throw wrapException("post", e);
+        } finally {
+            perfLog("TwitterAdapter.post", perfStart);
         }
     }
 
     @Override
     public void deletePost(String accessToken, String postId) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             client.deleteTweet(accessToken, postId);
             recordApiCall();
         } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
+        } finally {
+            perfLog("TwitterAdapter.deletePost", perfStart);
         }
     }
 

@@ -71,23 +71,17 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
 
     @Override
     public String getAuthorizationUrl(String callbackUrl, String state) {
-        try {
-            checkRateLimit();
-            String url = AUTH_URL
-                + "?client_id=" + encode(appId)
-                + "&redirect_uri=" + encode(callbackUrl)
-                + "&response_type=code"
-                + "&scope=" + encode("boards:read,pins:read,pins:write")
-                + "&state=" + encode(state);
-            recordApiCall();
-            return url;
-        } catch (RuntimeException e) {
-            throw wrapException("getAuthorizationUrl", e);
-        }
+        return AUTH_URL
+            + "?client_id=" + encode(appId)
+            + "&redirect_uri=" + encode(callbackUrl)
+            + "&response_type=code"
+            + "&scope=" + encode("boards:read,pins:read,pins:write")
+            + "&state=" + encode(state);
     }
 
     @Override
     public SnsAuthToken exchangeToken(String code, String callbackUrl) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String body = "grant_type=authorization_code"
@@ -108,11 +102,14 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
             throw wrapException("exchangeToken", e);
         } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
+        } finally {
+            perfLog("PinterestAdapter.exchangeToken", perfStart);
         }
     }
 
     @Override
     public SnsAuthToken refreshToken(String refreshToken) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String body = "grant_type=refresh_token"
@@ -132,12 +129,19 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
             throw wrapException("refreshToken", e);
         } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
+        } finally {
+            perfLog("PinterestAdapter.refreshToken", perfStart);
         }
     }
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        long perfStart = System.nanoTime();
         try {
+            SnsProfile cached = getCachedProfile(accessToken);
+            if (cached != null) {
+                return cached;
+            }
             checkRateLimit();
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_BASE + "/user_account"))
@@ -152,12 +156,14 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
             JsonNode json = objectMapper.readTree(response.body());
             recordApiCall();
 
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 json.path("username").asText(),
                 json.path("business_name").asText(json.path("username").asText("")),
                 json.path("profile_image").asText(null),
                 json.path("follower_count").asInt(0)
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -165,11 +171,14 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
             throw wrapException("getProfile", e);
         } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
+        } finally {
+            perfLog("PinterestAdapter.getProfile", perfStart);
         }
     }
 
     @Override
     public PostResult post(String accessToken, PostRequest request) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String content = request.content();
@@ -236,11 +245,14 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
             throw wrapException("post", e);
         } catch (RuntimeException e) {
             throw wrapException("post", e);
+        } finally {
+            perfLog("PinterestAdapter.post", perfStart);
         }
     }
 
     @Override
     public void deletePost(String accessToken, String postId) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             HttpRequest request = HttpRequest.newBuilder()
@@ -261,6 +273,8 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
             throw wrapException("deletePost", e);
         } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
+        } finally {
+            perfLog("PinterestAdapter.deletePost", perfStart);
         }
     }
 

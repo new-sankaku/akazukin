@@ -1,60 +1,53 @@
 {#include base}
-{#title}Analytics - Akazukin{/title}
+{#title}アナリティクス - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu">&#9776;</button>
-    <h1>Akazukin</h1>
-    <nav>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/dashboard/analytics">Analytics</a>
-        <a href="/posts">Posts</a>
-        <a href="/posts/compose">Compose</a>
-        <a href="/accounts">Accounts</a>
-        <a href="#" onclick="toggleTheme()" id="theme-icon">Theme</a>
-        <a href="#" onclick="logout()">Logout</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">Dashboard</a>
-        <a href="/dashboard/analytics" class="active">Analytics</a>
-        <a href="/posts">Posts</a>
-        <a href="/posts/compose">Compose</a>
-        <a href="/accounts">Accounts</a>
-    </aside>
+    {#sidebar active="analytics" /}
 
     <main class="ak-main">
-        <h2>Analytics</h2>
+        <h2>アナリティクス</h2>
 
         <div id="analytics-summary"
-             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;"
-             hx-get="/api/v1/dashboard/summary"
-             hx-trigger="load"
-             hx-swap="innerHTML">
+             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>Total Posts</p>
+                <p>総投稿数</p>
             </div>
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>Published</p>
+                <p>公開済み</p>
             </div>
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>Scheduled</p>
+                <p>予約済み</p>
             </div>
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>Failed</p>
+                <p>失敗</p>
             </div>
         </div>
 
         <div class="ak-card" style="margin-top: 2rem;">
-            <h3>Posts per Platform</h3>
+            <h3>プラットフォーム別投稿数</h3>
             <div id="platform-chart" style="margin-top: 1rem;">
-                <p style="color: var(--ak-text-muted);">Loading chart data...</p>
+                <p style="color: var(--ak-text-muted);">チャートデータを読み込み中...</p>
             </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: 2rem;">
+            <h3>グロース戦略</h3>
+            <div style="display: flex; gap: 1rem; align-items: flex-end; margin-top: 1rem;">
+                <div style="flex: 1;">
+                    <label for="growth-account-select" style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--ak-text-muted);">アカウント選択</label>
+                    <select id="growth-account-select" style="width: 100%; padding: 0.5rem; border: 1px solid var(--ak-border); border-radius: 4px; background: var(--ak-bg); color: var(--ak-text);">
+                        <option value="">アカウントを選択してください</option>
+                    </select>
+                </div>
+                <button onclick="loadGrowthAdvice()" style="padding: 0.5rem 1.5rem; background: var(--ak-primary); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">アドバイスを取得</button>
+            </div>
+            <div id="growth-result" style="margin-top: 1rem;"></div>
         </div>
 
         <style>
@@ -106,6 +99,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         loadAnalytics();
+        loadGrowthAccounts();
     });
 
     async function loadAnalytics() {
@@ -132,17 +126,17 @@
             }
         } catch (err) {
             document.getElementById('platform-chart').innerHTML =
-                '<p style="color: var(--ak-primary);">Failed to load analytics data.</p>';
+                '<p style="color: var(--ak-primary);">アナリティクスデータの読み込みに失敗しました。</p>';
         }
     }
 
     function renderSummary(data) {
         var container = document.getElementById('analytics-summary');
         container.innerHTML =
-            '<div class="ak-card ak-stat"><h3>' + (data.totalPosts || 0) + '</h3><p>Total Posts</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + (data.publishedPosts || 0) + '</h3><p>Published</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + (data.scheduledPosts || 0) + '</h3><p>Scheduled</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + (data.failedPosts || 0) + '</h3><p>Failed</p></div>';
+            '<div class="ak-card ak-stat"><h3>' + (data.totalPosts || 0) + '</h3><p>総投稿数</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.publishedPosts || 0) + '</h3><p>公開済み</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.scheduledPosts || 0) + '</h3><p>予約済み</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.failedPosts || 0) + '</h3><p>失敗</p></div>';
     }
 
     function renderPlatformChart(platformCounts) {
@@ -150,7 +144,7 @@
         var entries = Object.entries(platformCounts);
 
         if (entries.length === 0) {
-            container.innerHTML = '<p style="color: var(--ak-text-muted);">No platform data available yet. Start posting to see analytics.</p>';
+            container.innerHTML = '<p style="color: var(--ak-text-muted);">プラットフォームデータがまだありません。投稿を作成するとアナリティクスが表示されます。</p>';
             return;
         }
 
@@ -176,6 +170,91 @@
         var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+
+    async function loadGrowthAccounts() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/accounts', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (!response.ok) return;
+
+            var accounts = await response.json();
+            var select = document.getElementById('growth-account-select');
+            accounts.forEach(function(account) {
+                var option = document.createElement('option');
+                option.value = account.id;
+                option.textContent = account.platform + ' - ' + (account.displayName || account.accountIdentifier);
+                select.appendChild(option);
+            });
+        } catch (err) {
+        }
+    }
+
+    async function loadGrowthAdvice() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        var accountId = document.getElementById('growth-account-select').value;
+        var resultDiv = document.getElementById('growth-result');
+
+        if (!accountId) {
+            resultDiv.innerHTML = '<p style="color: var(--ak-primary);">アカウントを選択してください。</p>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<p style="color: var(--ak-text-muted);">グロース戦略を分析中...</p>';
+
+        try {
+            var response = await fetch('/api/v1/dashboard/growth?accountId=' + encodeURIComponent(accountId), {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!response.ok) {
+                var error = await response.json();
+                resultDiv.innerHTML = '<p style="color: var(--ak-primary);">' + escapeHtml(error.message || 'グロース戦略の取得に失敗しました。') + '</p>';
+                return;
+            }
+
+            var data = await response.json();
+            renderGrowthAdvice(data);
+        } catch (err) {
+            resultDiv.innerHTML = '<p style="color: var(--ak-primary);">グロース戦略の取得に失敗しました。</p>';
+        }
+    }
+
+    function renderGrowthAdvice(data) {
+        var resultDiv = document.getElementById('growth-result');
+        var html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">' +
+            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.platform) + '</h3><p>プラットフォーム</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.currentFollowers) + '</h3><p>現在のフォロワー数</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.projectedGrowth) + '</h3><p>成長予測</p></div>' +
+            '</div>';
+        html += '<div class="ak-card" style="white-space: pre-wrap;">' + escapeHtml(data.advice) + '</div>';
+        resultDiv.innerHTML = html;
     }
 </script>
 {/body}

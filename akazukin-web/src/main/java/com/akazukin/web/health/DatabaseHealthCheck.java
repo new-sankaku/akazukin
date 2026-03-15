@@ -34,8 +34,7 @@ public class DatabaseHealthCheck implements HealthCheck {
             boolean valid = connection.isValid(VALIDATION_TIMEOUT_SECONDS);
             if (valid) {
                 builder.up()
-                        .withData("database", connection.getMetaData().getDatabaseProductName())
-                        .withData("url", connection.getMetaData().getURL());
+                        .withData("database", connection.getMetaData().getDatabaseProductName());
             } else {
                 builder.down()
                         .withData("reason", "Connection validation failed");

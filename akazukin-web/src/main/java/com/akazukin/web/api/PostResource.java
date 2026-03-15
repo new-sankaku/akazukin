@@ -19,6 +19,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import com.akazukin.application.dto.ErrorResponseDto;
 
@@ -34,6 +35,9 @@ public class PostResource {
     @Inject
     PostUseCase postUseCase;
 
+    @Inject
+    JsonWebToken jwt;
+
     @POST
     public Response createPost(PostRequestDto request, @Context SecurityContext securityContext) {
         if (request == null) {
@@ -41,7 +45,7 @@ public class PostResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         PostResponseDto response = postUseCase.createPost(userId, request);
         return Response.status(Response.Status.ACCEPTED).entity(response).build();
     }
@@ -56,7 +60,7 @@ public class PostResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         PostResponseDto response = postUseCase.updatePost(id, userId, request);
         return Response.ok(response).build();
     }
@@ -65,7 +69,7 @@ public class PostResource {
     public Response listPosts(@QueryParam("page") @DefaultValue("0") int page,
                               @QueryParam("size") @DefaultValue("20") int size,
                               @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         List<PostResponseDto> posts = postUseCase.listPosts(userId, page, size);
         return Response.ok(posts).build();
     }
@@ -80,7 +84,7 @@ public class PostResource {
     @DELETE
     @Path("/{id}")
     public Response deletePost(@PathParam("id") UUID id, @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        UUID userId = UUID.fromString(jwt.getSubject());
         postUseCase.deletePost(id, userId);
         return Response.noContent().build();
     }

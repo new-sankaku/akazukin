@@ -7,6 +7,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.net.URI;
 
 @Path("/")
 public class LoginController extends Controller {
@@ -18,8 +20,16 @@ public class LoginController extends Controller {
     }
 
     @GET
+    @Path("")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance index() {
+        return Templates.index();
+    }
+
+    @GET
+    @Path("/login")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance login() {
         return Templates.index();
     }
 

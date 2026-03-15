@@ -16,6 +16,9 @@ public class CompositeNotificationSender implements NotificationSender {
     private static final Logger LOG = Logger.getLogger(CompositeNotificationSender.class);
 
     @Inject
+    DbNotificationSender dbSender;
+
+    @Inject
     EmailNotificationSender emailSender;
 
     @Inject
@@ -23,6 +26,7 @@ public class CompositeNotificationSender implements NotificationSender {
 
     @Override
     public void send(Notification notification) {
+        dbSender.send(notification);
         trySend(emailSender, notification);
         trySend(webhookSender, notification);
     }

@@ -14,4 +14,6 @@ public interface CircuitBreakerRegistry {
     void recordSuccess(SnsPlatform platform);
 
     void recordFailure(SnsPlatform platform);
+
+    boolean isCallPermitted(SnsPlatform platform);
 }

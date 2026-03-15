@@ -1,27 +1,10 @@
 {#include base}
 {#title}監査ログ - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <h1>Akazukin</h1>
-    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
-    <nav>
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/audit-logs">監査ログ</a>
-        <a href="#" onclick="logout()">ログアウト</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/audit-logs" class="active">監査ログ</a>
-    </aside>
+    {#sidebar active="audit-logs" /}
 
     <main class="ak-main" style="max-width: 1200px;">
         <h2>監査ログ</h2>
@@ -42,7 +25,7 @@
                         <option value="">すべて</option>
                         <option value="SNS_API">SNS API</option>
                         <option value="INTERNAL_API">内部 API</option>
-                        <option value="PAGE">ページ</option>
+                        <option value="PAGE">アクセス</option>
                     </select>
                 </label>
                 <label>
@@ -103,7 +86,7 @@
     let allLogs = [];
 
     const CATEGORY_MAP = {
-        'PAGE':         { type: 'page',         label: 'ページ' },
+        'PAGE':         { type: 'page',         label: 'アクセス' },
         'INTERNAL_API': { type: 'internal-api',  label: '内部 API' },
         'SNS_API':      { type: 'sns-api',       label: 'SNS API' }
     };
@@ -321,7 +304,7 @@
             '</div>';
 
         content.innerHTML = html;
-        document.getElementById('detail-modal').showModal();
+        document.getElementById('detail-modal').show();
     }
 
     function renderPagination(result) {
@@ -353,6 +336,11 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

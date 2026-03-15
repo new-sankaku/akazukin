@@ -1,30 +1,10 @@
 {#include base}
 {#title}コンテンツカレンダー - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
-    <h1>Akazukin</h1>
-    <nav>
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/calendar" class="active">カレンダー</a>
-        <a href="#" onclick="logout()">ログアウト</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/calendar" class="active">カレンダー</a>
-        <a href="/news">ニュース</a>
-        <a href="/ab-tests">A/Bテスト</a>
-        <a href="/audit-logs">監査ログ</a>
-    </aside>
+    {#sidebar active="calendar" /}
 
     <main class="ak-main">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -222,6 +202,11 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

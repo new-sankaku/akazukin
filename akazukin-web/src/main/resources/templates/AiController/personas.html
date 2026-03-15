@@ -1,29 +1,10 @@
 {#include base}
 {#title}ペルソナ管理 - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
-    <h1>Akazukin</h1>
-    <nav>
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/ai" class="active">AI</a>
-        <a href="/audit-logs">監査ログ</a>
-        <a href="#" onclick="logout()">ログアウト</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/ai" class="active">AI</a>
-        <a href="/audit-logs">監査ログ</a>
-    </aside>
+    {#sidebar active="ai" /}
 
     <main class="ak-main">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -44,14 +25,25 @@
                     </div>
                     <div>
                         <label for="persona-tone" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">トーン</label>
-                        <input type="text" id="persona-tone" name="tone" required placeholder="例: フレンドリー"
+                        <select id="persona-tone" name="tone" required
                             style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
+                            <option value="CASUAL">カジュアル</option>
+                            <option value="FORMAL">フォーマル</option>
+                            <option value="HUMOROUS">ユーモラス</option>
+                            <option value="PROFESSIONAL">プロフェッショナル</option>
+                            <option value="FRIENDLY">フレンドリー</option>
+                        </select>
                     </div>
                     <div>
                         <label for="persona-language" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">言語</label>
                         <input type="text" id="persona-language" name="language" required placeholder="例: ja"
                             style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
                     </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label for="persona-system-prompt" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">システムプロンプト</label>
+                    <textarea id="persona-system-prompt" name="systemPrompt" required rows="3" placeholder="例: あなたはカジュアルで親しみやすいSNSライターです。"
+                        style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text)); resize: vertical;"></textarea>
                 </div>
                 <button type="submit" id="create-persona-btn"
                     style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;"
@@ -146,8 +138,9 @@
                     '<span>トーン: ' + escapeHtmlGlobal(p.tone || '-') + '</span>' +
                     '<span>言語: ' + escapeHtmlGlobal(p.language || '-') + '</span>' +
                 '</div>' +
+                '<div style="margin-top: 0.5rem; color: var(--text-muted, var(--ak-text-muted)); font-size: 0.85rem; white-space: pre-wrap;">' + escapeHtmlGlobal(p.systemPrompt || '') + '</div>' +
                 '<div class="persona-card-actions">' +
-                    '<button class="ak-btn-detail" onclick="editPersona(\'' + escapeHtmlGlobal(p.id) + '\', \'' + escapeHtmlGlobal(p.name) + '\', \'' + escapeHtmlGlobal(p.tone || '') + '\', \'' + escapeHtmlGlobal(p.language || '') + '\')">編集</button>' +
+                    '<button class="ak-btn-detail" onclick="editPersona(\'' + escapeHtmlGlobal(p.id) + '\', \'' + escapeHtmlGlobal(p.name) + '\', \'' + escapeHtmlGlobal(p.systemPrompt || '') + '\', \'' + escapeHtmlGlobal(p.tone || '') + '\', \'' + escapeHtmlGlobal(p.language || '') + '\')">編集</button>' +
                     '<button class="ak-btn-delete" onclick="deletePersona(\'' + escapeHtmlGlobal(p.id) + '\')">削除</button>' +
                 '</div>' +
             '</div>';
@@ -172,6 +165,7 @@
                 },
                 body: JSON.stringify({
                     name: document.getElementById('persona-name').value,
+                    systemPrompt: document.getElementById('persona-system-prompt').value,
                     tone: document.getElementById('persona-tone').value,
                     language: document.getElementById('persona-language').value
                 })
@@ -195,9 +189,11 @@
         return false;
     }
 
-    function editPersona(id, name, tone, language) {
+    function editPersona(id, name, systemPrompt, tone, language) {
         var newName = prompt('名前:', name);
         if (newName === null) return;
+        var newSystemPrompt = prompt('システムプロンプト:', systemPrompt);
+        if (newSystemPrompt === null) return;
         var newTone = prompt('トーン:', tone);
         if (newTone === null) return;
         var newLanguage = prompt('言語:', language);
@@ -212,7 +208,7 @@
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ name: newName, tone: newTone, language: newLanguage })
+            body: JSON.stringify({ name: newName, systemPrompt: newSystemPrompt, tone: newTone, language: newLanguage })
         }).then(function(response) {
             if (!response.ok) {
                 showApiError(response, 'ペルソナの更新に失敗しました');

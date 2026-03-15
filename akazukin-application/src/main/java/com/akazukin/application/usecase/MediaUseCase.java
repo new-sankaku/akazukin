@@ -7,6 +7,7 @@ import com.akazukin.domain.port.MediaAssetRepository;
 import com.akazukin.domain.port.MediaStorage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,6 +30,7 @@ public class MediaUseCase {
         this.mediaStorage = mediaStorage;
     }
 
+    @Transactional
     public MediaAssetDto upload(UUID userId, String fileName, String mimeType, byte[] data) {
         if (fileName == null || fileName.isBlank()) {
             throw new DomainException("INVALID_INPUT", "File name is required");
@@ -69,6 +71,7 @@ public class MediaUseCase {
                 .toList();
     }
 
+    @Transactional
     public void deleteAsset(UUID assetId, UUID userId) {
         MediaAsset asset = mediaAssetRepository.findById(assetId)
                 .orElseThrow(() -> new DomainException("ASSET_NOT_FOUND",

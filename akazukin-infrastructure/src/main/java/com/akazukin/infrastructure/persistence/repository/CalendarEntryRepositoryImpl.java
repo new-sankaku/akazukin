@@ -37,20 +37,12 @@ public class CalendarEntryRepositoryImpl implements CalendarEntryRepository, Pan
     @Transactional
     public CalendarEntry save(CalendarEntry calendarEntry) {
         CalendarEntryEntity entity = CalendarEntryMapper.toEntity(calendarEntry);
-        CalendarEntryEntity existing = find("id", entity.id).firstResult();
-        if (existing != null) {
-            existing.userId = entity.userId;
-            existing.postId = entity.postId;
-            existing.title = entity.title;
-            existing.description = entity.description;
-            existing.scheduledAt = entity.scheduledAt;
-            existing.platforms = entity.platforms;
-            existing.color = entity.color;
-            existing.updatedAt = entity.updatedAt;
-            persist(existing);
-            return CalendarEntryMapper.toDomain(existing);
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
+            persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
         }
-        persist(entity);
         return CalendarEntryMapper.toDomain(entity);
     }
 

@@ -1,92 +1,276 @@
 {#include base}
-{#title}Compose Post - Akazukin{/title}
+{#title}投稿作成 - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <h1>{msg:app_title}</h1>
-    <nav>
-        <a href="/dashboard">{msg:nav_dashboard}</a>
-        <a href="/posts">{msg:nav_posts}</a>
-        <a href="/posts/compose">{msg:nav_compose}</a>
-        <a href="/accounts">{msg:nav_accounts}</a>
-        <a href="#" onclick="toggleTheme()">{msg:nav_theme}</a>
-        <a href="#" onclick="logout()">{msg:nav_logout}</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">{msg:nav_dashboard}</a>
-        <a href="/posts">{msg:nav_posts}</a>
-        <a href="/posts/compose" class="active">{msg:nav_compose}</a>
-        <a href="/accounts">{msg:nav_accounts}</a>
-    </aside>
+    {#sidebar active="compose" /}
 
     <main class="ak-main">
-        <h2>Compose Post</h2>
-
-        <div id="compose-error" class="ak-card" style="display: none; border-color: var(--ak-primary); color: var(--ak-primary);"></div>
-        <div id="compose-success" class="ak-card" style="display: none; border-color: #2d6a4f; color: #2d6a4f;"></div>
+        <h2 id="compose-heading" style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">新規投稿</h2>
 
         <form id="compose-form" onsubmit="return handleCompose(event)">
-            <div class="ak-card">
-                <label for="content">Post Content</label>
-                <textarea id="content" name="content" rows="6" placeholder="What would you like to share?" required></textarea>
-                <small id="char-count" style="color: var(--ak-text-muted);">0 characters</small>
+            <!-- 投稿内容 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <label for="content" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">投稿内容</label>
+                <textarea id="content" name="content" rows="6"
+                    placeholder="投稿する内容を入力してください..."
+                    required
+                    style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                    <small id="char-count" style="color: var(--text-muted, var(--ak-text-muted)); transition: color 0.2s;">0 文字</small>
+                    <small id="char-warning" style="color: var(--status-warning, #C8A96E); display: none; font-weight: 600;"></small>
+                </div>
             </div>
 
-            <div class="ak-card">
-                <h3>Target Platforms</h3>
-                <fieldset>
-                    <label><input type="checkbox" name="platforms" value="TWITTER"> Twitter / X</label>
-                    <label><input type="checkbox" name="platforms" value="BLUESKY"> Bluesky</label>
-                    <label><input type="checkbox" name="platforms" value="MASTODON"> Mastodon</label>
-                    <label><input type="checkbox" name="platforms" value="THREADS"> Threads</label>
-                    <label><input type="checkbox" name="platforms" value="INSTAGRAM"> Instagram</label>
-                    <label><input type="checkbox" name="platforms" value="REDDIT"> Reddit</label>
-                    <label><input type="checkbox" name="platforms" value="TELEGRAM"> Telegram</label>
-                    <label><input type="checkbox" name="platforms" value="VK"> VK</label>
-                    <label><input type="checkbox" name="platforms" value="PINTEREST"> Pinterest</label>
+            <!-- 投稿先プラットフォーム -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">投稿先プラットフォーム</h3>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <button type="button" onclick="toggleAllPlatforms(true)" class="ak-btn-sm"
+                        style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; letter-spacing: 0.03em;">すべて選択</button>
+                    <button type="button" onclick="toggleAllPlatforms(false)" class="ak-btn-sm"
+                        style="background: transparent; color: var(--text-sec, var(--ak-text-muted)); border: 1px solid var(--border, var(--ak-border)); padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; letter-spacing: 0.03em;">選択解除</button>
+                </div>
+                <fieldset style="border: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.4rem;">
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="TWITTER">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/x/1DA1F2" alt="X">
+                        <span class="platform-label">Twitter / X</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="BLUESKY">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/bluesky/0085FF" alt="Bluesky">
+                        <span class="platform-label">Bluesky</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="MASTODON">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/mastodon/6364FF" alt="Mastodon">
+                        <span class="platform-label">Mastodon</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="THREADS">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/threads/333333" alt="Threads">
+                        <span class="platform-label">Threads</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="INSTAGRAM">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/instagram/E4405F" alt="Instagram">
+                        <span class="platform-label">Instagram</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="REDDIT">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/reddit/FF4500" alt="Reddit">
+                        <span class="platform-label">Reddit</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="TELEGRAM">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/telegram/26A5E4" alt="Telegram">
+                        <span class="platform-label">Telegram</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="VK">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/vk/4680C2" alt="VK">
+                        <span class="platform-label">VK</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="PINTEREST">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/pinterest/BD081C" alt="Pinterest">
+                        <span class="platform-label">Pinterest</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="MIXI2">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/mixi/D1A019" alt="MIXI2">
+                        <span class="platform-label">MIXI2</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="NOTE">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/note/41C9B4" alt="note">
+                        <span class="platform-label">note</span>
+                    </label>
+                    <label class="platform-check">
+                        <input type="checkbox" name="platforms" value="NICONICO">
+                        <img class="platform-icon" src="https://cdn.simpleicons.org/niconico/231815" alt="niconico">
+                        <span class="platform-label">niconico</span>
+                    </label>
                 </fieldset>
             </div>
 
-            <div class="ak-card">
-                <label for="scheduledAt">Schedule (optional)</label>
-                <input type="datetime-local" id="scheduledAt" name="scheduledAt">
-                <small style="color: var(--ak-text-muted);">Leave empty to save as draft</small>
+            <!-- 予約投稿 -->
+            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">予約投稿（任意）</h3>
+                <div style="display: flex; align-items: center; gap: 0.5rem; max-width: 360px;">
+                    <input type="datetime-local" id="scheduledAt" name="scheduledAt"
+                        onclick="this.showPicker &amp;&amp; this.showPicker()"
+                        style="flex: 1; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text)); cursor: pointer;">
+                    <button type="button" onclick="document.getElementById('scheduledAt').value=''"
+                        style="background: transparent; border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.4rem 0.6rem; cursor: pointer; color: var(--text-sec, var(--ak-text-muted)); font-size: 0.8rem;">クリア</button>
+                </div>
+                <small style="display: block; margin-top: 0.5rem; color: var(--text-muted, var(--ak-text-muted));">空欄の場合は下書きとして保存されます</small>
             </div>
 
-            <button type="submit" class="contrast">Create Post</button>
+            <!-- 送信ボタン -->
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button type="submit" id="submit-btn"
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
+                    onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
+                    onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">
+                    投稿を作成
+                </button>
+                <button type="button" id="approval-btn" onclick="submitForApproval()"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, color 0.2s;"
+                    onmouseover="this.style.background='var(--accent-gold, var(--ak-primary))'; this.style.color='white'"
+                    onmouseout="this.style.background='transparent'; this.style.color='var(--accent-gold, var(--ak-primary))'">
+                    承認申請
+                </button>
+            </div>
         </form>
     </main>
 </div>
 
 <script>
-    document.getElementById('content').addEventListener('input', function() {
-        document.getElementById('char-count').textContent = this.value.length + ' characters';
+    var contentEl = document.getElementById('content');
+    var charCountEl = document.getElementById('char-count');
+    var charWarningEl = document.getElementById('char-warning');
+    var editPostId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        var params = new URLSearchParams(window.location.search);
+        var editId = params.get('edit');
+        if (editId) {
+            editPostId = editId;
+            document.getElementById('compose-heading').textContent = '投稿を編集';
+            document.getElementById('submit-btn').textContent = '更新';
+            loadPostForEdit(editId, token);
+        }
+
+        fetch('/api/v1/accounts', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function(res) {
+            if (!res.ok) return;
+            return res.json();
+        }).then(function(accounts) {
+            if (!accounts) return;
+            var connectedPlatforms = accounts.map(function(a) { return a.platform; });
+            var checkboxes = document.querySelectorAll('input[name="platforms"]');
+            checkboxes.forEach(function(cb) {
+                if (connectedPlatforms.indexOf(cb.value) === -1) {
+                    cb.disabled = true;
+                    var label = cb.closest('label');
+                    if (label) {
+                        label.style.opacity = '0.45';
+                        label.style.cursor = 'not-allowed';
+                        label.title = 'このプラットフォームは未連携です。アカウント管理から連携してください。';
+                    }
+                }
+            });
+        }).catch(function() { /* ignore */ });
     });
+
+    async function loadPostForEdit(id, token) {
+        try {
+            var response = await fetch('/api/v1/posts/' + id, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!response.ok) {
+                showToast('error', '投稿の読み込みに失敗しました');
+                return;
+            }
+
+            var post = await response.json();
+
+            contentEl.value = post.content || '';
+            contentEl.dispatchEvent(new Event('input'));
+
+            var platforms = [];
+            if (post.targets && post.targets.length > 0) {
+                platforms = post.targets.map(function(t) { return t.platform; });
+            } else if (post.targetPlatforms) {
+                platforms = post.targetPlatforms;
+            }
+            var checkboxes = document.querySelectorAll('input[name="platforms"]');
+            checkboxes.forEach(function(cb) {
+                cb.checked = platforms.indexOf(cb.value) !== -1;
+            });
+
+            if (post.scheduledAt) {
+                var dt = new Date(post.scheduledAt);
+                var iso = dt.getFullYear() + '-' +
+                    String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(dt.getDate()).padStart(2, '0') + 'T' +
+                    String(dt.getHours()).padStart(2, '0') + ':' +
+                    String(dt.getMinutes()).padStart(2, '0');
+                document.getElementById('scheduledAt').value = iso;
+            }
+        } catch (err) {
+            showToast('error', '投稿の読み込みに失敗しました', 'サーバーに接続できませんでした。');
+        }
+    }
+
+    contentEl.addEventListener('input', function() {
+        var len = this.value.length;
+        charCountEl.textContent = len + ' 文字';
+
+        // Twitter limit warning
+        if (len > 280) {
+            charCountEl.style.color = 'var(--status-error, #B04040)';
+            charWarningEl.style.display = 'inline';
+            charWarningEl.textContent = 'Twitter の文字数上限 (280) を超えています';
+            charWarningEl.style.color = 'var(--status-error, #B04040)';
+        } else if (len > 250) {
+            charCountEl.style.color = 'var(--status-warning, #C8A96E)';
+            charWarningEl.style.display = 'inline';
+            charWarningEl.textContent = 'Twitter の上限まであと ' + (280 - len) + ' 文字';
+            charWarningEl.style.color = 'var(--status-warning, #C8A96E)';
+        } else {
+            charCountEl.style.color = 'var(--text-muted, var(--ak-text-muted))';
+            charWarningEl.style.display = 'none';
+        }
+    });
+
+    function toggleAllPlatforms(checked) {
+        var checkboxes = document.querySelectorAll('input[name="platforms"]');
+        checkboxes.forEach(function(cb) {
+            if (!cb.disabled) cb.checked = checked;
+        });
+    }
 
     async function handleCompose(event) {
         event.preventDefault();
-        const errorDiv = document.getElementById('compose-error');
-        const successDiv = document.getElementById('compose-success');
-        errorDiv.style.display = 'none';
-        successDiv.style.display = 'none';
 
-        const token = localStorage.getItem('accessToken');
+        var token = localStorage.getItem('accessToken');
         if (!token) {
             window.location.href = '/';
             return false;
         }
 
-        const content = document.getElementById('content').value;
-        const platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
-            .map(cb => cb.value);
-        const scheduledAtInput = document.getElementById('scheduledAt').value;
-        const scheduledAt = scheduledAtInput ? new Date(scheduledAtInput).toISOString() : null;
+        var submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.setAttribute('aria-busy', 'true');
+        submitBtn.textContent = '送信中...';
+
+        var content = document.getElementById('content').value;
+        var platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
+            .map(function(cb) { return cb.value; });
+        var scheduledAtInput = document.getElementById('scheduledAt').value;
+        var scheduledAt = scheduledAtInput ? new Date(scheduledAtInput).toISOString() : null;
+
+        var isEdit = !!editPostId;
+        var url = isEdit ? '/api/v1/posts/' + editPostId : '/api/v1/posts';
+        var method = isEdit ? 'PUT' : 'POST';
 
         try {
-            const response = await fetch('/api/v1/posts', {
-                method: 'POST',
+            var response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
@@ -105,27 +289,111 @@
             }
 
             if (!response.ok) {
-                const data = await response.json();
-                errorDiv.textContent = data.message || 'Failed to create post';
-                errorDiv.style.display = 'block';
+                await showApiError(response, isEdit ? '投稿の更新に失敗しました' : '投稿の作成に失敗しました');
                 return false;
             }
 
-            successDiv.textContent = 'Post created successfully!';
-            successDiv.style.display = 'block';
-            document.getElementById('compose-form').reset();
-            document.getElementById('char-count').textContent = '0 characters';
+            if (isEdit) {
+                showToast('success', '投稿を更新しました');
+                window.location.href = '/posts/' + editPostId;
+            } else {
+                showToast('success', '投稿を作成しました');
+                document.getElementById('compose-form').reset();
+                charCountEl.textContent = '0 文字';
+                charCountEl.style.color = 'var(--text-muted, var(--ak-text-muted))';
+                charWarningEl.style.display = 'none';
+            }
         } catch (err) {
-            errorDiv.textContent = 'Network error. Please try again.';
-            errorDiv.style.display = 'block';
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('aria-busy');
+            submitBtn.textContent = isEdit ? '更新' : '投稿を作成';
         }
         return false;
+    }
+
+    async function submitForApproval() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        var approvalBtn = document.getElementById('approval-btn');
+        approvalBtn.disabled = true;
+        approvalBtn.textContent = '送信中...';
+
+        var content = document.getElementById('content').value;
+        var platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
+            .map(function(cb) { return cb.value; });
+        var scheduledAtInput = document.getElementById('scheduledAt').value;
+        var scheduledAt = scheduledAtInput ? new Date(scheduledAtInput).toISOString() : null;
+
+        try {
+            // First create the post as draft
+            var postResponse = await fetch('/api/v1/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    content: content,
+                    mediaUrls: [],
+                    targetPlatforms: platforms,
+                    scheduledAt: scheduledAt,
+                    status: 'DRAFT'
+                })
+            });
+
+            if (postResponse.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!postResponse.ok) {
+                await showApiError(postResponse, '投稿の作成に失敗しました');
+                return;
+            }
+
+            var post = await postResponse.json();
+
+            // Then submit for approval
+            var approvalResponse = await fetch('/api/v1/approvals/' + post.id + '/decide', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    decision: 'PENDING',
+                    comment: ''
+                })
+            });
+
+            showToast('success', '承認申請を送信しました');
+            document.getElementById('compose-form').reset();
+            charCountEl.textContent = '0 文字';
+            charCountEl.style.color = 'var(--text-muted, var(--ak-text-muted))';
+            charWarningEl.style.display = 'none';
+        } catch (err) {
+            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+        } finally {
+            approvalBtn.disabled = false;
+            approvalBtn.textContent = '承認申請';
+        }
     }
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

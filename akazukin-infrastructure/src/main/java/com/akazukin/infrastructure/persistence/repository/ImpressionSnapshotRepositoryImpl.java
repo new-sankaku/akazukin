@@ -66,7 +66,12 @@ public class ImpressionSnapshotRepositoryImpl implements ImpressionSnapshotRepos
         long perfStart = System.nanoTime();
         try {
             ImpressionSnapshotEntity entity = ImpressionSnapshotMapper.toEntity(snapshot);
-            persist(entity);
+            if (entity.id == null) {
+                entity.id = UUID.randomUUID();
+                persist(entity);
+            } else {
+                entity = getEntityManager().merge(entity);
+            }
             return ImpressionSnapshotMapper.toDomain(entity);
         } finally {
             long perfMs = (System.nanoTime() - perfStart) / 1_000_000;

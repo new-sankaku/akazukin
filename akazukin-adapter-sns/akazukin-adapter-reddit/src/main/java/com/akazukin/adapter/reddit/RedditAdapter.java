@@ -81,24 +81,18 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
     @Override
     public String getAuthorizationUrl(String callbackUrl, String state) {
-        try {
-            checkRateLimit();
-            String url = AUTH_URL
-                + "?client_id=" + encode(clientId)
-                + "&response_type=code"
-                + "&state=" + encode(state)
-                + "&redirect_uri=" + encode(callbackUrl)
-                + "&duration=permanent"
-                + "&scope=" + encode("identity submit read");
-            recordApiCall();
-            return url;
-        } catch (RuntimeException e) {
-            throw wrapException("getAuthorizationUrl", e);
-        }
+        return AUTH_URL
+            + "?client_id=" + encode(clientId)
+            + "&response_type=code"
+            + "&state=" + encode(state)
+            + "&redirect_uri=" + encode(callbackUrl)
+            + "&duration=permanent"
+            + "&scope=" + encode("identity submit read");
     }
 
     @Override
     public SnsAuthToken exchangeToken(String code, String callbackUrl) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String body = "grant_type=authorization_code"
@@ -119,11 +113,14 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
             throw wrapException("exchangeToken", e);
         } catch (RuntimeException e) {
             throw wrapException("exchangeToken", e);
+        } finally {
+            perfLog("RedditAdapter.exchangeToken", perfStart);
         }
     }
 
     @Override
     public SnsAuthToken refreshToken(String refreshToken) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String body = "grant_type=refresh_token"
@@ -143,12 +140,19 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
             throw wrapException("refreshToken", e);
         } catch (RuntimeException e) {
             throw wrapException("refreshToken", e);
+        } finally {
+            perfLog("RedditAdapter.refreshToken", perfStart);
         }
     }
 
     @Override
     public SnsProfile getProfile(String accessToken) {
+        long perfStart = System.nanoTime();
         try {
+            SnsProfile cached = getCachedProfile(accessToken);
+            if (cached != null) {
+                return cached;
+            }
             checkRateLimit();
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_BASE + "/api/v1/me"))
@@ -166,12 +170,14 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
             int karma = json.path("link_karma").asInt(0) + json.path("comment_karma").asInt(0);
 
-            return new SnsProfile(
+            SnsProfile profile = new SnsProfile(
                 json.path("name").asText(),
                 json.path("name").asText(""),
                 json.path("icon_img").asText(null),
                 karma
             );
+            cacheProfile(accessToken, profile);
+            return profile;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -179,11 +185,14 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
             throw wrapException("getProfile", e);
         } catch (RuntimeException e) {
             throw wrapException("getProfile", e);
+        } finally {
+            perfLog("RedditAdapter.getProfile", perfStart);
         }
     }
 
     @Override
     public PostResult post(String accessToken, PostRequest request) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String content = request.content();
@@ -237,11 +246,14 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
             throw wrapException("post", e);
         } catch (RuntimeException e) {
             throw wrapException("post", e);
+        } finally {
+            perfLog("RedditAdapter.post", perfStart);
         }
     }
 
     @Override
     public void deletePost(String accessToken, String postId) {
+        long perfStart = System.nanoTime();
         try {
             checkRateLimit();
             String body = "id=" + encode(postId);
@@ -266,6 +278,8 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
             throw wrapException("deletePost", e);
         } catch (RuntimeException e) {
             throw wrapException("deletePost", e);
+        } finally {
+            perfLog("RedditAdapter.deletePost", perfStart);
         }
     }
 

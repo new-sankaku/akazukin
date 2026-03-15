@@ -23,6 +23,16 @@ dependencies {
     implementation(project(":akazukin-adapter-sns:akazukin-adapter-telegram"))
     implementation(project(":akazukin-adapter-sns:akazukin-adapter-vk"))
     implementation(project(":akazukin-adapter-sns:akazukin-adapter-pinterest"))
+    implementation(project(":akazukin-adapter-sns:akazukin-adapter-tiktok"))
+
+    // AI modules
+    implementation(project(":akazukin-ai:akazukin-ai-core"))
+    implementation(project(":akazukin-ai:akazukin-ai-ollama"))
+
+    // New SNS adapters
+    implementation(project(":akazukin-adapter-sns:akazukin-adapter-mixi2"))
+    implementation(project(":akazukin-adapter-sns:akazukin-adapter-note"))
+    implementation(project(":akazukin-adapter-sns:akazukin-adapter-niconico"))
 
     // Quarkus REST
     implementation("io.quarkus:quarkus-rest")
@@ -34,8 +44,8 @@ dependencies {
     // Quarkiverse Web Bundler
     implementation("io.quarkiverse.web-bundler:quarkus-web-bundler:1.7.3")
 
-    // htmx
-    implementation("org.mvnpm:htmx.org:2.0.8")
+    // htmx (compileOnly for Web Bundler)
+    compileOnly("org.mvnpm:htmx.org:2.0.8")
 
     // Security — JWT
     implementation("io.quarkus:quarkus-smallrye-jwt")
@@ -46,10 +56,13 @@ dependencies {
 
     implementation("io.quarkus:quarkus-smallrye-health")
     implementation("io.quarkus:quarkus-smallrye-fault-tolerance")
+    implementation("io.quarkus:quarkus-scheduler")
     implementation("com.bucket4j:bucket4j-core:8.10.1")
 
-    // AWS Lambda HTTP adapter
-    implementation("io.quarkus:quarkus-amazon-lambda-http")
+    // AWS Lambda HTTP adapter (excluded in dev/test mode - conflicts with standard HTTP server)
+    if (!gradle.startParameter.taskNames.any { it.contains("quarkusDev") || it.contains("test") || it.contains("Test") }) {
+        implementation("io.quarkus:quarkus-amazon-lambda-http")
+    }
 
     // Observability
     implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
@@ -60,8 +73,14 @@ dependencies {
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:3.15.0")
     implementation("io.quarkiverse.amazonservices:quarkus-amazon-secretsmanager:3.15.0")
+    implementation("software.amazon.awssdk:url-connection-client:2.25.27")
+    implementation("software.amazon.awssdk:scheduler:2.25.27")
+
+    // H2 for dev mode
+    implementation("io.quarkus:quarkus-jdbc-h2")
 
     // Test
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.quarkus:quarkus-test-security")
     testImplementation("io.rest-assured:rest-assured")
 }

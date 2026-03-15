@@ -79,8 +79,10 @@ public class DefaultAgentOrchestrator implements AgentOrchestrator {
             LOG.log(Level.INFO, "Agent task {0} ({1}) completed successfully",
                     new Object[]{task.getId(), agentType});
         } catch (Exception e) {
-            taskRepository.updateStatus(task.getId(), "FAILED", "Agent execution failed: " + e.getMessage());
-            throw new RuntimeException("Agent " + agentType + " failed", e);
+            String errorMsg = "Agent execution failed: " + e.getMessage();
+            taskRepository.updateStatus(task.getId(), "FAILED", errorMsg);
+            LOG.log(Level.WARNING, "Agent task {0} ({1}) failed: {2}",
+                    new Object[]{task.getId(), agentType, e.getMessage()});
         }
 
         return taskRepository.findById(task.getId()).orElseThrow();

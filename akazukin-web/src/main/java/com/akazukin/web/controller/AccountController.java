@@ -18,6 +18,7 @@ public class AccountController extends Controller {
     }
 
     @GET
+    @Path("")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance list() {
         return Templates.list();

@@ -48,7 +48,12 @@ public class AgentTaskRepositoryImpl implements AgentTaskRepository, PanacheRepo
     @Transactional
     public AgentTask save(AgentTask task) {
         AgentTaskEntity entity = AgentTaskMapper.toEntity(task);
-        persist(entity);
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
+            persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
+        }
         return AgentTaskMapper.toDomain(entity);
     }
 

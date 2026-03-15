@@ -12,58 +12,123 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PostTargetRepositoryImpl implements PostTargetRepository, PanacheRepository<PostTargetEntity> {
 
+    private static final Logger LOG = Logger.getLogger(PostTargetRepositoryImpl.class.getName());
+
     @Override
     public Optional<PostTarget> findById(UUID id) {
-        return find("id", id).firstResultOptional().map(PostTargetMapper::toDomain);
+        long perfStart = System.nanoTime();
+        try {
+            return find("id", id).firstResultOptional().map(PostTargetMapper::toDomain);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findById", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findById", perfMs});
+            }
+        }
     }
 
     @Override
     public List<PostTarget> findByPostId(UUID postId) {
-        return find("postId", postId)
-                .list()
-                .stream()
-                .map(PostTargetMapper::toDomain)
-                .collect(Collectors.toList());
+        long perfStart = System.nanoTime();
+        try {
+            return find("postId", postId)
+                    .list()
+                    .stream()
+                    .map(PostTargetMapper::toDomain)
+                    .collect(Collectors.toList());
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByPostId", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByPostId", perfMs});
+            }
+        }
     }
 
     @Override
     @Transactional
     public PostTarget save(PostTarget target) {
-        PostTargetEntity entity = PostTargetMapper.toEntity(target);
-        if (entity.id != null) {
-            entity = getEntityManager().merge(entity);
-        } else {
-            persist(entity);
+        long perfStart = System.nanoTime();
+        try {
+            PostTargetEntity entity = PostTargetMapper.toEntity(target);
+            if (entity.id == null) {
+                entity.id = UUID.randomUUID();
+                persist(entity);
+            } else {
+                entity = getEntityManager().merge(entity);
+            }
+            return PostTargetMapper.toDomain(entity);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.save", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.save", perfMs});
+            }
         }
-        return PostTargetMapper.toDomain(entity);
     }
 
     @Override
     @Transactional
     public void deleteByPostId(UUID postId) {
-        delete("postId", postId);
+        long perfStart = System.nanoTime();
+        try {
+            delete("postId", postId);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.deleteByPostId", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.deleteByPostId", perfMs});
+            }
+        }
     }
 
     @Override
     public List<PostTarget> findByPostIds(List<UUID> postIds) {
-        if (postIds == null || postIds.isEmpty()) {
-            return List.of();
+        long perfStart = System.nanoTime();
+        try {
+            if (postIds == null || postIds.isEmpty()) {
+                return List.of();
+            }
+            return find("postId in ?1", postIds)
+                    .list()
+                    .stream()
+                    .map(PostTargetMapper::toDomain)
+                    .collect(Collectors.toList());
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByPostIds", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByPostIds", perfMs});
+            }
         }
-        return find("postId in ?1", postIds)
-                .list()
-                .stream()
-                .map(PostTargetMapper::toDomain)
-                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void updateStatus(UUID id, PostStatus status, String errorMessage) {
-        update("status = ?1, errorMessage = ?2 where id = ?3", status.name(), errorMessage, id);
+        long perfStart = System.nanoTime();
+        try {
+            update("status = ?1, errorMessage = ?2 where id = ?3", status.name(), errorMessage, id);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.updateStatus", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.updateStatus", perfMs});
+            }
+        }
     }
 }

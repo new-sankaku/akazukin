@@ -19,6 +19,7 @@ import com.akazukin.domain.port.PostRepository;
 import com.akazukin.domain.port.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -53,6 +54,7 @@ public class ApprovalUseCase {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public void submitForApproval(UUID postId, UUID requesterId, UUID approverId, UUID teamId) {
         long perfStart = System.nanoTime();
         try {
@@ -127,6 +129,7 @@ public class ApprovalUseCase {
         }
     }
 
+    @Transactional
     public void decide(UUID approvalId, UUID deciderId, ApprovalDecisionDto decision) {
         long perfStart = System.nanoTime();
         try {

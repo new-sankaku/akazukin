@@ -8,6 +8,7 @@ import com.akazukin.domain.model.ABTestStatus;
 import com.akazukin.domain.port.ABTestRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -27,6 +28,7 @@ public class ABTestUseCase {
         this.abTestRepository = abTestRepository;
     }
 
+    @Transactional
     public ABTestDto createTest(UUID userId, ABTestRequestDto request) {
         if (request.name() == null || request.name().isBlank()) {
             throw new DomainException("INVALID_INPUT", "Test name is required");
@@ -65,6 +67,7 @@ public class ABTestUseCase {
                 .toList();
     }
 
+    @Transactional
     public ABTestDto completeTest(UUID testId, UUID userId, String winnerVariant) {
         ABTest test = abTestRepository.findById(testId)
                 .orElseThrow(() -> new DomainException("TEST_NOT_FOUND",
@@ -93,6 +96,7 @@ public class ABTestUseCase {
         return toDto(saved);
     }
 
+    @Transactional
     public void deleteTest(UUID testId, UUID userId) {
         ABTest test = abTestRepository.findById(testId)
                 .orElseThrow(() -> new DomainException("TEST_NOT_FOUND",

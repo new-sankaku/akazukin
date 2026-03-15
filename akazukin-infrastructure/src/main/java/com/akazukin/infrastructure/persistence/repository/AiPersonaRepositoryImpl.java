@@ -41,10 +41,11 @@ public class AiPersonaRepositoryImpl implements AiPersonaRepository, PanacheRepo
     @Transactional
     public AiPersona save(AiPersona aiPersona) {
         AiPersonaEntity entity = AiPersonaMapper.toEntity(aiPersona);
-        if (entity.id != null) {
-            entity = getEntityManager().merge(entity);
-        } else {
+        if (entity.id == null) {
+            entity.id = UUID.randomUUID();
             persist(entity);
+        } else {
+            entity = getEntityManager().merge(entity);
         }
         return AiPersonaMapper.toDomain(entity);
     }

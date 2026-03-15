@@ -1,16 +1,13 @@
 package com.akazukin.worker;
 
-import com.akazukin.domain.model.SnsPlatform;
-import com.akazukin.domain.port.SnsAdapter;
+import com.akazukin.domain.model.CircuitBreakerState;
+import com.akazukin.domain.model.CircuitState;
+import com.akazukin.domain.port.CircuitBreakerRegistry;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,44 +16,35 @@ public class CircuitBreakerReporter {
 
     private static final Logger LOG = Logger.getLogger(CircuitBreakerReporter.class.getName());
 
-    private final Map<SnsPlatform, SnsAdapter> adapterMap;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
 
     @Inject
-    public CircuitBreakerReporter(Instance<SnsAdapter> adapterInstances) {
-        this.adapterMap = new EnumMap<>(SnsPlatform.class);
-        for (SnsAdapter adapter : adapterInstances) {
-            this.adapterMap.put(adapter.platform(), adapter);
-        }
+    public CircuitBreakerReporter(CircuitBreakerRegistry circuitBreakerRegistry) {
+        this.circuitBreakerRegistry = circuitBreakerRegistry;
     }
 
     @Scheduled(every = "5m", identity = "circuit-breaker-reporter")
     void reportCircuitBreakerStatus() {
-        if (adapterMap.isEmpty()) {
-            LOG.log(Level.FINE, "No SNS adapters registered, skipping health report");
+        List<CircuitBreakerState> allStates = circuitBreakerRegistry.getAllStates();
+        if (allStates.isEmpty()) {
+            LOG.log(Level.FINE, "No circuit breaker states registered");
             return;
         }
 
-        List<SnsPlatform> healthyPlatforms = new ArrayList<>();
-        List<SnsPlatform> unhealthyPlatforms = new ArrayList<>();
+        List<CircuitBreakerState> openCircuits = allStates.stream()
+                .filter(s -> s.state() != CircuitState.CLOSED)
+                .toList();
 
-        for (Map.Entry<SnsPlatform, SnsAdapter> entry : adapterMap.entrySet()) {
-            try {
-                entry.getValue().getMaxContentLength();
-                healthyPlatforms.add(entry.getKey());
-            } catch (Exception e) {
-                LOG.log(Level.WARNING,
-                        "Health check failed for platform " + entry.getKey(), e);
-                unhealthyPlatforms.add(entry.getKey());
-            }
-        }
-
-        if (unhealthyPlatforms.isEmpty()) {
-            LOG.log(Level.FINE, "All {0} SNS adapters healthy: {1}",
-                    new Object[]{healthyPlatforms.size(), healthyPlatforms});
+        if (openCircuits.isEmpty()) {
+            LOG.log(Level.FINE, "All {0} circuit breakers are CLOSED",
+                    allStates.size());
         } else {
-            LOG.log(Level.WARNING,
-                    "Unhealthy SNS adapters: {0} (healthy: {1})",
-                    new Object[]{unhealthyPlatforms, healthyPlatforms});
+            for (CircuitBreakerState state : openCircuits) {
+                LOG.log(Level.WARNING,
+                        "Circuit breaker {0}: state={1}, failures={2}, lastFailure={3}",
+                        new Object[]{state.platform(), state.state(),
+                                state.failureCount(), state.lastFailureTime()});
+            }
         }
     }
 }

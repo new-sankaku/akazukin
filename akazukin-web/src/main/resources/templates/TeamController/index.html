@@ -1,0 +1,573 @@
+{#include base}
+{#title}チーム管理 - Akazukin{/title}
+{#body}
+{#appheader /}
+
+<div class="ak-layout">
+    {#sidebar active="teams" /}
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">チーム管理</h2>
+        </div>
+
+        <div id="create-team-form" class="ak-card" style="
+            background: var(--bg-elevated, #F0EBD8);
+            border: 1px solid var(--border-lt, #CCC5AE);
+            border-radius: 2px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        ">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="new-team-name" placeholder="チーム名を入力" style="
+                    flex: 1;
+                    min-width: 200px;
+                    padding: 0.5rem 0.8rem;
+                    border: 1px solid var(--border, #B8B19C);
+                    border-radius: 2px;
+                    background: var(--bg-surface, #EDE8D5);
+                    color: var(--text-primary, #4D493E);
+                    font-size: 0.9rem;
+                ">
+                <button onclick="createTeam()" style="
+                    background-color: var(--accent-gold, #C8964A);
+                    border-color: var(--accent-gold, #C8964A);
+                    border: none;
+                    color: #fff;
+                    font-size: 0.85rem;
+                    padding: 0.5rem 1.2rem;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    letter-spacing: 0.05em;
+                    transition: background-color 0.2s ease;
+                    white-space: nowrap;
+                " onmouseover="this.style.backgroundColor='var(--accent-gold-hover, #B5853E)'" onmouseout="this.style.backgroundColor='var(--accent-gold, #C8964A)'">チームを作成</button>
+            </div>
+        </div>
+
+        <div id="teams-list">
+            <div class="ak-card" style="
+                background: var(--bg-surface, #EDE8D5);
+                border: 1px solid var(--border-lt, #CCC5AE);
+                border-radius: 2px;
+                text-align: center;
+                padding: 2rem;
+            ">
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    .team-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .team-card:hover {
+        border-color: var(--border, #B8B19C);
+        box-shadow: 0 2px 8px rgba(61, 58, 50, 0.08);
+    }
+
+    .team-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .team-name {
+        color: var(--text-heading, #3D3A32);
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+    }
+
+    .team-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        color: var(--text-muted, #9B9580);
+        font-size: 0.8rem;
+        letter-spacing: 0.03em;
+    }
+
+    .team-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .btn-expand {
+        background: transparent;
+        border: 1px solid var(--border, #B8B19C);
+        color: var(--text-sec, #7A7464);
+        font-size: 0.78rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-expand:hover {
+        border-color: var(--accent-gold, #C8964A);
+        color: var(--accent-gold, #C8964A);
+    }
+
+    .btn-delete-team {
+        background: transparent;
+        border: 1px solid var(--border, #B8B19C);
+        color: var(--text-sec, #7A7464);
+        font-size: 0.78rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-delete-team:hover {
+        border-color: #C1574B;
+        color: #C1574B;
+        background: rgba(193, 87, 75, 0.06);
+    }
+
+    .team-members-panel {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-lt, #CCC5AE);
+        display: none;
+    }
+
+    .team-members-panel.open {
+        display: block;
+    }
+
+    .member-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-lt, #CCC5AE);
+    }
+
+    .member-row:last-of-type {
+        border-bottom: none;
+    }
+
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-primary, #4D493E);
+        font-size: 0.9rem;
+    }
+
+    .member-role-badge {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #fff;
+    }
+
+    .btn-remove-member {
+        background: transparent;
+        border: 1px solid var(--border, #B8B19C);
+        color: var(--text-sec, #7A7464);
+        font-size: 0.75rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-remove-member:hover {
+        border-color: #C1574B;
+        color: #C1574B;
+        background: rgba(193, 87, 75, 0.06);
+    }
+
+    .add-member-form {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .add-member-form input,
+    .add-member-form select {
+        padding: 0.4rem 0.6rem;
+        border: 1px solid var(--border, #B8B19C);
+        border-radius: 2px;
+        background: var(--bg-elevated, #F0EBD8);
+        color: var(--text-primary, #4D493E);
+        font-size: 0.82rem;
+    }
+
+    .btn-add-member {
+        background-color: var(--accent-gold, #C8964A);
+        border: none;
+        color: #fff;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 2px;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: background-color 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-add-member:hover {
+        background-color: var(--accent-gold-hover, #B5853E);
+    }
+
+    .empty-state {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 2px;
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .empty-state-decoration {
+        width: 64px;
+        height: 2px;
+        background: var(--border, #B8B19C);
+        margin: 0 auto 1.5rem;
+    }
+
+    .empty-state-message {
+        color: var(--text-sec, #7A7464);
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 600px) {
+        .team-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .team-actions {
+            width: 100%;
+        }
+
+        .team-actions button {
+            flex: 1;
+            text-align: center;
+        }
+
+        .add-member-form {
+            flex-direction: column;
+        }
+
+        .add-member-form input,
+        .add-member-form select,
+        .btn-add-member {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    var roleColors = {
+        'ADMIN': '#C8964A',
+        'USER': '#6A8A6A',
+        'VIEWER': '#7A7464'
+    };
+
+    var roleLabels = {
+        'ADMIN': '管理者',
+        'USER': 'メンバー',
+        'VIEWER': '閲覧者'
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTeams();
+
+        document.getElementById('new-team-name').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') createTeam();
+        });
+    });
+
+    async function loadTeams() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            var response = await fetch('/api/v1/teams', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (response.ok) {
+                var teams = await response.json();
+                renderTeams(teams);
+            } else {
+                await showApiError(response, 'チームの読み込みに失敗しました');
+            }
+        } catch (err) {
+            document.getElementById('teams-list').innerHTML =
+                '<div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">' +
+                '<p style="color: #C1574B; margin: 0;">サーバーに接続できませんでした</p></div>';
+            showToast('error', 'チームの読み込みに失敗しました', 'サーバーに接続できません。ネットワーク接続を確認してください。');
+        }
+    }
+
+    function renderTeams(teams) {
+        var container = document.getElementById('teams-list');
+
+        if (teams.length === 0) {
+            container.innerHTML =
+                '<div class="empty-state">' +
+                '<div class="empty-state-decoration"></div>' +
+                '<p class="empty-state-message">チームがまだ作成されていません</p>' +
+                '</div>';
+            return;
+        }
+
+        container.innerHTML = teams.map(function(team) {
+            var memberCount = team.members ? team.members.length : 0;
+            var dateStr = formatJapaneseDate(team.createdAt);
+
+            return '<div class="team-card" id="team-' + escapeHtmlGlobal(team.id) + '">' +
+                '<div class="team-card-header">' +
+                '<div>' +
+                '<div class="team-name">' + escapeHtmlGlobal(team.name) + '</div>' +
+                '<div class="team-meta">' +
+                '<span><i class="fas fa-users" style="margin-right: 0.3rem;"></i>' + memberCount + ' メンバー</span>' +
+                '<span><i class="fas fa-calendar" style="margin-right: 0.3rem;"></i>' + dateStr + '</span>' +
+                '</div>' +
+                '</div>' +
+                '<div class="team-actions">' +
+                '<button class="btn-expand" onclick="toggleMembers(\'' + team.id + '\')">メンバー</button>' +
+                '<button class="btn-delete-team" onclick="deleteTeam(\'' + team.id + '\')">削除</button>' +
+                '</div>' +
+                '</div>' +
+                '<div class="team-members-panel" id="members-' + escapeHtmlGlobal(team.id) + '">' +
+                '<p style="color: var(--text-muted, #9B9580); font-size: 0.85rem;">読み込み中...</p>' +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function formatJapaneseDate(dateStr) {
+        if (!dateStr) return '--';
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '--';
+        var year = d.getFullYear();
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        return year + '年' + month + '月' + day + '日';
+    }
+
+    async function createTeam() {
+        var nameInput = document.getElementById('new-team-name');
+        var name = nameInput.value.trim();
+        if (!name) {
+            showToast('warning', 'チーム名を入力してください');
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/teams', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ name: name })
+            });
+
+            if (response.ok || response.status === 201) {
+                nameInput.value = '';
+                showToast('success', 'チームを作成しました');
+                loadTeams();
+            } else {
+                await showApiError(response, 'チームの作成に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'チームの作成に失敗しました', 'サーバーに接続できません。もう一度お試しください。');
+        }
+    }
+
+    async function toggleMembers(teamId) {
+        var panel = document.getElementById('members-' + teamId);
+        if (panel.classList.contains('open')) {
+            panel.classList.remove('open');
+            return;
+        }
+
+        panel.classList.add('open');
+        panel.innerHTML = '<p style="color: var(--text-muted, #9B9580); font-size: 0.85rem;">読み込み中...</p>';
+
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/teams/' + teamId, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (!response.ok) {
+                await showApiError(response, 'メンバーの読み込みに失敗しました');
+                panel.innerHTML = '<p style="color: #C1574B; font-size: 0.85rem;">メンバーの読み込みに失敗しました</p>';
+                return;
+            }
+
+            var team = await response.json();
+            renderMembers(teamId, team.members || []);
+        } catch (err) {
+            panel.innerHTML = '<p style="color: #C1574B; font-size: 0.85rem;">メンバーの読み込みに失敗しました</p>';
+            showToast('error', 'メンバーの読み込みに失敗しました');
+        }
+    }
+
+    function renderMembers(teamId, members) {
+        var panel = document.getElementById('members-' + teamId);
+        var html = '';
+
+        if (members.length === 0) {
+            html += '<p style="color: var(--text-muted, #9B9580); font-size: 0.85rem; margin-bottom: 0.75rem;">メンバーがいません</p>';
+        } else {
+            html += members.map(function(member) {
+                var roleColor = roleColors[member.role] || '#7A7464';
+                var roleLabel = roleLabels[member.role] || member.role;
+                var joinedDate = formatJapaneseDate(member.joinedAt);
+
+                return '<div class="member-row">' +
+                    '<div class="member-info">' +
+                    '<span>' + escapeHtmlGlobal(member.username || member.userId) + '</span>' +
+                    '<span class="member-role-badge" style="background-color: ' + roleColor + ';">' + escapeHtmlGlobal(roleLabel) + '</span>' +
+                    '<span style="color: var(--text-muted, #9B9580); font-size: 0.75rem;">' + joinedDate + '</span>' +
+                    '</div>' +
+                    '<button class="btn-remove-member" onclick="removeMember(\'' + teamId + '\', \'' + member.userId + '\')">除外</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        html += '<div class="add-member-form">' +
+            '<input type="text" id="add-user-' + escapeHtmlGlobal(teamId) + '" placeholder="ユーザーID">' +
+            '<select id="add-role-' + escapeHtmlGlobal(teamId) + '">' +
+            '<option value="USER">メンバー</option>' +
+            '<option value="ADMIN">管理者</option>' +
+            '<option value="VIEWER">閲覧者</option>' +
+            '</select>' +
+            '<button class="btn-add-member" onclick="addMember(\'' + teamId + '\')">追加</button>' +
+            '</div>';
+
+        panel.innerHTML = html;
+    }
+
+    async function addMember(teamId) {
+        var userInput = document.getElementById('add-user-' + teamId);
+        var roleSelect = document.getElementById('add-role-' + teamId);
+        var userId = userInput.value.trim();
+        var role = roleSelect.value;
+
+        if (!userId) {
+            showToast('warning', 'ユーザーIDを入力してください');
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/teams/' + teamId + '/members', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ userId: userId, role: role })
+            });
+
+            if (response.ok) {
+                userInput.value = '';
+                showToast('success', 'メンバーを追加しました');
+                loadTeams();
+                setTimeout(function() { toggleMembers(teamId); }, 300);
+            } else {
+                await showApiError(response, 'メンバーの追加に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'メンバーの追加に失敗しました', 'サーバーに接続できません。もう一度お試しください。');
+        }
+    }
+
+    async function removeMember(teamId, memberId) {
+        if (!confirm('このメンバーをチームから除外してもよろしいですか？')) return;
+
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/teams/' + teamId + '/members/' + memberId, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok || response.status === 204) {
+                showToast('success', 'メンバーを除外しました');
+                loadTeams();
+                setTimeout(function() { toggleMembers(teamId); }, 300);
+            } else {
+                await showApiError(response, 'メンバーの除外に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'メンバーの除外に失敗しました', 'サーバーに接続できません。もう一度お試しください。');
+        }
+    }
+
+    async function deleteTeam(teamId) {
+        if (!confirm('このチームを削除してもよろしいですか？この操作は取り消せません。')) return;
+
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/teams/' + teamId, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok || response.status === 204) {
+                showToast('success', 'チームを削除しました');
+                loadTeams();
+            } else {
+                await showApiError(response, 'チームの削除に失敗しました');
+            }
+        } catch (err) {
+            showToast('error', 'チームの削除に失敗しました', 'サーバーに接続できません。もう一度お試しください。');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+
+    function toggleMobileMenu() {
+        var sidebar = document.querySelector('.ak-sidebar');
+        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
+    }
+</script>
+{/body}
+{/include}

@@ -22,12 +22,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PinterestClient implements AutoCloseable {
 
-    private static final String API_BASE_URL = "https://api.pinterest.com/v5";
-    private static final String AUTH_URL = "https://www.pinterest.com/oauth/";
-    private static final String TOKEN_URL = "https://api.pinterest.com/v5/oauth/token";
+    private static final Logger LOG = Logger.getLogger(PinterestClient.class.getName());
+
+    private static final String DEFAULT_API_BASE_URL = "https://api.pinterest.com/v5";
+    private static final String DEFAULT_AUTH_BASE_URL = "https://www.pinterest.com/oauth/";
+    private static final String DEFAULT_TOKEN_URL = "https://api.pinterest.com/v5/oauth/token";
     private static final int HTTP_CLIENT_ERROR = 400;
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
@@ -44,11 +48,18 @@ public class PinterestClient implements AutoCloseable {
     private final PinterestConfig config;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final String apiBaseUrl;
+    private final String authBaseUrl;
+    private final String tokenUrl;
 
-    private PinterestClient(PinterestConfig config, HttpClient httpClient, ObjectMapper objectMapper) {
+    private PinterestClient(PinterestConfig config, HttpClient httpClient, ObjectMapper objectMapper,
+                            String apiBaseUrl, String authBaseUrl, String tokenUrl) {
         this.config = config;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+        this.apiBaseUrl = apiBaseUrl;
+        this.authBaseUrl = authBaseUrl;
+        this.tokenUrl = tokenUrl;
     }
 
     public static Builder builder() {
@@ -57,7 +68,7 @@ public class PinterestClient implements AutoCloseable {
 
     public String getAuthorizationUrl(String state, List<String> scopes) {
         String scopeString = String.join(",", scopes);
-        return AUTH_URL
+        return authBaseUrl
             + "?client_id=" + encode(config.appId())
             + "&redirect_uri=" + encode(config.redirectUri())
             + "&response_type=code"
@@ -66,113 +77,143 @@ public class PinterestClient implements AutoCloseable {
     }
 
     public TokenResponse exchangeToken(String code) {
-        Map<String, String> payload = new HashMap<>();
-        payload.put("grant_type", "authorization_code");
-        payload.put("code", code);
-        payload.put("redirect_uri", config.redirectUri());
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, String> payload = new HashMap<>();
+            payload.put("grant_type", "authorization_code");
+            payload.put("code", code);
+            payload.put("redirect_uri", config.redirectUri());
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(TOKEN_URL))
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .header("Authorization", "Basic " + basicAuth())
-            .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("Authorization", "Basic " + basicAuth())
+                .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, TokenResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, TokenResponse.class);
+        } finally {
+            perfLog("PinterestClient.exchangeToken", perfStart);
+        }
     }
 
     public TokenResponse refreshToken(String refreshToken) {
-        Map<String, String> payload = new HashMap<>();
-        payload.put("grant_type", "refresh_token");
-        payload.put("refresh_token", refreshToken);
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, String> payload = new HashMap<>();
+            payload.put("grant_type", "refresh_token");
+            payload.put("refresh_token", refreshToken);
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(TOKEN_URL))
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .header("Authorization", "Basic " + basicAuth())
-            .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .header("Authorization", "Basic " + basicAuth())
+                .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, TokenResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, TokenResponse.class);
+        } finally {
+            perfLog("PinterestClient.refreshToken", perfStart);
+        }
     }
 
     public PinResponse createPin(String accessToken, String boardId, String title,
                                  String description, String imageUrl) {
-        Map<String, Object> mediaSource = new HashMap<>();
-        mediaSource.put("source_type", "image_url");
-        mediaSource.put("url", imageUrl);
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, Object> mediaSource = new HashMap<>();
+            mediaSource.put("source_type", "image_url");
+            mediaSource.put("url", imageUrl);
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("board_id", boardId);
-        payload.put("title", title);
-        payload.put("description", description);
-        payload.put("media_source", mediaSource);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("board_id", boardId);
+            payload.put("title", title);
+            payload.put("description", description);
+            payload.put("media_source", mediaSource);
 
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/pins"))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
-            .timeout(READ_TIMEOUT)
-            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/pins"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(toJson(payload)))
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, PinResponse.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, PinResponse.class);
+        } finally {
+            perfLog("PinterestClient.createPin", perfStart);
+        }
     }
 
     public void deletePin(String accessToken, String pinId) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/pins/" + pinId))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Accept", "application/json")
-            .DELETE()
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/pins/" + pinId))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .DELETE()
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        sendRequest(request);
+            sendRequest(request);
+        } finally {
+            perfLog("PinterestClient.deletePin", perfStart);
+        }
     }
 
     public PinterestUser getMe(String accessToken) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/user_account"))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Accept", "application/json")
-            .GET()
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/user_account"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        return parseResponse(response, PinterestUser.class);
+            HttpResponse<String> response = sendRequest(request);
+            return parseResponse(response, PinterestUser.class);
+        } finally {
+            perfLog("PinterestClient.getMe", perfStart);
+        }
     }
 
     public List<Board> listBoards(String accessToken) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(API_BASE_URL + "/boards"))
-            .header("Authorization", "Bearer " + accessToken)
-            .header("Accept", "application/json")
-            .GET()
-            .timeout(READ_TIMEOUT)
-            .build();
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/boards"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
 
-        HttpResponse<String> response = sendRequest(request);
-        JsonNode root = parseJsonTree(response);
-        JsonNode items = root.path("items");
-        if (!items.isArray()) {
-            return List.of();
-        }
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode items = root.path("items");
+            if (!items.isArray()) {
+                return List.of();
+            }
 
-        List<Board> boards = new ArrayList<>();
-        for (JsonNode item : items) {
-            boards.add(fromJson(item, Board.class));
+            List<Board> boards = new ArrayList<>();
+            for (JsonNode item : items) {
+                boards.add(fromJson(item, Board.class));
+            }
+            return List.copyOf(boards);
+        } finally {
+            perfLog("PinterestClient.listBoards", perfStart);
         }
-        return List.copyOf(boards);
     }
 
     @Override
@@ -187,31 +228,45 @@ public class PinterestClient implements AutoCloseable {
         return java.util.Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
     }
 
+    private void perfLog(String methodName, long startNanos) {
+        long perfMs = (System.nanoTime() - startNanos) / 1_000_000;
+        if (perfMs >= 100) {
+            LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{methodName, perfMs});
+        } else {
+            LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{methodName, perfMs});
+        }
+    }
+
     private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler)
             throws IOException, InterruptedException {
+        long perfStart = System.nanoTime();
         int maxRetries = 3;
         long delayMs = 1000;
         IOException lastException = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-                HttpResponse<T> response = httpClient.send(request, handler);
-                if (response.statusCode() == 429 && attempt < maxRetries) {
-                    String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
-                    long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
-                    Thread.sleep(Math.min(waitMs, 30000));
-                    delayMs *= 2;
-                    continue;
-                }
-                return response;
-            } catch (IOException e) {
-                lastException = e;
-                if (attempt < maxRetries) {
-                    Thread.sleep(delayMs);
-                    delayMs *= 2;
+        try {
+            for (int attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    HttpResponse<T> response = httpClient.send(request, handler);
+                    if (response.statusCode() == 429 && attempt < maxRetries) {
+                        String retryAfter = response.headers().firstValue("Retry-After").orElse(null);
+                        long waitMs = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : delayMs;
+                        Thread.sleep(Math.min(waitMs, 30000));
+                        delayMs *= 2;
+                        continue;
+                    }
+                    return response;
+                } catch (IOException e) {
+                    lastException = e;
+                    if (attempt < maxRetries) {
+                        Thread.sleep(delayMs);
+                        delayMs *= 2;
+                    }
                 }
             }
+            throw lastException;
+        } finally {
+            perfLog("PinterestClient.sendWithRetry", perfStart);
         }
-        throw lastException;
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) {
@@ -295,6 +350,9 @@ public class PinterestClient implements AutoCloseable {
         private PinterestConfig config;
         private HttpClient httpClient;
         private ObjectMapper objectMapper;
+        private String apiBaseUrl;
+        private String authBaseUrl;
+        private String tokenUrl;
 
         private Builder() {
         }
@@ -314,6 +372,21 @@ public class PinterestClient implements AutoCloseable {
             return this;
         }
 
+        public Builder apiBaseUrl(String apiBaseUrl) {
+            this.apiBaseUrl = apiBaseUrl;
+            return this;
+        }
+
+        public Builder authBaseUrl(String authBaseUrl) {
+            this.authBaseUrl = authBaseUrl;
+            return this;
+        }
+
+        public Builder tokenUrl(String tokenUrl) {
+            this.tokenUrl = tokenUrl;
+            return this;
+        }
+
         public PinterestClient build() {
             if (config == null) {
                 throw new IllegalStateException("PinterestConfig must be provided");
@@ -324,7 +397,16 @@ public class PinterestClient implements AutoCloseable {
             if (objectMapper == null) {
                 objectMapper = DEFAULT_OBJECT_MAPPER;
             }
-            return new PinterestClient(config, httpClient, objectMapper);
+            if (apiBaseUrl == null) {
+                apiBaseUrl = DEFAULT_API_BASE_URL;
+            }
+            if (authBaseUrl == null) {
+                authBaseUrl = DEFAULT_AUTH_BASE_URL;
+            }
+            if (tokenUrl == null) {
+                tokenUrl = DEFAULT_TOKEN_URL;
+            }
+            return new PinterestClient(config, httpClient, objectMapper, apiBaseUrl, authBaseUrl, tokenUrl);
         }
     }
 }

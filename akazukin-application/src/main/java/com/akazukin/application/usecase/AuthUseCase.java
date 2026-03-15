@@ -35,11 +35,9 @@ public class AuthUseCase {
             throw new DomainException("INVALID_INPUT", "Password is required");
         }
 
-        if (userRepository.findByUsername(request.username()).isPresent()) {
-            throw new DomainException("DUPLICATE_USERNAME", "Username already exists: " + request.username());
-        }
-        if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new DomainException("DUPLICATE_EMAIL", "Email already exists: " + request.email());
+        if (userRepository.findByUsername(request.username()).isPresent()
+                || userRepository.findByEmail(request.email()).isPresent()) {
+            throw new DomainException("DUPLICATE_USER", "このユーザー名またはメールアドレスは既に使用されています");
         }
 
         Instant now = Instant.now();
@@ -60,10 +58,10 @@ public class AuthUseCase {
 
     public User authenticate(String username, String rawPassword) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new DomainException("INVALID_CREDENTIALS", "Invalid username or password"));
+                .orElseThrow(() -> new DomainException("INVALID_CREDENTIALS", "ユーザー名またはパスワードが正しくありません"));
 
         if (!passwordHasher.verify(rawPassword, user.getPasswordHash())) {
-            throw new DomainException("INVALID_CREDENTIALS", "Invalid username or password");
+            throw new DomainException("INVALID_CREDENTIALS", "ユーザー名またはパスワードが正しくありません");
         }
 
         return user;

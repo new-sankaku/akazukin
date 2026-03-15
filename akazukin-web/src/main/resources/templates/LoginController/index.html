@@ -1,35 +1,51 @@
 {#include base}
 {#title}{msg:login_title} - {msg:app_title}{/title}
 {#body}
+<style>
+    .ak-dev-login { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border, #B8B19C); text-align: center; }
+    .ak-dev-login-label { font-size: 0.8rem; color: var(--text-muted, #9B9580); margin-bottom: 0.75rem; letter-spacing: 0.1em; }
+    .ak-btn-dev { display: block; width: 100%; margin-bottom: 0.5rem; padding: 0.6rem; background: var(--bg-subtle, #E4DECC); border: 1px solid var(--border-lt, #CCC5AE); color: var(--text-body, #5A5548); cursor: pointer; font-size: 0.85rem; transition: background 0.2s; border-radius: 0.35rem; }
+    .ak-btn-dev:hover { background: var(--bg-field, #DDD6BB); }
+</style>
+
 <div class="ak-auth-container">
-    <h2>{msg:app_title}</h2>
-    <p style="text-align: center; color: var(--ak-text-muted);">{msg:app_subtitle}</p>
+    <div class="ak-card">
+        <h2 style="text-align: center; margin-bottom: 0.25rem;">{msg:app_title}</h2>
+        <p style="text-align: center; color: var(--text-muted, #9B9580); font-size: 0.9rem; letter-spacing: 0.05em;">
+            {msg:app_subtitle}
+        </p>
 
-    <div id="login-error" class="ak-card" style="display: none; border-color: var(--ak-primary); color: var(--ak-primary);"></div>
+        <div style="border-top: 1px solid var(--border, #B8B19C); margin: 1.5rem 0;"></div>
 
-    <form id="login-form" onsubmit="return handleLogin(event)">
-        <label for="username">{msg:login_username}</label>
-        <input type="text" id="username" name="username" placeholder="{msg:login_username_placeholder}" required>
+        <form id="login-form" onsubmit="return handleLogin(event)">
+            <label for="username">{msg:login_username}</label>
+            <input type="text" id="username" name="username" placeholder="{msg:login_username_placeholder}" required>
 
-        <label for="password">{msg:login_password}</label>
-        <input type="password" id="password" name="password" placeholder="{msg:login_password_placeholder}" required>
+            <label for="password">{msg:login_password}</label>
+            <input type="password" id="password" name="password" placeholder="{msg:login_password_placeholder}" required>
 
-        <button type="submit" class="contrast">{msg:login_submit}</button>
-    </form>
+            <button type="submit" id="login-btn" class="ak-btn-primary" style="width: 100%; margin-top: 1rem;">
+                {msg:login_submit}
+            </button>
+        </form>
 
-    <p style="text-align: center; margin-top: 1rem;">
-        {msg:login_no_account} <a href="/register">{msg:login_register_link}</a>
-    </p>
+        <p style="text-align: center; margin-top: 1.25rem; font-size: 0.9rem;">
+            {msg:login_no_account} <a href="/register">{msg:login_register_link}</a>
+        </p>
+
+        <div class="ak-dev-login">
+            <div class="ak-dev-login-label">— 開発用クイックログイン —</div>
+            <button onclick="devLogin('admin', 'admin123')" class="ak-btn-dev">管理者でログイン</button>
+            <button onclick="devLogin('user', 'user123')" class="ak-btn-dev">一般ユーザーでログイン</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    async function handleLogin(event) {
-        event.preventDefault();
-        const errorDiv = document.getElementById('login-error');
-        errorDiv.style.display = 'none';
-
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+    async function doLogin(username, password) {
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
 
         try {
             const response = await fetch('/api/v1/auth/login', {
@@ -39,10 +55,8 @@
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                errorDiv.textContent = data.message || 'Login failed';
-                errorDiv.style.display = 'block';
-                return false;
+                await showApiError(response, 'ログインに失敗しました');
+                return;
             }
 
             const data = await response.json();
@@ -50,10 +64,25 @@
             localStorage.setItem('refreshToken', data.refreshToken);
             window.location.href = '/dashboard';
         } catch (err) {
-            errorDiv.textContent = 'Network error. Please try again.';
-            errorDiv.style.display = 'block';
+            showToast('error', 'エラー', 'ネットワークエラーが発生しました。再度お試しください。');
+        } finally {
+            btn.disabled = false;
+            btn.removeAttribute('aria-busy');
         }
+    }
+
+    async function handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        await doLogin(username, password);
         return false;
+    }
+
+    async function devLogin(username, password) {
+        document.getElementById('username').value = username;
+        document.getElementById('password').value = password;
+        await doLogin(username, password);
     }
 </script>
 {/body}

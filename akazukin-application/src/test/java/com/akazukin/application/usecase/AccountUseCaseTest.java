@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,9 @@ class AccountUseCaseTest {
     @BeforeEach
     void setUp() {
         snsAccountRepository = new InMemorySnsAccountRepository();
-        accountUseCase = new AccountUseCase(snsAccountRepository);
+        accountUseCase = new AccountUseCase(snsAccountRepository, platform -> {
+            throw new UnsupportedOperationException("Not used in this test");
+        });
         userId = UUID.randomUUID();
     }
 
@@ -163,6 +166,25 @@ class AccountUseCaseTest {
         @Override
         public void deleteById(UUID id) {
             store.remove(id);
+        }
+
+        @Override
+        public List<SnsAccount> findAllByIds(Collection<UUID> ids) {
+            return store.values().stream()
+                    .filter(account -> ids.contains(account.getId()))
+                    .toList();
+        }
+
+        @Override
+        public long countByPlatform(SnsPlatform platform) {
+            return store.values().stream()
+                    .filter(account -> account.getPlatform() == platform)
+                    .count();
+        }
+
+        @Override
+        public long countAll() {
+            return store.size();
         }
     }
 }

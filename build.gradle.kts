@@ -10,6 +10,7 @@ subprojects {
         mavenCentral()
     }
 
+
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
@@ -18,6 +19,9 @@ subprojects {
 
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
+        options.compilerArgs.add("-parameters")
+        options.isFork = true
+        options.forkOptions.jvmArgs = listOf("-Duser.language=ja", "-Dfile.encoding=UTF-8", "-Dstdout.encoding=UTF-8", "-Dstderr.encoding=UTF-8")
     }
 
     tasks.withType<Test> {

@@ -1,29 +1,10 @@
 {#include base}
 {#title}承認レビュー - Akazukin{/title}
 {#body}
-<header class="ak-header">
-    <button class="ak-hamburger" onclick="toggleMobileMenu()" aria-label="メニュー切替">&#9776;</button>
-    <h1>Akazukin</h1>
-    <nav>
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/approvals" class="active">承認</a>
-        <a href="/audit-logs">監査ログ</a>
-        <a href="#" onclick="logout()">ログアウト</a>
-    </nav>
-</header>
+{#appheader /}
 
 <div class="ak-layout">
-    <aside class="ak-sidebar">
-        <a href="/dashboard">ダッシュボード</a>
-        <a href="/posts">投稿一覧</a>
-        <a href="/posts/compose">新規投稿</a>
-        <a href="/accounts">アカウント管理</a>
-        <a href="/approvals" class="active">承認</a>
-        <a href="/audit-logs">監査ログ</a>
-    </aside>
+    {#sidebar active="approvals" /}
 
     <main class="ak-main">
         <div style="margin-bottom: 1.5rem;">

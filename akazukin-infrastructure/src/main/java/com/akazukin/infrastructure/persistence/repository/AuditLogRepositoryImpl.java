@@ -25,6 +25,9 @@ public class AuditLogRepositoryImpl implements AuditLogRepository, PanacheReposi
         long perfStart = System.nanoTime();
         try {
             AuditLogEntity entity = AuditLogMapper.toEntity(auditLog);
+            if (entity.id == null) {
+                entity.id = UUID.randomUUID();
+            }
             persist(entity);
         } finally {
             long perfMs = (System.nanoTime() - perfStart) / 1_000_000;

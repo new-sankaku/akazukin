@@ -14,105 +14,155 @@ import jakarta.inject.Inject;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @ApplicationScoped
 public class AccountUseCase {
 
+    private static final Logger LOG = Logger.getLogger(AccountUseCase.class.getName());
+
     private final SnsAccountRepository snsAccountRepository;
-    private final Map<SnsPlatform, SnsAdapter> snsAdapters = new ConcurrentHashMap<>();
+    private final SnsAdapterLookup snsAdapterLookup;
 
     @Inject
-    public AccountUseCase(SnsAccountRepository snsAccountRepository) {
+    public AccountUseCase(SnsAccountRepository snsAccountRepository,
+                          SnsAdapterLookup snsAdapterLookup) {
         this.snsAccountRepository = snsAccountRepository;
-    }
-
-    public void registerAdapter(SnsAdapter adapter) {
-        snsAdapters.put(adapter.platform(), adapter);
+        this.snsAdapterLookup = snsAdapterLookup;
     }
 
     public List<AccountResponseDto> listAccounts(UUID userId) {
-        List<SnsAccount> accounts = snsAccountRepository.findByUserId(userId);
+        long perfStart = System.nanoTime();
+        try {
+            List<SnsAccount> accounts = snsAccountRepository.findByUserId(userId);
 
-        return accounts.stream()
-                .map(this::toAccountResponseDto)
-                .toList();
+            return accounts.stream()
+                    .map(this::toAccountResponseDto)
+                    .toList();
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.listAccounts", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.listAccounts", perfMs});
+            }
+        }
     }
 
     public AccountResponseDto getAccount(UUID accountId) {
-        SnsAccount account = snsAccountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
+        long perfStart = System.nanoTime();
+        try {
+            SnsAccount account = snsAccountRepository.findById(accountId)
+                    .orElseThrow(() -> new AccountNotFoundException(accountId));
 
-        return toAccountResponseDto(account);
+            return toAccountResponseDto(account);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.getAccount", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.getAccount", perfMs});
+            }
+        }
     }
 
     public void deleteAccount(UUID accountId, UUID userId) {
-        SnsAccount account = snsAccountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
+        long perfStart = System.nanoTime();
+        try {
+            SnsAccount account = snsAccountRepository.findById(accountId)
+                    .orElseThrow(() -> new AccountNotFoundException(accountId));
 
-        if (!account.getUserId().equals(userId)) {
-            throw new DomainException("FORBIDDEN", "You do not own this account");
+            if (!account.getUserId().equals(userId)) {
+                throw new DomainException("FORBIDDEN", "You do not own this account");
+            }
+
+            snsAccountRepository.deleteById(accountId);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.deleteAccount", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.deleteAccount", perfMs});
+            }
         }
-
-        snsAccountRepository.deleteById(accountId);
     }
 
     public String getAuthorizationUrl(UUID userId, SnsPlatform platform, String callbackUrl) {
-        SnsAdapter adapter = getAdapterForPlatform(platform);
-        String state = UUID.randomUUID().toString();
-        return adapter.getAuthorizationUrl(callbackUrl, state);
+        long perfStart = System.nanoTime();
+        try {
+            SnsAdapter adapter = getAdapterForPlatform(platform);
+            String state = UUID.randomUUID().toString();
+            return adapter.getAuthorizationUrl(callbackUrl, state);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.getAuthorizationUrl", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.getAuthorizationUrl", perfMs});
+            }
+        }
     }
 
     public AccountResponseDto connectAccount(UUID userId, SnsPlatform platform,
                                              String code, String callbackUrl) {
-        SnsAdapter adapter = getAdapterForPlatform(platform);
+        long perfStart = System.nanoTime();
+        try {
+            SnsAdapter adapter = getAdapterForPlatform(platform);
 
-        SnsAuthToken token = adapter.exchangeToken(code, callbackUrl);
-        SnsProfile profile = adapter.getProfile(token.accessToken());
+            SnsAuthToken token = adapter.exchangeToken(code, callbackUrl);
+            SnsProfile profile = adapter.getProfile(token.accessToken());
 
-        SnsAccount existingAccount = snsAccountRepository
-                .findByUserIdAndPlatform(userId, platform)
-                .orElse(null);
+            SnsAccount existingAccount = snsAccountRepository
+                    .findByUserIdAndPlatform(userId, platform)
+                    .orElse(null);
 
-        Instant now = Instant.now();
-        SnsAccount account;
+            Instant now = Instant.now();
+            SnsAccount account;
 
-        if (existingAccount != null) {
-            existingAccount.setAccessToken(token.accessToken());
-            existingAccount.setRefreshToken(token.refreshToken());
-            existingAccount.setTokenExpiresAt(token.expiresAt());
-            existingAccount.setAccountIdentifier(profile.accountIdentifier());
-            existingAccount.setDisplayName(profile.displayName());
-            existingAccount.setUpdatedAt(now);
-            account = snsAccountRepository.save(existingAccount);
-        } else {
-            account = new SnsAccount(
-                    null,
-                    userId,
-                    platform,
-                    profile.accountIdentifier(),
-                    profile.displayName(),
-                    token.accessToken(),
-                    token.refreshToken(),
-                    token.expiresAt(),
-                    now,
-                    now
-            );
-            account = snsAccountRepository.save(account);
+            if (existingAccount != null) {
+                existingAccount.setAccessToken(token.accessToken());
+                existingAccount.setRefreshToken(token.refreshToken());
+                existingAccount.setTokenExpiresAt(token.expiresAt());
+                existingAccount.setAccountIdentifier(profile.accountIdentifier());
+                existingAccount.setDisplayName(profile.displayName());
+                existingAccount.setUpdatedAt(now);
+                account = snsAccountRepository.save(existingAccount);
+            } else {
+                account = new SnsAccount(
+                        null,
+                        userId,
+                        platform,
+                        profile.accountIdentifier(),
+                        profile.displayName(),
+                        token.accessToken(),
+                        token.refreshToken(),
+                        token.expiresAt(),
+                        now,
+                        now
+                );
+                account = snsAccountRepository.save(account);
+            }
+
+            return toAccountResponseDto(account);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.connectAccount", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AccountUseCase.connectAccount", perfMs});
+            }
         }
-
-        return toAccountResponseDto(account);
     }
 
     private SnsAdapter getAdapterForPlatform(SnsPlatform platform) {
-        SnsAdapter adapter = snsAdapters.get(platform);
-        if (adapter == null) {
+        try {
+            return snsAdapterLookup.getAdapter(platform);
+        } catch (IllegalArgumentException e) {
             throw new DomainException("UNSUPPORTED_PLATFORM",
                     "Platform not supported: " + platform);
         }
-        return adapter;
     }
 
     private AccountResponseDto toAccountResponseDto(SnsAccount account) {

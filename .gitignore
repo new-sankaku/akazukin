@@ -1,8 +1,6 @@
 # Gradle
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
-!gradle/wrapper/gradle-wrapper.properties
 
 # Compiled class file
 *.class
@@ -25,6 +23,10 @@ build/
 *.tar.gz
 *.rar
 
+# Gradle wrapper jar (must come after *.jar to override)
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
 # virtual machine crash logs
 hs_err_pid*
 replay_pid*
@@ -39,12 +41,19 @@ replay_pid*
 *.swp
 *~
 
+# Dev DB (H2 file-based)
+data/
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Environment
+# Environment / API Keys / Secrets
 .env
+*.env
+.env.*
 *.pem
 !src/main/resources/publicKey.pem
 .claude/worktrees/
+credentials.*
+**/secrets.properties

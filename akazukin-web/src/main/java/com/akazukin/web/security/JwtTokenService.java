@@ -1,14 +1,16 @@
 package com.akazukin.web.security;
 
 import com.akazukin.domain.model.User;
-import io.smallrye.jwt.auth.principal.JWTParser;
-import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.jwt.build.Jwt;
+import io.smallrye.jwt.util.KeyUtils;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 
+import java.security.PublicKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
@@ -26,8 +28,8 @@ public class JwtTokenService {
     @ConfigProperty(name = "akazukin.jwt.refresh-token-duration", defaultValue = "P7D")
     Duration refreshTokenDuration;
 
-    @Inject
-    JWTParser jwtParser;
+    @ConfigProperty(name = "mp.jwt.verify.publickey.location", defaultValue = "/publicKey.pem")
+    String publicKeyLocation;
 
     public String generateAccessToken(User user) {
         return Jwt.issuer(issuer)
@@ -35,7 +37,8 @@ public class JwtTokenService {
                 .subject(user.getId().toString())
                 .groups(Set.of(user.getRole().name()))
                 .expiresAt(Instant.now().plus(accessTokenDuration))
-                .sign();
+                .innerSign()
+                .encrypt();
     }
 
     public String generateRefreshToken(User user) {
@@ -44,7 +47,8 @@ public class JwtTokenService {
                 .subject(user.getId().toString())
                 .claim("type", "refresh")
                 .expiresAt(Instant.now().plus(refreshTokenDuration))
-                .sign();
+                .innerSign()
+                .encrypt();
     }
 
     /**
@@ -59,27 +63,37 @@ public class JwtTokenService {
             throw new InvalidRefreshTokenException("Refresh token must not be empty");
         }
 
-        JsonWebToken jwt;
+        JwtClaims claims;
         try {
-            jwt = jwtParser.parse(token);
-        } catch (ParseException e) {
+            PublicKey publicKey = KeyUtils.readPublicKey(publicKeyLocation);
+            JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+                    .setRequireSubject()
+                    .setExpectedIssuer(issuer)
+                    .setVerificationKey(publicKey)
+                    .build();
+            claims = jwtConsumer.processToClaims(token);
+        } catch (InvalidJwtException e) {
             throw new InvalidRefreshTokenException("Failed to parse refresh token: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new InvalidRefreshTokenException("Failed to verify refresh token: " + e.getMessage(), e);
         }
 
-        if (!issuer.equals(jwt.getIssuer())) {
-            throw new InvalidRefreshTokenException("Invalid token issuer");
+        String tokenType;
+        try {
+            tokenType = claims.getStringClaimValue("type");
+        } catch (Exception e) {
+            tokenType = null;
         }
-
-        String tokenType = jwt.getClaim("type");
         if (!"refresh".equals(tokenType)) {
             throw new InvalidRefreshTokenException("Token is not a refresh token");
         }
 
-        if (jwt.getExpirationTime() <= Instant.now().getEpochSecond()) {
-            throw new InvalidRefreshTokenException("Refresh token has expired");
+        String subject;
+        try {
+            subject = claims.getSubject();
+        } catch (Exception e) {
+            throw new InvalidRefreshTokenException("Failed to extract subject from refresh token", e);
         }
-
-        String subject = jwt.getSubject();
         if (subject == null || subject.isBlank()) {
             throw new InvalidRefreshTokenException("Refresh token has no subject");
         }
