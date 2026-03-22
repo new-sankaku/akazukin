@@ -21,7 +21,7 @@ dependencies {
     implementation("io.quarkus:quarkus-redis-client")
     implementation("io.quarkus:quarkus-cache")
     implementation("io.quarkus:quarkus-mailer")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
 
     testImplementation("io.quarkus:quarkus-junit5")
 }
