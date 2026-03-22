@@ -9,7 +9,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -130,6 +132,50 @@ public class AuditLogRepositoryImpl implements AuditLogRepository, PanacheReposi
                 LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AuditLogRepositoryImpl.countAll", perfMs});
             } else {
                 LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AuditLogRepositoryImpl.countAll", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public List<AuditLog> findRecent(int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            return find("ORDER BY createdAt DESC")
+                    .page(0, limit)
+                    .list()
+                    .stream()
+                    .map(AuditLogMapper::toDomain)
+                    .toList();
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AuditLogRepositoryImpl.findRecent", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AuditLogRepositoryImpl.findRecent", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public Map<String, Long> countByResponseStatusRange() {
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, Long> result = new HashMap<>();
+            long total = count();
+            long successCount = count("responseStatus >= 200 AND responseStatus < 300");
+            long warnCount = count("responseStatus >= 300 AND responseStatus < 500");
+            long errorCount = count("responseStatus >= 500");
+            result.put("total", total);
+            result.put("success", successCount);
+            result.put("warn", warnCount);
+            result.put("error", errorCount);
+            return result;
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AuditLogRepositoryImpl.countByResponseStatusRange", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AuditLogRepositoryImpl.countByResponseStatusRange", perfMs});
             }
         }
     }

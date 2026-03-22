@@ -18,7 +18,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.net.URI;
 import java.util.List;
@@ -33,13 +32,13 @@ public class TeamResource {
     @Inject
     TeamUseCase teamUseCase;
 
-    @Inject
-    JsonWebToken jwt;
+    @Context
+    SecurityContext securityContext;
+
 
     @POST
-    public Response createTeam(TeamRequestDto request,
-                               @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+    public Response createTeam(TeamRequestDto request) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         TeamResponseDto team = teamUseCase.createTeam(userId, request.name());
         return Response.created(URI.create("/api/v1/teams/" + team.id()))
                 .entity(team)
@@ -47,17 +46,16 @@ public class TeamResource {
     }
 
     @GET
-    public Response listTeams(@Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+    public Response listTeams() {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         List<TeamResponseDto> teams = teamUseCase.listTeams(userId);
         return Response.ok(teams).build();
     }
 
     @GET
     @Path("/{id}")
-    public Response getTeam(@PathParam("id") UUID id,
-                            @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+    public Response getTeam(@PathParam("id") UUID id) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         TeamResponseDto team = teamUseCase.getTeam(id, userId);
         return Response.ok(team).build();
     }
@@ -65,9 +63,8 @@ public class TeamResource {
     @POST
     @Path("/{id}/members")
     public Response addMember(@PathParam("id") UUID id,
-                              AddMemberRequestDto request,
-                              @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+                              AddMemberRequestDto request) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         Role role = Role.valueOf(request.role());
         TeamResponseDto team = teamUseCase.addMember(id, userId, request.userId(), role);
         return Response.ok(team).build();
@@ -76,18 +73,16 @@ public class TeamResource {
     @DELETE
     @Path("/{id}/members/{memberId}")
     public Response removeMember(@PathParam("id") UUID id,
-                                 @PathParam("memberId") UUID memberId,
-                                 @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+                                 @PathParam("memberId") UUID memberId) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         teamUseCase.removeMember(id, userId, memberId);
         return Response.noContent().build();
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deleteTeam(@PathParam("id") UUID id,
-                               @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+    public Response deleteTeam(@PathParam("id") UUID id) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         teamUseCase.deleteTeam(id, userId);
         return Response.noContent().build();
     }

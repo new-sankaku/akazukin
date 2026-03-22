@@ -36,6 +36,16 @@ public class InteractionRepositoryImpl implements InteractionRepository, Panache
     }
 
     @Override
+    public List<Interaction> findByUserIdAndTargetUserId(UUID userId, String targetUserId, int offset, int limit) {
+        return find("userId = ?1 and targetUserId = ?2 order by createdAt desc", userId, targetUserId)
+                .page(offset / Math.max(limit, 1), Math.max(limit, 1))
+                .list()
+                .stream()
+                .map(InteractionMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public Interaction save(Interaction interaction) {
         InteractionEntity entity = InteractionMapper.toEntity(interaction);
@@ -51,5 +61,10 @@ public class InteractionRepositoryImpl implements InteractionRepository, Panache
     @Override
     public long countByUserId(UUID userId) {
         return count("userId", userId);
+    }
+
+    @Override
+    public long countByUserIdAndTargetUserId(UUID userId, String targetUserId) {
+        return count("userId = ?1 and targetUserId = ?2", userId, targetUserId);
     }
 }

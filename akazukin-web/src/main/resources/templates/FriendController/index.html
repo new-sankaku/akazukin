@@ -1,5 +1,5 @@
 {#include base}
-{#title}フレンド管理 - Akazukin{/title}
+{#title}{msg:friend_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,28 +7,35 @@
     {#sidebar active="friends" /}
 
     <main class="ak-main">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">フレンド一覧</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-sm, 0.5rem);">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">{msg:friend_page_heading}</h2>
             <button onclick="showAddFriendForm()" style="
                 background-color: var(--accent-gold, #C8964A);
                 border: none;
-                color: #fff;
+                color: var(--color-white, #fff);
                 font-size: 0.85rem;
                 padding: 0.5rem 1.2rem;
                 border-radius: 2px;
                 cursor: pointer;
                 letter-spacing: 0.05em;
                 transition: background-color 0.2s ease;
-            ">フレンドを追加</button>
+            ">{msg:friend_add_btn}</button>
         </div>
 
-        <!-- Add Friend Form (hidden by default) -->
+        <div class="friend-page-tabs" id="friend-tabs">
+            <div class="friend-page-tab active" data-tab="dashboard">{msg:friend_tab_dashboard}</div>
+            <div class="friend-page-tab" data-tab="timeline">{msg:friend_tab_timeline}</div>
+            <div class="friend-page-tab" data-tab="plan">{msg:friend_tab_plan}</div>
+            <div class="friend-page-tab" data-tab="compose">{msg:friend_tab_compose}</div>
+            <div class="friend-page-tab" data-tab="map">{msg:friend_tab_map}</div>
+        </div>
+
         <div id="add-friend-form" style="display: none; margin-bottom: 1.5rem;">
             <div class="ak-card" style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; padding: 1.5rem;">
-                <h3 style="margin: 0 0 1rem; color: var(--text-heading, #3D3A32); font-size: 1rem;">新しいフレンドを追加</h3>
+                <h3 style="margin: 0 0 1rem; color: var(--text-heading, #3D3A32); font-size: 1rem;">{msg:friend_add_title}</h3>
                 <div style="display: grid; gap: 0.75rem;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">プラットフォーム</label>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">{msg:friend_platform}</label>
                         <select id="friend-platform" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
                             <option value="TWITTER">Twitter</option>
                             <option value="BLUESKY">Bluesky</option>
@@ -42,67 +49,353 @@
                             <option value="TELEGRAM">Telegram</option>
                             <option value="VK">VK</option>
                             <option value="PINTEREST">Pinterest</option>
+                            <option value="TIKTOK">TikTok</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">ユーザーID / 識別子</label>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">{msg:friend_identifier}</label>
                         <input id="friend-identifier" type="text" placeholder="@username" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">表示名</label>
-                        <input id="friend-displayname" type="text" placeholder="表示名" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">{msg:friend_display_name}</label>
+                        <input id="friend-displayname" type="text" placeholder="{msg:friend_display_name}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5);">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">メモ</label>
-                        <textarea id="friend-notes" rows="2" placeholder="メモ（任意）" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5); resize: vertical;"></textarea>
+                        <label style="font-size: 0.8rem; color: var(--text-sec, #7A7464);">{msg:friend_notes}</label>
+                        <textarea id="friend-notes" rows="2" placeholder="{msg:friend_notes_placeholder}" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border, #B8B19C); border-radius: 2px; background: var(--bg-surface, #EDE8D5); resize: vertical;"></textarea>
                     </div>
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        <button onclick="hideAddFriendForm()" style="padding: 0.5rem 1rem; border: 1px solid var(--border, #B8B19C); background: transparent; border-radius: 2px; cursor: pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
-                        <button onclick="addFriend()" style="padding: 0.5rem 1rem; background: var(--accent-gold, #C8964A); border: none; color: #fff; border-radius: 2px; cursor: pointer;">追加</button>
+                        <button onclick="hideAddFriendForm()" style="padding: 0.5rem 1rem; border: 1px solid var(--border, #B8B19C); background: transparent; border-radius: 2px; cursor: pointer; color: var(--text-sec, #7A7464);">{msg:friend_cancel}</button>
+                        <button onclick="addFriend()" style="padding: 0.5rem 1rem; background: var(--accent-gold, #C8964A); border: none; color: var(--color-white, #fff); border-radius: 2px; cursor: pointer;">{msg:friend_add_submit}</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Friends List -->
-        <div id="friends-list">
-            <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
-                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+        <div class="friend-tab-content active" id="tab-dashboard">
+            <div id="engagement-ranking">
+                <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
+                    <p style="color: var(--text-muted, #9B9580); margin: 0;">{msg:friend_loading}</p>
+                </div>
             </div>
+        </div>
+
+        <div class="friend-tab-content" id="tab-timeline">
+            <div id="timeline-friend-select" style="margin-bottom: var(--sp-md, 1rem);">
+                <label style="font-size: 0.82rem; color: var(--text-sec, #7A7464); margin-bottom: 0.3rem; display: block;">{msg:friend_select_friend}</label>
+                <div id="timeline-friend-chips" class="friend-chip-list"></div>
+            </div>
+            <div id="timeline-content">
+                <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
+                    <p style="color: var(--text-muted, #9B9580); margin: 0;">{msg:friend_select_friend_hint}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="friend-tab-content" id="tab-plan">
+            <div style="margin-bottom: var(--sp-md, 1rem);">
+                <label style="font-size: 0.82rem; color: var(--text-sec, #7A7464); margin-bottom: 0.3rem; display: block;">{msg:friend_plan_target}</label>
+                <div id="plan-friend-chips" class="friend-chip-list"></div>
+            </div>
+            <button class="friend-btn-primary" id="btn-generate-plan" disabled>{msg:friend_plan_generate}</button>
+            <div id="plan-result" style="display: none; margin-top: 1.2rem;"></div>
+        </div>
+
+        <div class="friend-tab-content" id="tab-compose">
+            <div style="margin-bottom: var(--sp-md, 1rem);">
+                <label style="font-size: 0.82rem; color: var(--text-sec, #7A7464); margin-bottom: 0.3rem; display: block;">{msg:friend_compose_target}</label>
+                <div id="compose-friend-chips" class="friend-chip-list"></div>
+            </div>
+            <div style="margin-bottom: var(--sp-md, 1rem);">
+                <label style="font-size: 0.82rem; color: var(--text-sec, #7A7464); margin-bottom: 0.3rem; display: block;">{msg:friend_compose_purpose}</label>
+                <div class="friend-chip-list">
+                    <span class="friend-chip-item selected" data-purpose="reply">{msg:friend_purpose_reply}</span>
+                    <span class="friend-chip-item" data-purpose="impression">{msg:friend_purpose_impression}</span>
+                    <span class="friend-chip-item" data-purpose="question">{msg:friend_purpose_question}</span>
+                    <span class="friend-chip-item" data-purpose="share">{msg:friend_purpose_share}</span>
+                </div>
+            </div>
+            <div style="margin-bottom: var(--sp-md, 1rem);">
+                <label style="font-size: 0.82rem; color: var(--text-sec, #7A7464); margin-bottom: 0.3rem; display: block;">{msg:friend_compose_reference}</label>
+                <textarea id="compose-reference" rows="3" placeholder="{msg:friend_compose_reference_placeholder}" style="width: 100%; padding: 0.7rem; font-size: 0.85rem; background: var(--bg-field, #DDD6BB); border: 1px solid var(--border-lt, #CCC5AE); color: var(--text-body, #5A5548); resize: vertical; border-radius: 2px;"></textarea>
+            </div>
+            <button class="friend-btn-primary" id="btn-compose" disabled>{msg:friend_compose_generate}</button>
+            <div id="compose-result" style="display: none; margin-top: var(--sp-md, 1rem);"></div>
+        </div>
+
+        <div class="friend-tab-content" id="tab-map">
+            <p style="font-size: 0.82rem; color: var(--text-sec, #7A7464); margin-bottom: var(--sp-md, 1rem);">{msg:friend_map_description}</p>
+            <div id="bubble-map-container" class="friend-bubble-map"></div>
+            <div id="sns-distribution" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-md, 1rem); margin-top: var(--sp-md, 1rem);"></div>
+            <div id="map-legend" class="friend-map-legend" style="margin-top: var(--sp-md, 1rem);"></div>
         </div>
     </main>
 </div>
 
 <style>
-    .friend-card {
-        background: var(--bg-surface, #EDE8D5);
-        border: 1px solid var(--border-lt, #CCC5AE);
-        border-radius: 2px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1rem;
-        transition: border-color 0.2s ease;
-    }
-    .friend-card:hover {
-        border-color: var(--border, #B8B19C);
-    }
-    .friend-card-inner {
+    .friend-page-tabs {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
+        gap: 0;
+        border-bottom: 2px solid var(--border, #B8B19C);
+        margin-bottom: var(--sp-lg, 1.5rem);
+        flex-wrap: wrap;
     }
-    .friend-platform-badge {
+    .friend-page-tab {
+        padding: 0.6rem 1.2rem;
+        cursor: pointer;
+        color: var(--text-sec, #7A7464);
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        border: 1px solid transparent;
+        border-bottom: none;
+        transition: all 0.2s ease;
+    }
+    .friend-page-tab:hover {
+        color: var(--text-heading, #3D3A32);
+        background: var(--bg-subtle, #E4DECC);
+    }
+    .friend-page-tab.active {
+        color: var(--text-heading, #3D3A32);
+        background: var(--bg-surface, #EDE8D5);
+        border-color: var(--border, #B8B19C);
+        border-bottom: 2px solid var(--bg-surface, #EDE8D5);
+        margin-bottom: -2px;
+        position: relative;
+    }
+    .friend-tab-content { display: none; }
+    .friend-tab-content.active { display: block; }
+    .friend-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--sp-sm, 0.5rem);
+    }
+    .friend-chip-item {
+        padding: 0.35rem 0.8rem;
+        border: 1px solid var(--border-lt, #CCC5AE);
+        background: var(--bg-subtle, #E4DECC);
+        cursor: pointer;
+        font-size: 0.82rem;
+        color: var(--text-sec, #7A7464);
+        transition: all 0.15s;
+        border-radius: 2px;
+    }
+    .friend-chip-item:hover, .friend-chip-item.selected {
+        border-color: var(--accent-gold, #C8964A);
+        background: var(--accent-gold-light, #F2E6D0);
+        color: var(--text-heading, #3D3A32);
+    }
+    .friend-btn-primary {
         display: inline-flex;
         align-items: center;
-        padding: 0.2rem 0.7rem;
+        gap: 0.4rem;
+        padding: var(--sp-sm, 0.5rem) var(--sp-md, 1rem);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        background: var(--accent-gold, #C8964A);
+        color: var(--color-white, #fff);
+        border: 1px solid var(--accent-gold, #C8964A);
+        letter-spacing: 0.04em;
         border-radius: 2px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #fff;
-        white-space: nowrap;
-        flex-shrink: 0;
+        transition: all 0.15s;
+    }
+    .friend-btn-primary:hover {
+        background: var(--accent-gold-hover, #B5853E);
+    }
+    .friend-btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .friend-priority-row {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-md, 1rem);
+        padding: 0.8rem;
+        border: 1px solid var(--border-lt, #CCC5AE);
+        background: var(--bg-elevated, #F0EBD8);
+        margin-bottom: var(--sp-sm, 0.5rem);
+        transition: border-color 0.15s;
+        flex-wrap: wrap;
+    }
+    .friend-priority-row:hover {
+        border-color: var(--accent-gold, #C8964A);
+    }
+    .friend-priority-rank {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-muted, #9B9580);
+        min-width: var(--sp-lg, 1.5rem);
+        text-align: center;
+    }
+    .friend-priority-name {
+        font-weight: 500;
+        color: var(--text-heading, #3D3A32);
+        flex: 1;
+        min-width: 0;
+    }
+    .friend-days-badge {
+        font-size: 0.82rem;
+        padding: 0.2rem 0.6rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        border-radius: 2px;
+    }
+    .friend-days-urgent {
+        background: var(--status-error-bg, #EEDCDC);
+        color: var(--status-error, #B04040);
+        border: 1px solid var(--status-error, #B04040);
+    }
+    .friend-days-warning {
+        background: var(--status-warning-bg, #F0E6D0);
+        color: var(--status-warning-text, #8B7540);
+        border: 1px solid var(--status-warning, #C8A96E);
+    }
+    .friend-days-ok {
+        background: var(--status-success-bg, #D5DDCA);
+        color: var(--status-success, #6B8B4A);
+        border: 1px solid var(--status-success, #6B8B4A);
+    }
+    .friend-platform-tag {
+        display: inline-block;
+        padding: 0.15rem var(--sp-sm, 0.5rem);
+        font-size: 0.72rem;
+        font-weight: 500;
+        border: 1px solid var(--accent-gold, #C8964A);
+        color: var(--accent-gold, #C8964A);
+        letter-spacing: 0.02em;
+        border-radius: 2px;
+    }
+    .friend-analyst-note {
+        background: var(--accent-gold-light, #F2E6D0);
+        border-left: 3px solid var(--accent-gold, #C8964A);
+        padding: 0.6rem 0.8rem;
+        font-size: 0.82rem;
+        color: var(--text-primary, #4D493E);
+        margin-top: 0.6rem;
+        margin-bottom: 0.6rem;
+    }
+    .friend-score-bar {
+        height: 6px;
+        background: var(--bg-field, #DDD6BB);
+        border: 1px solid var(--border-sub, #DDD6BB);
+        flex: 1;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .friend-score-bar-fill {
+        height: 100%;
+        transition: width 0.3s;
+    }
+    .friend-score-high .friend-score-bar-fill { background: var(--status-success, #6B8B4A); }
+    .friend-score-mid .friend-score-bar-fill { background: var(--status-warning, #C8A96E); }
+    .friend-score-low .friend-score-bar-fill { background: var(--status-error, #B04040); }
+    .friend-timeline-line {
+        position: relative;
+        padding-left: var(--sp-lg, 1.5rem);
+    }
+    .friend-timeline-line::before {
+        content: '';
+        position: absolute;
+        left: 0.45rem;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--border, #B8B19C);
+    }
+    .friend-tl-item {
+        position: relative;
+        padding-bottom: var(--sp-md, 1rem);
+    }
+    .friend-tl-item::before {
+        content: '';
+        position: absolute;
+        left: -1.05rem;
+        top: 0.35rem;
+        width: 8px;
+        height: 8px;
+        border: 1px solid var(--border, #B8B19C);
+        background: var(--bg-elevated, #F0EBD8);
+    }
+    .friend-tl-item.friend-tl-highlight::before {
+        background: var(--accent-gold, #C8964A);
+        border-color: var(--accent-gold, #C8964A);
+    }
+    .friend-plan-card {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: var(--sp-md, 1rem);
+        margin-bottom: 0.6rem;
+        border-radius: 2px;
+    }
+    .friend-plan-day {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--accent-gold, #C8964A);
+        margin-bottom: 0.3rem;
+        letter-spacing: 0.04em;
+    }
+    .friend-plan-action {
+        font-size: 0.85rem;
+        color: var(--text-body, #5A5548);
+        margin-bottom: 0.2rem;
+    }
+    .friend-plan-persona {
+        font-size: 0.75rem;
+        color: var(--text-sec, #7A7464);
+        font-style: italic;
+    }
+    .friend-composer-output {
+        background: var(--bg-field, #DDD6BB);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: 0.8rem;
+        font-size: 0.85rem;
+        color: var(--text-body, #5A5548);
+        min-height: 4rem;
+        margin-top: 0.6rem;
+        border-radius: 2px;
+    }
+    .friend-bubble-map {
+        position: relative;
+        width: 100%;
+        min-height: 360px;
+        background: var(--bg-field, #DDD6BB);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        overflow: hidden;
+    }
+    .friend-bubble {
+        position: absolute;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--border, #B8B19C);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: var(--bg-elevated, #F0EBD8);
+    }
+    .friend-bubble:hover {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 3px var(--accent-gold-light, #F2E6D0);
+    }
+    .friend-bubble-warning {
+        background: var(--accent-gold-light, #F2E6D0);
+        border-color: var(--status-warning, #C8A96E);
+    }
+    .friend-bubble-atrisk {
+        background: var(--accent-gold-light, #F2E6D0);
+        border-color: var(--status-error, #B04040);
+    }
+    .friend-map-legend {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: var(--sp-sm, 0.5rem) var(--sp-md, 1rem);
+        border-radius: 2px;
     }
     .btn-remove {
         background: transparent;
@@ -116,85 +409,392 @@
         white-space: nowrap;
     }
     .btn-remove:hover {
-        border-color: #C1574B;
-        color: #C1574B;
+        border-color: var(--status-error, #C1574B);
+        color: var(--status-error, #C1574B);
         background: rgba(193, 87, 75, 0.06);
+    }
+    @media(max-width:900px) {
+        #sns-distribution { grid-template-columns: 1fr; }
     }
 </style>
 
 <script>
+    var friendRootCss = getComputedStyle(document.documentElement);
+    function friendCssVar(name, fallback) { return friendRootCss.getPropertyValue(name).trim() || fallback; }
     var platformColors = {
-        'TWITTER': '#1DA1F2', 'BLUESKY': '#0085FF', 'MASTODON': '#6364FF',
-        'THREADS': '#000000', 'INSTAGRAM': '#E1306C', 'REDDIT': '#FF4500',
-        'TELEGRAM': '#0088CC', 'VK': '#4A76A8', 'PINTEREST': '#E60023',
-        'MIXI2': '#F7931E', 'NOTE': '#41C9B4', 'NICONICO': '#252525'
+        'TWITTER': friendCssVar('--platform-twitter', '#1DA1F2'), 'BLUESKY': friendCssVar('--platform-bluesky', '#0085FF'), 'MASTODON': friendCssVar('--platform-mastodon', '#6364FF'),
+        'THREADS': friendCssVar('--platform-threads', '#000000'), 'INSTAGRAM': friendCssVar('--platform-instagram', '#E1306C'), 'REDDIT': friendCssVar('--platform-reddit', '#FF4500'),
+        'TELEGRAM': friendCssVar('--platform-telegram', '#0088CC'), 'VK': friendCssVar('--platform-vk', '#4A76A8'), 'PINTEREST': friendCssVar('--platform-pinterest', '#E60023'),
+        'MIXI2': friendCssVar('--platform-threads', '#F7931E'), 'NOTE': friendCssVar('--platform-bluesky', '#41C9B4'), 'NICONICO': friendCssVar('--platform-threads', '#252525'), 'TIKTOK': friendCssVar('--platform-threads', '#010101')
     };
     var platformNames = {
         'TWITTER': 'Twitter', 'BLUESKY': 'Bluesky', 'MASTODON': 'Mastodon',
         'THREADS': 'Threads', 'INSTAGRAM': 'Instagram', 'REDDIT': 'Reddit',
         'TELEGRAM': 'Telegram', 'VK': 'VK', 'PINTEREST': 'Pinterest',
-        'MIXI2': 'Mixi2', 'NOTE': 'note', 'NICONICO': 'ニコニコ'
+        'MIXI2': 'Mixi2', 'NOTE': 'note', 'NICONICO': 'ニコニコ', 'TIKTOK': 'TikTok'
     };
 
-    document.addEventListener('DOMContentLoaded', function() { loadFriends(); });
+    var friendsCache = [];
+    var selectedTimelineFriend = null;
+    var selectedPlanFriend = null;
+    var selectedComposeFriend = null;
+    var selectedPurpose = 'reply';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadEngagementRanking();
+        initTabs();
+    });
+
+    function initTabs() {
+        document.querySelectorAll('.friend-page-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.friend-page-tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.friend-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                tab.classList.add('active');
+                var tabId = 'tab-' + tab.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+                if (tab.dataset.tab === 'dashboard') loadEngagementRanking();
+                if (tab.dataset.tab === 'map') loadBubbleMap();
+            });
+        });
+
+        document.querySelectorAll('[data-purpose]').forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('[data-purpose]').forEach(function(c) { c.classList.remove('selected'); });
+                chip.classList.add('selected');
+                selectedPurpose = chip.dataset.purpose;
+            });
+        });
+    }
 
     function showAddFriendForm() { document.getElementById('add-friend-form').style.display = 'block'; }
     function hideAddFriendForm() { document.getElementById('add-friend-form').style.display = 'none'; }
 
-    async function loadFriends() {
+    function getToken() {
         var token = localStorage.getItem('accessToken');
-        if (!token) { window.location.href = '/'; return; }
+        if (!token) { window.location.href = '/'; }
+        return token;
+    }
+
+    async function loadEngagementRanking() {
+        var token = getToken();
+        if (!token) return;
         try {
-            var response = await fetch('/api/v1/friends', {
+            var response = await fetch('/api/v1/friends/engagement', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.status === 401) { window.location.href = '/'; return; }
             if (response.ok) {
-                var friends = await response.json();
-                renderFriends(friends);
+                var data = await response.json();
+                friendsCache = data;
+                renderEngagementRanking(data);
+                renderFriendChips();
             } else {
-                await showApiError(response, 'フレンドの読み込みに失敗しました');
+                await showApiError(response, '{msg:friend_error_load}');
             }
         } catch (err) {
-            showToast('error', 'フレンドの読み込みに失敗しました', 'サーバーに接続できません。');
+            showToast('error', '{msg:friend_error_load}');
         }
     }
 
-    function renderFriends(friends) {
-        var container = document.getElementById('friends-list');
+    function renderEngagementRanking(friends) {
+        var container = document.getElementById('engagement-ranking');
         if (friends.length === 0) {
             container.innerHTML = '<div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 3rem 2rem;">' +
-                '<p style="color: var(--text-sec, #7A7464); font-size: 0.95rem;">フレンドがまだ登録されていません</p></div>';
+                '<p style="color: var(--text-sec, #7A7464); font-size: 0.95rem;">{msg:friend_empty}</p></div>';
             return;
         }
-        container.innerHTML = friends.map(function(f) {
-            var color = platformColors[f.platform] || '#7A7464';
-            var name = platformNames[f.platform] || f.platform;
-            var displayName = escapeHtmlGlobal(f.displayName || f.targetIdentifier);
-            var identifier = f.displayName ? escapeHtmlGlobal(f.targetIdentifier) : '';
-            var notes = f.notes ? '<div style="color: var(--text-muted, #9B9580); font-size: 0.8rem; margin-top: 0.3rem;">' + escapeHtmlGlobal(f.notes) + '</div>' : '';
-            return '<div class="friend-card"><div class="friend-card-inner">' +
-                '<div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 0;">' +
-                '<span class="friend-platform-badge" style="background-color: ' + color + ';">' + escapeHtmlGlobal(name) + '</span>' +
-                '<div style="min-width: 0;">' +
-                '<div style="color: var(--text-primary, #4D493E); font-weight: 600; font-size: 0.95rem;">' + displayName + '</div>' +
-                (identifier ? '<div style="color: var(--text-sec, #7A7464); font-size: 0.8rem;">' + identifier + '</div>' : '') +
-                notes +
-                '</div></div>' +
-                '<button class="btn-remove" onclick="removeFriend(\'' + f.id + '\')">削除</button>' +
-                '</div></div>';
+        var topAnalyst = friends.length > 0 && friends[0].daysSinceLastInteraction >= 10 ? friends[0] : null;
+        var html = friends.map(function(f) {
+            var daysClass = f.priorityLevel === 'urgent' ? 'friend-days-urgent' :
+                            f.priorityLevel === 'warning' ? 'friend-days-warning' : 'friend-days-ok';
+            var name = escapeHtmlGlobal(f.displayName || f.targetIdentifier);
+            var pName = platformNames[f.platform] || f.platform;
+            return '<div class="friend-priority-row">' +
+                '<span class="friend-priority-rank">' + f.rank + '</span>' +
+                '<span class="friend-priority-name">' + name + '</span>' +
+                '<span class="friend-platform-tag">' + escapeHtmlGlobal(pName) + '</span>' +
+                '<span class="friend-days-badge ' + daysClass + '">' + f.daysSinceLastInteraction + '{msg:friend_days_elapsed}</span>' +
+                '<span style="font-size:0.82rem;color:var(--text-sec);">{msg:friend_score}: ' + f.relationshipScore + '</span>' +
+                '<button class="btn-remove" onclick="removeFriend(\'' + f.friendId + '\')">{msg:friend_remove}</button>' +
+                '</div>';
         }).join('');
+        if (topAnalyst) {
+            html += '<div class="friend-analyst-note">' + escapeHtmlGlobal(topAnalyst.analystNote) + '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function renderFriendChips() {
+        var containers = ['timeline-friend-chips', 'plan-friend-chips', 'compose-friend-chips'];
+        containers.forEach(function(containerId) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = friendsCache.map(function(f) {
+                var name = escapeHtmlGlobal(f.displayName || f.targetIdentifier);
+                return '<span class="friend-chip-item" data-friendid="' + f.friendId + '">' + name + '</span>';
+            }).join('');
+
+            container.querySelectorAll('.friend-chip-item').forEach(function(chip) {
+                chip.addEventListener('click', function() {
+                    container.querySelectorAll('.friend-chip-item').forEach(function(c) { c.classList.remove('selected'); });
+                    chip.classList.add('selected');
+                    var fid = chip.dataset.friendid;
+                    if (containerId === 'timeline-friend-chips') {
+                        selectedTimelineFriend = fid;
+                        loadTimeline(fid);
+                    } else if (containerId === 'plan-friend-chips') {
+                        selectedPlanFriend = fid;
+                        document.getElementById('btn-generate-plan').disabled = false;
+                    } else if (containerId === 'compose-friend-chips') {
+                        selectedComposeFriend = fid;
+                        document.getElementById('btn-compose').disabled = false;
+                    }
+                });
+            });
+        });
+
+        document.getElementById('btn-generate-plan').addEventListener('click', function() {
+            if (selectedPlanFriend) generatePlan(selectedPlanFriend);
+        });
+        document.getElementById('btn-compose').addEventListener('click', function() {
+            if (selectedComposeFriend) composeForFriend(selectedComposeFriend);
+        });
+    }
+
+    async function loadTimeline(friendId) {
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/friends/' + friendId + '/timeline', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderTimeline(data);
+            } else {
+                await showApiError(response, '{msg:friend_error_timeline}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:friend_error_timeline}');
+        }
+    }
+
+    function renderTimeline(data) {
+        var container = document.getElementById('timeline-content');
+        var displayName = escapeHtmlGlobal(data.displayName || data.targetIdentifier);
+        var scoreColor = data.relationshipScore >= 80 ? 'var(--status-success, #6B8B4A)' :
+                         data.relationshipScore >= 50 ? 'var(--status-warning, #C8A96E)' : 'var(--status-error, #B04040)';
+        var avatar = displayName.charAt(0);
+
+        var historyBars = (data.scoreHistory || []).map(function(s, i) {
+            var color = s >= 80 ? 'var(--status-success)' : s >= 50 ? 'var(--status-warning)' : 'var(--status-error)';
+            return '<div style="flex:1;background:' + color + ';height:' + s + '%;opacity:0.7"></div>';
+        }).join('');
+
+        var metricsHtml = '';
+        if (data.metrics) {
+            var m = data.metrics;
+            metricsHtml =
+                '<div style="font-size:0.82rem;margin-bottom:0.3rem;display:flex;align-items:center;gap:var(--sp-sm)">' +
+                '<span style="min-width:5rem;color:var(--text-sec)">{msg:friend_metric_reply}</span>' +
+                '<div class="friend-score-bar ' + scoreClass(m.replyFrequency) + '"><div class="friend-score-bar-fill" style="width:' + m.replyFrequency + '%"></div></div></div>' +
+                '<div style="font-size:0.82rem;margin-bottom:0.3rem;display:flex;align-items:center;gap:var(--sp-sm)">' +
+                '<span style="min-width:5rem;color:var(--text-sec)">{msg:friend_metric_like}</span>' +
+                '<div class="friend-score-bar ' + scoreClass(m.likeRate) + '"><div class="friend-score-bar-fill" style="width:' + m.likeRate + '%"></div></div></div>' +
+                '<div style="font-size:0.82rem;margin-bottom:0.3rem;display:flex;align-items:center;gap:var(--sp-sm)">' +
+                '<span style="min-width:5rem;color:var(--text-sec)">{msg:friend_metric_mutual}</span>' +
+                '<div class="friend-score-bar ' + scoreClass(m.mutualInteraction) + '"><div class="friend-score-bar-fill" style="width:' + m.mutualInteraction + '%"></div></div></div>';
+        }
+
+        var timelineHtml = '<div class="friend-timeline-line" style="margin-top:0.8rem">';
+        (data.timeline || []).forEach(function(item) {
+            var cls = item.highlight ? 'friend-tl-item friend-tl-highlight' : 'friend-tl-item';
+            var d = new Date(item.date);
+            var dateStr = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+            timelineHtml += '<div class="' + cls + '">' +
+                '<div style="font-size:0.72rem;color:var(--text-muted)">' + dateStr + '</div>' +
+                '<div style="font-size:0.85rem;color:var(--text-body)">' + escapeHtmlGlobal(item.description) + '</div>' +
+                (item.detail ? '<div style="font-size:0.72rem;color:var(--text-sec);margin-top:0.15rem">' + escapeHtmlGlobal(item.detail) + '</div>' : '') +
+                '</div>';
+        });
+        timelineHtml += '</div>';
+        if (!data.timeline || data.timeline.length === 0) {
+            timelineHtml = '<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem;">{msg:friend_no_timeline}</p>';
+        }
+
+        container.innerHTML =
+            '<div style="background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem;border-radius:2px;">' +
+            '<div style="display:flex;align-items:center;gap:var(--sp-md);margin-bottom:var(--sp-md)">' +
+            '<div style="width:3rem;height:3rem;background:var(--bg-field);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--text-muted);font-weight:700">' + avatar + '</div>' +
+            '<div style="flex:1"><div style="font-size:1.05rem;font-weight:500;color:var(--text-heading)">' + displayName + '</div>' +
+            '<div style="font-size:0.78rem;color:var(--text-muted)">' + escapeHtmlGlobal(data.targetIdentifier) + ' / ' + escapeHtmlGlobal(platformNames[data.platform] || data.platform) + '</div>' +
+            (data.notes ? '<div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">' + escapeHtmlGlobal(data.notes) + '</div>' : '') +
+            '</div>' +
+            '<div style="text-align:right"><div style="font-size:0.72rem;color:var(--text-muted)">{msg:friend_relationship_score}</div>' +
+            '<div style="font-size:1.4rem;font-weight:700;color:' + scoreColor + '">' + data.relationshipScore + '</div></div></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md);margin-bottom:var(--sp-md)">' +
+            '<div><div style="font-size:0.78rem;color:var(--text-sec);margin-bottom:0.3rem">{msg:friend_score_trend}</div>' +
+            '<div style="display:flex;align-items:flex-end;gap:3px;height:60px">' + historyBars + '</div></div>' +
+            '<div><div style="font-size:0.78rem;color:var(--text-sec);margin-bottom:0.3rem">{msg:friend_engagement_metrics}</div>' + metricsHtml + '</div></div>' +
+            (data.analystNote ? '<div class="friend-analyst-note">' + escapeHtmlGlobal(data.analystNote) + '</div>' : '') +
+            '<hr style="border:none;border-top:1px solid var(--border-lt);margin:var(--sp-lg) 0">' +
+            '<h3 style="font-size:0.95rem;font-weight:500;color:var(--text-primary);margin-bottom:0.4rem">{msg:friend_engagement_history}</h3>' +
+            timelineHtml + '</div>';
+    }
+
+    function scoreClass(val) {
+        if (val >= 60) return 'friend-score-high';
+        if (val >= 30) return 'friend-score-mid';
+        return 'friend-score-low';
+    }
+
+    async function generatePlan(friendId) {
+        var token = getToken();
+        showToast('info', '{msg:friend_plan_generating}');
+        try {
+            var response = await fetch('/api/v1/friends/' + friendId + '/plan', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderPlan(data);
+            } else {
+                await showApiError(response, '{msg:friend_error_plan}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:friend_error_plan}');
+        }
+    }
+
+    function renderPlan(data) {
+        var container = document.getElementById('plan-result');
+        var displayName = escapeHtmlGlobal(data.displayName);
+        var actionsHtml = (data.actions || []).map(function(a) {
+            return '<div class="friend-plan-card">' +
+                '<div class="friend-plan-day">' + escapeHtmlGlobal(a.day) + '</div>' +
+                '<div class="friend-plan-action">' + escapeHtmlGlobal(a.action) + '</div>' +
+                (a.personaNote ? '<div class="friend-plan-persona">' + escapeHtmlGlobal(a.personaNote) + '</div>' : '') +
+                '</div>';
+        }).join('');
+
+        container.innerHTML =
+            '<div style="background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem;border-radius:2px;">' +
+            '<h3 style="font-size:0.95rem;font-weight:500;color:var(--text-primary);margin-bottom:0.4rem">' + displayName + ' {msg:friend_plan_title_suffix}</h3>' +
+            (data.analystNote ? '<div class="friend-analyst-note">' + escapeHtmlGlobal(data.analystNote) + '</div>' : '') +
+            (data.recommendedPersona ? '<div style="font-size:0.82rem;color:var(--text-sec);margin-bottom:0.6rem">{msg:friend_plan_persona}: <strong style="color:var(--accent-gold)">' + escapeHtmlGlobal(data.recommendedPersona) + '</strong></div>' : '') +
+            '<div style="margin-top:var(--sp-md)">' + actionsHtml + '</div></div>';
+        container.style.display = 'block';
+    }
+
+    async function composeForFriend(friendId) {
+        var token = getToken();
+        showToast('info', '{msg:friend_compose_generating}');
+        var body = {
+            friendId: friendId,
+            purpose: selectedPurpose,
+            referenceContent: document.getElementById('compose-reference').value
+        };
+        try {
+            var response = await fetch('/api/v1/friends/compose', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderComposeResult(data);
+            } else {
+                await showApiError(response, '{msg:friend_error_compose}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:friend_error_compose}');
+        }
+    }
+
+    function renderComposeResult(data) {
+        var container = document.getElementById('compose-result');
+        container.innerHTML =
+            '<div style="background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem;border-radius:2px;">' +
+            '<div style="font-size:0.82rem;color:var(--text-sec);margin-bottom:0.4rem">{msg:friend_compose_result}</div>' +
+            '<div class="friend-composer-output">' + escapeHtmlGlobal(data.generatedText) + '</div>' +
+            (data.composerNote ? '<div class="friend-analyst-note" style="margin-top:0.6rem">' + escapeHtmlGlobal(data.composerNote) + '</div>' : '') +
+            '</div>';
+        container.style.display = 'block';
+    }
+
+    async function loadBubbleMap() {
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/friends/bubble-map', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderBubbleMap(data);
+            } else {
+                await showApiError(response, '{msg:friend_error_map}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:friend_error_map}');
+        }
+    }
+
+    function renderBubbleMap(data) {
+        var mapContainer = document.getElementById('bubble-map-container');
+        var bubblesHtml = (data.bubbles || []).map(function(b, i) {
+            var size = 50 + Math.min(b.engagementFrequency, 60);
+            var y = b.relationshipScore >= 80 ? 10 + (i * 8) % 30 :
+                    b.relationshipScore >= 50 ? 35 + (i * 8) % 30 : 60 + (i * 8) % 25;
+            var x = 10 + (i * 18) % 75;
+            var statusClass = b.status === 'at_risk' ? ' friend-bubble-atrisk' :
+                              b.status === 'warning' ? ' friend-bubble-warning' : '';
+            var pName = platformNames[b.platform] || b.platform;
+            return '<div class="friend-bubble' + statusClass + '" style="width:' + size + 'px;height:' + size + 'px;left:' + x + '%;top:' + y + '%;">' +
+                '<div style="font-size:0.6rem;color:var(--accent-gold);font-weight:500">' + escapeHtmlGlobal(pName) + '</div>' +
+                '<div style="font-size:0.72rem;font-weight:500;color:var(--text-heading);text-align:center;line-height:1.2">' + escapeHtmlGlobal(b.displayName) + '</div>' +
+                '<div style="font-size:0.65rem;color:var(--text-sec)">{msg:friend_score} ' + b.relationshipScore + '</div></div>';
+        }).join('');
+        mapContainer.innerHTML = bubblesHtml;
+
+        var distHtml = '';
+        if (data.snsSummaries && data.snsSummaries.length > 0) {
+            var summaryRows = data.snsSummaries.map(function(s) {
+                var pName = platformNames[s.platform] || s.platform;
+                var barClass = s.avgScore >= 80 ? 'friend-score-high' : s.avgScore >= 50 ? 'friend-score-mid' : 'friend-score-low';
+                return '<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:var(--sp-sm)">' +
+                    '<span style="min-width:6rem;font-size:0.82rem;color:var(--text-sec)">' + escapeHtmlGlobal(pName) + '</span>' +
+                    '<div class="friend-score-bar ' + barClass + '" style="flex:1"><div class="friend-score-bar-fill" style="width:' + s.avgScore + '%"></div></div>' +
+                    '<span style="font-size:0.78rem;color:var(--text-muted);min-width:2rem">' + s.friendCount + '{msg:friend_count_suffix}</span></div>';
+            }).join('');
+            distHtml += '<div style="background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem;border-radius:2px;"><h3 style="font-size:0.95rem;font-weight:500;color:var(--text-primary);margin-bottom:0.4rem">{msg:friend_sns_distribution}</h3><div style="margin-top:0.6rem">' + summaryRows + '</div></div>';
+        }
+
+        if (data.snsAdvices && data.snsAdvices.length > 0) {
+            var adviceRows = data.snsAdvices.map(function(a) {
+                var pName = platformNames[a.platform] || a.platform;
+                return '<div style="display:flex;align-items:center;gap:0.6rem;padding:var(--sp-sm) 0.8rem;background:var(--bg-subtle);border:1px solid var(--border-sub);font-size:0.82rem;color:var(--text-sec);margin-top:0.4rem"><strong style="color:var(--text-primary);font-weight:500">' + escapeHtmlGlobal(pName) + '</strong> ' + escapeHtmlGlobal(a.advice) + '</div>';
+            }).join('');
+            distHtml += '<div style="background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem;border-radius:2px;"><h3 style="font-size:0.95rem;font-weight:500;color:var(--text-primary);margin-bottom:0.4rem">{msg:friend_sns_advice}</h3>' + adviceRows + '</div>';
+        }
+        document.getElementById('sns-distribution').innerHTML = distHtml;
+
+        document.getElementById('map-legend').innerHTML =
+            '<span style="font-size:0.82rem;color:var(--text-sec)">{msg:friend_legend}:</span>' +
+            '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.78rem"><span style="width:12px;height:12px;background:var(--bg-elevated);border:2px solid var(--border);display:inline-block"></span> {msg:friend_status_stable}</span>' +
+            '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.78rem"><span style="width:12px;height:12px;background:var(--accent-gold-light);border:2px solid var(--status-warning);display:inline-block"></span> {msg:friend_status_warning}</span>' +
+            '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.78rem"><span style="width:12px;height:12px;background:var(--accent-gold-light);border:2px solid var(--status-error);display:inline-block"></span> {msg:friend_status_atrisk}</span>';
     }
 
     async function addFriend() {
-        var token = localStorage.getItem('accessToken');
+        var token = getToken();
         var body = {
             platform: document.getElementById('friend-platform').value,
             targetIdentifier: document.getElementById('friend-identifier').value,
             displayName: document.getElementById('friend-displayname').value,
             notes: document.getElementById('friend-notes').value
         };
-        if (!body.targetIdentifier) { showToast('error', 'ユーザーIDを入力してください'); return; }
+        if (!body.targetIdentifier) { showToast('error', '{msg:friend_error_identifier_required}'); return; }
         try {
             var response = await fetch('/api/v1/friends', {
                 method: 'POST',
@@ -202,36 +802,36 @@
                 body: JSON.stringify(body)
             });
             if (response.ok || response.status === 201) {
-                showToast('success', 'フレンドを追加しました');
+                showToast('success', '{msg:friend_added}');
                 hideAddFriendForm();
                 document.getElementById('friend-identifier').value = '';
                 document.getElementById('friend-displayname').value = '';
                 document.getElementById('friend-notes').value = '';
-                loadFriends();
+                loadEngagementRanking();
             } else {
-                await showApiError(response, 'フレンドの追加に失敗しました');
+                await showApiError(response, '{msg:friend_error_add}');
             }
         } catch (err) {
-            showToast('error', 'フレンドの追加に失敗しました');
+            showToast('error', '{msg:friend_error_add}');
         }
     }
 
     async function removeFriend(id) {
-        if (!confirm('このフレンドを削除してもよろしいですか？')) return;
-        var token = localStorage.getItem('accessToken');
+        if (!confirm('{msg:friend_confirm_remove}')) return;
+        var token = getToken();
         try {
             var response = await fetch('/api/v1/friends/' + id, {
                 method: 'DELETE',
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.ok || response.status === 204) {
-                showToast('success', 'フレンドを削除しました');
-                loadFriends();
+                showToast('success', '{msg:friend_removed}');
+                loadEngagementRanking();
             } else {
-                await showApiError(response, 'フレンドの削除に失敗しました');
+                await showApiError(response, '{msg:friend_error_remove}');
             }
         } catch (err) {
-            showToast('error', 'フレンドの削除に失敗しました');
+            showToast('error', '{msg:friend_error_remove}');
         }
     }
 
@@ -239,11 +839,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

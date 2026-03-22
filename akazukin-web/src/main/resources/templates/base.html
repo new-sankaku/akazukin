@@ -28,7 +28,6 @@
     <footer class="ak-footer">&copy; 2026 Akazukin &mdash; 複数SNS一元管理ツール</footer>
 
     <script>
-        // Show a toast notification (type: error/success/warning/info, durationMs: 0 = manual close only)
         function showToast(type, title, detail, durationMs) {
             if (durationMs === undefined) durationMs = 8000;
             var container = document.getElementById('ak-toast-container');
@@ -43,7 +42,6 @@
 
             container.appendChild(toast);
 
-            // Trigger animation
             requestAnimationFrame(function() { toast.classList.add('ak-toast--visible'); });
 
             if (durationMs > 0) {
@@ -54,7 +52,6 @@
             }
         }
 
-        // Parse an API error response and show a toast
         async function showApiError(response, fallbackMessage) {
             var title = fallbackMessage || 'An error occurred';
             var detail = null;
@@ -63,12 +60,10 @@
                 if (data.message) title = data.message;
                 if (data.details) detail = data.details;
             } catch (e) {
-                // response body was not JSON
             }
             showToast('error', title, detail, 0);
         }
 
-        // Global escapeHtml available to all pages
         function escapeHtmlGlobal(text) {
             if (text === null || text === undefined) return '';
             var div = document.createElement('div');

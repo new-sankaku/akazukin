@@ -35,9 +35,11 @@ public class AuthUseCase {
             throw new DomainException("INVALID_INPUT", "Password is required");
         }
 
-        if (userRepository.findByUsername(request.username()).isPresent()
-                || userRepository.findByEmail(request.email()).isPresent()) {
-            throw new DomainException("DUPLICATE_USER", "このユーザー名またはメールアドレスは既に使用されています");
+        if (userRepository.findByUsername(request.username()).isPresent()) {
+            throw new DomainException("DUPLICATE_USERNAME", "このユーザー名は既に使用されています");
+        }
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new DomainException("DUPLICATE_EMAIL", "このメールアドレスは既に使用されています");
         }
 
         Instant now = Instant.now();

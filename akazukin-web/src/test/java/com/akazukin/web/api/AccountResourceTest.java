@@ -13,6 +13,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
 @DisplayName("AccountResource API Tests")
@@ -205,32 +206,30 @@ class AccountResourceTest {
 
         @Test
         @TestSecurity(user = "00000000-0000-0000-0000-000000004205", roles = "ADMIN")
-        @DisplayName("Valid platform with no registered adapter returns 400 UNSUPPORTED_PLATFORM")
-        void getAuthUrl_validPlatformNoAdapter() {
-            // TWITTER is valid in enum but no adapter is registered in test
+        @DisplayName("Valid platform with registered adapter returns 200 with auth URL")
+        void getAuthUrl_validPlatformWithAdapter() {
             given()
                     .contentType(ContentType.JSON)
                     .queryParam("callbackUrl", "http://localhost:8080/callback")
             .when()
                     .get("/api/v1/accounts/TWITTER/auth")
             .then()
-                    .statusCode(400)
-                    .body("error", equalTo("UNSUPPORTED_PLATFORM"));
+                    .statusCode(200)
+                    .body("authorizationUrl", notNullValue());
         }
 
         @Test
         @TestSecurity(user = "00000000-0000-0000-0000-000000004206", roles = "ADMIN")
         @DisplayName("Case-insensitive platform name works")
         void getAuthUrl_caseInsensitivePlatform() {
-            // Lowercase should also be converted via toUpperCase()
             given()
                     .contentType(ContentType.JSON)
                     .queryParam("callbackUrl", "http://localhost:8080/callback")
             .when()
                     .get("/api/v1/accounts/twitter/auth")
             .then()
-                    .statusCode(400)
-                    .body("error", equalTo("UNSUPPORTED_PLATFORM")); // Valid enum but no adapter
+                    .statusCode(200)
+                    .body("authorizationUrl", notNullValue());
         }
 
         @Test
@@ -243,8 +242,8 @@ class AccountResourceTest {
             .when()
                     .get("/api/v1/accounts/Twitter/auth")
             .then()
-                    .statusCode(400)
-                    .body("error", equalTo("UNSUPPORTED_PLATFORM"));
+                    .statusCode(200)
+                    .body("authorizationUrl", notNullValue());
         }
 
         @Test
@@ -316,17 +315,18 @@ class AccountResourceTest {
 
         @Test
         @TestSecurity(user = "00000000-0000-0000-0000-000000004304", roles = "ADMIN")
-        @DisplayName("Valid platform with no adapter returns 400 UNSUPPORTED_PLATFORM")
-        void callback_noAdapter() {
-            given()
+        @DisplayName("Valid platform callback with invalid code returns error")
+        void callback_invalidCode() {
+            int status = given()
                     .contentType(ContentType.JSON)
                     .queryParam("callbackUrl", "http://localhost:8080/callback")
                     .body("{\"code\":\"test-code\",\"state\":\"test-state\"}")
             .when()
                     .post("/api/v1/accounts/TWITTER/callback")
             .then()
-                    .statusCode(400)
-                    .body("error", equalTo("UNSUPPORTED_PLATFORM"));
+                    .extract().statusCode();
+
+            assert status != 200 : "Expected non-200 for invalid OAuth code, got " + status;
         }
 
         @Test

@@ -23,6 +23,8 @@ import java.util.Objects;
 
 public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
+    private static final int TELEGRAM_MAX_LENGTH = 4096;
+
     private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
         .connectTimeout(CONNECTION_TIMEOUT)
         .followRedirects(HttpClient.Redirect.NORMAL)
@@ -66,6 +68,11 @@ public class TelegramAdapter extends AbstractSnsAdapter implements AutoCloseable
     @Override
     public SnsPlatform platform() {
         return SnsPlatform.TELEGRAM;
+    }
+
+    @Override
+    public int getMaxContentLength() {
+        return TELEGRAM_MAX_LENGTH;
     }
 
     @Override

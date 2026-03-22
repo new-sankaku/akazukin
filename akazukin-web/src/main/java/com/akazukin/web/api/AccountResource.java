@@ -18,7 +18,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import com.akazukin.application.dto.ErrorResponseDto;
 
@@ -35,21 +34,21 @@ public class AccountResource {
     @Inject
     AccountUseCase accountUseCase;
 
-    @Inject
-    JsonWebToken jwt;
+    @Context
+    SecurityContext securityContext;
+
 
     @GET
-    public Response listAccounts(@Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+    public Response listAccounts() {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         List<AccountResponseDto> accounts = accountUseCase.listAccounts(userId);
         return Response.ok(accounts).build();
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deleteAccount(@PathParam("id") UUID id,
-                                  @Context SecurityContext securityContext) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+    public Response deleteAccount(@PathParam("id") UUID id) {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         accountUseCase.deleteAccount(id, userId);
         return Response.noContent().build();
     }
@@ -57,14 +56,13 @@ public class AccountResource {
     @GET
     @Path("/{platform}/auth")
     public Response getAuthorizationUrl(@PathParam("platform") String platform,
-                                        @QueryParam("callbackUrl") String callbackUrl,
-                                        @Context SecurityContext securityContext) {
+                                        @QueryParam("callbackUrl") String callbackUrl) {
         if (callbackUrl == null || callbackUrl.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "callbackUrl parameter is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         SnsPlatform snsPlatform;
         try {
             snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());
@@ -82,14 +80,13 @@ public class AccountResource {
     @Path("/{platform}/callback")
     public Response handleOAuthCallback(@PathParam("platform") String platform,
                                         OAuthCallbackDto callbackDto,
-                                        @QueryParam("callbackUrl") String callbackUrl,
-                                        @Context SecurityContext securityContext) {
+                                        @QueryParam("callbackUrl") String callbackUrl) {
         if (callbackUrl == null || callbackUrl.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "callbackUrl parameter is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         SnsPlatform snsPlatform;
         try {
             snsPlatform = SnsPlatform.valueOf(platform.toUpperCase());

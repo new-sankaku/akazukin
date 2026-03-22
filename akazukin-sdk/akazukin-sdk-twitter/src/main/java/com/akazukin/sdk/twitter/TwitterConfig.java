@@ -6,8 +6,14 @@ public record TwitterConfig(
     String redirectUri
 ) {
     public TwitterConfig {
-        clientId = clientId != null ? clientId : "";
-        clientSecret = clientSecret != null ? clientSecret : "";
-        redirectUri = redirectUri != null ? redirectUri : "";
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId must not be null or blank");
+        }
+        if (clientSecret == null || clientSecret.isBlank()) {
+            throw new IllegalArgumentException("clientSecret must not be null or blank");
+        }
+        if (redirectUri == null) {
+            redirectUri = "";
+        }
     }
 }

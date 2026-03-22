@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akazukin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep: #C4BDA6;
+    --bg-main: #DAD4BE;
+    --bg-surface: #EDE8D5;
+    --bg-elevated: #F0EBD8;
+    --bg-subtle: #E4DECC;
+    --bg-field: #DDD6BB;
+
+    --border: #B8B19C;
+    --border-lt: #CCC5AE;
+    --border-sub: #DDD6BB;
+
+    --text-heading: #3D3A32;
+    --text-primary: #4D493E;
+    --text-body: #5A5548;
+    --text-sec: #7A7464;
+    --text-muted: #7A7464;
+    --text-faint: #8A8470;
+
+    --accent-gold: #C8964A;
+    --accent-gold-hover: #B5853E;
+    --accent-gold-light: #F2E6D0;
+
+    --status-success: #6B8B4A;
+    --status-success-bg: #D5DDCA;
+    --status-warning: #C8A96E;
+    --status-warning-bg: #F0E6D0;
+    --status-error: #B04040;
+    --status-error-bg: #EEDCDC;
+    --status-info: #5A8BA0;
+    --status-info-bg: #D8E8F0;
+
+    --sp-xs: 0.25rem;
+    --sp-sm: 0.5rem;
+    --sp-md: 1rem;
+    --sp-lg: 1.5rem;
+    --sp-xl: 2rem;
+    --sp-2xl: 3rem;
+
+    --radius-sm: 0.2rem;
+    --radius-md: 0.4rem;
+    --radius-lg: 0.6rem;
+
+    --shadow-sm: 0 1px 4px rgba(75, 65, 50, 0.10);
+    --shadow-md: 0 2px 8px rgba(75, 65, 50, 0.15);
+    --shadow-lg: 0 4px 16px rgba(75, 65, 50, 0.18);
+
+    --transition: 0.2s ease;
+    --font-sans: 'Noto Sans JP', 'Segoe UI', 'Meiryo', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    --font-mono: 'Courier New', 'Consolas', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font-sans);
+    background: var(--bg-main);
+    color: var(--text-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: var(--sp-xl);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+    color: var(--text-heading);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.dashboard-title {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-heading);
+    padding-bottom: var(--sp-md);
+    margin-bottom: var(--sp-xl);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+}
+
+.dashboard-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-gold);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+}
+
+.ak-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-lg);
+    margin-bottom: var(--sp-xl);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    transition: box-shadow var(--transition);
+}
+
+.ak-card:hover { box-shadow: var(--shadow-md); }
+
+.ak-card::before,
+.ak-card::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--border);
+    border-style: solid;
+    pointer-events: none;
+}
+
+.ak-card::before {
+    top: 4px;
+    left: 4px;
+    border-width: 1px 0 0 1px;
+}
+
+.ak-card::after {
+    bottom: 4px;
+    right: 4px;
+    border-width: 0 1px 1px 0;
+}
+
+.ak-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-md);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.ak-card-header h2,
+.ak-card-header h3 { margin-bottom: 0; }
+
+.section-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.section-id {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent-gold);
+    background: var(--accent-gold-light);
+    padding: 0.1rem 0.4rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.ak-stat {
+    text-align: center;
+    padding: var(--sp-lg);
+}
+
+.ak-stat h3 {
+    font-size: 2rem;
+    margin: 0;
+    color: var(--accent-gold);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.ak-stat p {
+    margin: var(--sp-xs) 0 0;
+    color: var(--text-sec);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-md);
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-md);
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-md);
+}
+
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: 1px solid;
+}
+
+.platform-badge.twitter   { background: #E8F4FD; color: #1a8cd8; border-color: #B8DDF5; }
+.platform-badge.bluesky   { background: #E5F0FF; color: #0070E0; border-color: #B0D4FF; }
+.platform-badge.mastodon  { background: #EDEDFF; color: #595AFF; border-color: #C8C8FF; }
+.platform-badge.threads   { background: #F0F0F0; color: #333333; border-color: #D0D0D0; }
+
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: 1px solid;
+}
+
+.status-badge.published { background: var(--status-success-bg); color: var(--status-success); border-color: #B0C89A; }
+.status-badge.failed    { background: var(--status-error-bg);   color: var(--status-error);   border-color: #D4AAAA; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-decoration: none;
+}
+
+.btn:hover { background: var(--bg-subtle); border-color: var(--border); }
+
+.btn-primary {
+    background: var(--accent-gold);
+    color: var(--bg-elevated);
+    border-color: var(--accent-gold);
+}
+
+.btn-primary:hover { background: var(--accent-gold-hover); }
+
+.btn-sm { padding: 0.25rem 0.6rem; font-size: 0.75rem; }
+
+.pod-monitor-log {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.9;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--sp-md);
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.pod-log-entry {
+    display: flex;
+    gap: var(--sp-md);
+    padding: var(--sp-xs) 0;
+    border-bottom: 1px solid rgba(184, 177, 156, 0.3);
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.pod-log-entry:last-child { border-bottom: none; }
+
+.pod-log-timestamp {
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 5.5rem;
+}
+
+.pod-log-level {
+    font-weight: 700;
+    text-transform: uppercase;
+    width: 3.5rem;
+    text-align: center;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 0.1rem 0;
+    border-radius: var(--radius-sm);
+}
+
+.pod-log-level.ok   { color: var(--status-success); background: var(--status-success-bg); }
+.pod-log-level.warn { color: #8A7030; background: var(--status-warning-bg); }
+.pod-log-level.err  { color: var(--status-error); background: var(--status-error-bg); }
+.pod-log-level.info { color: var(--status-info); background: var(--status-info-bg); }
+
+.pod-log-message {
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.pod-log-platform {
+    flex-shrink: 0;
+}
+
+.pod-stat-bar {
+    display: flex;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-md);
+    flex-wrap: wrap;
+}
+
+.pod-stat-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-sub);
+    border-radius: var(--radius-md);
+    padding: var(--sp-sm) var(--sp-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 6rem;
+}
+
+.pod-stat-item .pod-stat-num {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    line-height: 1.2;
+}
+
+.pod-stat-item .pod-stat-num.success { color: var(--status-success); }
+.pod-stat-item .pod-stat-num.warning { color: var(--status-warning); }
+.pod-stat-item .pod-stat-num.error   { color: var(--status-error); }
+.pod-stat-item .pod-stat-num.info    { color: var(--status-info); }
+
+.pod-stat-item .pod-stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.timeline-chart-area {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-sub);
+    border-radius: var(--radius-md);
+    padding: var(--sp-lg);
+    margin-bottom: var(--sp-md);
+}
+
+.chart-row {
+    margin-bottom: var(--sp-lg);
+}
+
+.chart-row:last-child { margin-bottom: 0; }
+
+.chart-row-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-sm);
+}
+
+.chart-row-value {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-sec);
+    margin-left: auto;
+}
+
+.css-line-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 60px;
+    padding: var(--sp-xs) 0;
+    position: relative;
+}
+
+.css-line-chart::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-sub);
+}
+
+.chart-bar {
+    flex: 1;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    min-width: 0;
+    transition: opacity var(--transition);
+    position: relative;
+}
+
+.chart-bar:hover { opacity: 0.8; }
+
+.chart-bar.twitter  { background: #1a8cd8; }
+.chart-bar.bluesky  { background: #0070E0; }
+.chart-bar.mastodon { background: #595AFF; }
+.chart-bar.threads  { background: #333333; }
+
+.chart-marker {
+    position: relative;
+}
+
+.chart-marker::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--status-error);
+    border-radius: 50%;
+    border: 1px solid var(--bg-elevated);
+}
+
+.chart-time-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    padding-top: var(--sp-xs);
+}
+
+.analyst-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-sm);
+    background: var(--accent-gold-light);
+    border: 1px solid var(--accent-gold);
+    border-left: 3px solid var(--accent-gold);
+    border-radius: var(--radius-md);
+    padding: var(--sp-sm) var(--sp-md);
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-top: var(--sp-md);
+}
+
+.analyst-note-icon {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.analyst-note-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.trend-legend {
+    display: flex;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-md);
+}
+
+.trend-legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: 0.75rem;
+    color: var(--text-sec);
+}
+
+.trend-legend-dot {
+    width: 10px;
+    height: 3px;
+    border-radius: 1px;
+}
+
+.trend-legend-dot.twitter  { background: #1a8cd8; }
+.trend-legend-dot.bluesky  { background: #0070E0; }
+.trend-legend-dot.mastodon { background: #595AFF; }
+.trend-legend-dot.threads  { background: #333333; }
+
+.radar-list {
+    list-style: none;
+}
+
+.radar-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    padding: var(--sp-sm) 0;
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.radar-item:last-child { border-bottom: none; }
+
+.radar-rank {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 2rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.radar-rank.top { color: var(--accent-gold); }
+
+.radar-word {
+    font-weight: 600;
+    color: var(--text-heading);
+    flex-shrink: 0;
+    min-width: 7rem;
+}
+
+.radar-bar-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.radar-bar-bg {
+    height: 6px;
+    background: var(--bg-field);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.radar-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent-gold);
+    transition: width 0.4s ease;
+}
+
+.radar-bar-fill.high { background: var(--status-error); }
+.radar-bar-fill.mid  { background: var(--status-warning); }
+
+.radar-volume {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-sec);
+    width: 4rem;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.radar-affinity {
+    flex-shrink: 0;
+    width: 5rem;
+    text-align: center;
+}
+
+.affinity-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+}
+
+.affinity-tag.high    { background: var(--status-success-bg); color: var(--status-success); border-color: #B0C89A; }
+.affinity-tag.medium  { background: var(--status-warning-bg); color: #8A7030; border-color: #D4C090; }
+.affinity-tag.low     { background: var(--status-error-bg);   color: var(--status-error);   border-color: #D4AAAA; }
+
+.fire-post {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-sub);
+    border-radius: var(--radius-md);
+    padding: var(--sp-md);
+    margin-bottom: var(--sp-md);
+    transition: border-color var(--transition);
+}
+
+.fire-post:last-child { margin-bottom: 0; }
+
+.fire-post.alert {
+    border-color: var(--status-error);
+    border-left: 3px solid var(--status-error);
+}
+
+.fire-post.caution {
+    border-color: var(--status-warning);
+    border-left: 3px solid var(--status-warning);
+}
+
+.fire-post-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    margin-bottom: var(--sp-sm);
+    flex-wrap: wrap;
+}
+
+.fire-post-time {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.fire-post-content {
+    font-size: 0.88rem;
+    color: var(--text-body);
+    margin-bottom: var(--sp-sm);
+    padding: var(--sp-sm);
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    border-left: 2px solid var(--border-lt);
+}
+
+.fire-metrics {
+    display: flex;
+    gap: var(--sp-lg);
+    margin-bottom: var(--sp-sm);
+    flex-wrap: wrap;
+}
+
+.fire-metric {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: 0.78rem;
+    color: var(--text-sec);
+}
+
+.fire-metric-value {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+.fire-metric-delta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.fire-metric-delta.up   { color: var(--status-error); }
+.fire-metric-delta.down { color: var(--status-success); }
+
+.fire-severity {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+}
+
+.fire-severity.critical { background: var(--status-error-bg); color: var(--status-error); border-color: #D4AAAA; }
+.fire-severity.warning  { background: var(--status-warning-bg); color: #8A7030; border-color: #D4C090; }
+
+.fire-ai-analysis {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+    padding: var(--sp-md);
+    margin-top: var(--sp-sm);
+}
+
+.fire-ai-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--status-info);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--sp-xs);
+}
+
+.fire-ai-text {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-bottom: var(--sp-sm);
+}
+
+.fire-ai-actions {
+    display: flex;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+}
+
+.nier-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    margin: var(--sp-xl) 0;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+.nier-divider::before,
+.nier-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border-lt), transparent);
+}
+
+.pulse-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.pulse-dot.active { background: var(--status-success); }
+.pulse-dot.alert  { background: var(--status-error); }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.scan-line {
+    position: relative;
+    overflow: hidden;
+}
+
+.scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--accent-gold), transparent);
+    animation: scan 4s linear infinite;
+}
+
+@keyframes scan {
+    0%   { top: 0; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.geometric-accent {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border-lt);
+    transform: rotate(45deg);
+    opacity: 0.4;
+}
+
+@media (max-width: 1024px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+    body { padding: var(--sp-md); }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .fire-metrics { gap: var(--sp-sm); }
+    .radar-item { flex-wrap: wrap; }
+    .radar-bar-wrap { width: 100%; order: 10; }
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+
+<div class="dashboard-title">AKAZUKIN DASHBOARD</div>
+
+<section>
+    <div class="ak-card scan-line">
+        <div class="ak-card-header">
+            <div>
+                <span class="section-id">J1</span>
+                <h2 style="font-size:1rem; margin-top:var(--sp-xs);">
+                    <span class="pulse-dot active"></span>
+                    ポッド随伴モニター
+                </h2>
+                <span class="section-label">SNS投稿の通信ログ・イベント一覧</span>
+            </div>
+            <div style="display:flex; gap:var(--sp-sm); align-items:center;">
+                <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);">最終更新 12:45:03</span>
+                <button class="btn btn-sm">全件表示</button>
+            </div>
+        </div>
+
+        <div class="pod-stat-bar">
+            <div class="pod-stat-item">
+                <span class="pod-stat-num info">247</span>
+                <span class="pod-stat-label">総イベント</span>
+            </div>
+            <div class="pod-stat-item">
+                <span class="pod-stat-num success">231</span>
+                <span class="pod-stat-label">成功</span>
+            </div>
+            <div class="pod-stat-item">
+                <span class="pod-stat-num warning">12</span>
+                <span class="pod-stat-label">警告</span>
+            </div>
+            <div class="pod-stat-item">
+                <span class="pod-stat-num error">4</span>
+                <span class="pod-stat-label">エラー</span>
+            </div>
+        </div>
+
+        <div class="pod-monitor-log">
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:45:03</span>
+                <span class="pod-log-level ok">OK</span>
+                <span class="pod-log-platform"><span class="platform-badge twitter">Twitter</span></span>
+                <span class="pod-log-message">投稿ID:tw-8a3f2 配信完了 &#x2014; エンゲージメント取得開始</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:58</span>
+                <span class="pod-log-level ok">OK</span>
+                <span class="pod-log-platform"><span class="platform-badge bluesky">Bluesky</span></span>
+                <span class="pod-log-message">投稿ID:bs-1d92c 配信完了 &#x2014; 画像添付2件</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:51</span>
+                <span class="pod-log-level err">ERR</span>
+                <span class="pod-log-platform"><span class="platform-badge mastodon">Mastodon</span></span>
+                <span class="pod-log-message">投稿ID:md-7e401 配信失敗 &#x2014; 503 Service Unavailable (リトライ 2/3)</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:45</span>
+                <span class="pod-log-level warn">WARN</span>
+                <span class="pod-log-platform"><span class="platform-badge twitter">Twitter</span></span>
+                <span class="pod-log-message">レート制限接近 &#x2014; 残りクォータ 12/100 (次回リセット 12:50)</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:30</span>
+                <span class="pod-log-level ok">OK</span>
+                <span class="pod-log-platform"><span class="platform-badge threads">Threads</span></span>
+                <span class="pod-log-message">投稿ID:th-5c88a 配信完了 &#x2014; テキストのみ</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:22</span>
+                <span class="pod-log-level info">INFO</span>
+                <span class="pod-log-platform"><span class="platform-badge bluesky">Bluesky</span></span>
+                <span class="pod-log-message">セッショントークン更新完了 &#x2014; 有効期限 13:44:22</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:15</span>
+                <span class="pod-log-level err">ERR</span>
+                <span class="pod-log-platform"><span class="platform-badge mastodon">Mastodon</span></span>
+                <span class="pod-log-message">投稿ID:md-7e401 配信失敗 &#x2014; 503 Service Unavailable (リトライ 1/3)</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:44:02</span>
+                <span class="pod-log-level ok">OK</span>
+                <span class="pod-log-platform"><span class="platform-badge twitter">Twitter</span></span>
+                <span class="pod-log-message">投稿ID:tw-6b1e0 配信完了 &#x2014; スレッド3件目</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:43:55</span>
+                <span class="pod-log-level warn">WARN</span>
+                <span class="pod-log-platform"><span class="platform-badge threads">Threads</span></span>
+                <span class="pod-log-message">メディアアップロード遅延 &#x2014; 応答時間 4,200ms (閾値: 3,000ms)</span>
+            </div>
+            <div class="pod-log-entry">
+                <span class="pod-log-timestamp">12:43:40</span>
+                <span class="pod-log-level ok">OK</span>
+                <span class="pod-log-platform"><span class="platform-badge bluesky">Bluesky</span></span>
+                <span class="pod-log-message">投稿ID:bs-0a4c7 配信完了 &#x2014; OGP取得成功</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="nier-divider">SECTION BREAK</div>
+
+<section>
+    <div class="ak-card">
+        <div class="ak-card-header">
+            <div>
+                <span class="section-id">D3</span>
+                <h2 style="font-size:1rem; margin-top:var(--sp-xs);">横断トレンド比較タイムライン</h2>
+                <span class="section-label">SNS別投稿成功率・頻度の推移</span>
+            </div>
+            <div style="display:flex; gap:var(--sp-sm);">
+                <button class="btn btn-sm">24時間</button>
+                <button class="btn btn-sm" style="background:var(--accent-gold-light); border-color:var(--accent-gold);">7日間</button>
+                <button class="btn btn-sm">30日間</button>
+            </div>
+        </div>
+
+        <div class="trend-legend">
+            <div class="trend-legend-item"><span class="trend-legend-dot twitter"></span>Twitter</div>
+            <div class="trend-legend-item"><span class="trend-legend-dot bluesky"></span>Bluesky</div>
+            <div class="trend-legend-item"><span class="trend-legend-dot mastodon"></span>Mastodon</div>
+            <div class="trend-legend-item"><span class="trend-legend-dot threads"></span>Threads</div>
+        </div>
+
+        <div class="timeline-chart-area">
+            <div class="chart-row">
+                <div class="chart-row-header">
+                    <span class="platform-badge twitter">Twitter</span>
+                    <span style="font-size:0.8rem; color:var(--text-sec);">投稿成功率</span>
+                    <span class="chart-row-value">98.2%</span>
+                </div>
+                <div class="css-line-chart">
+                    <div class="chart-bar twitter" style="height:95%"></div>
+                    <div class="chart-bar twitter" style="height:92%"></div>
+                    <div class="chart-bar twitter" style="height:97%"></div>
+                    <div class="chart-bar twitter" style="height:96%"></div>
+                    <div class="chart-bar twitter" style="height:98%"></div>
+                    <div class="chart-bar twitter" style="height:94%"></div>
+                    <div class="chart-bar twitter" style="height:99%"></div>
+                    <div class="chart-bar twitter" style="height:100%"></div>
+                    <div class="chart-bar twitter" style="height:97%"></div>
+                    <div class="chart-bar twitter" style="height:96%"></div>
+                    <div class="chart-bar twitter" style="height:98%"></div>
+                    <div class="chart-bar twitter" style="height:95%"></div>
+                    <div class="chart-bar twitter" style="height:99%"></div>
+                    <div class="chart-bar twitter" style="height:100%"></div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-row-header">
+                    <span class="platform-badge bluesky">Bluesky</span>
+                    <span style="font-size:0.8rem; color:var(--text-sec);">投稿成功率</span>
+                    <span class="chart-row-value">96.7%</span>
+                </div>
+                <div class="css-line-chart">
+                    <div class="chart-bar bluesky" style="height:98%"></div>
+                    <div class="chart-bar bluesky" style="height:95%"></div>
+                    <div class="chart-bar bluesky" style="height:97%"></div>
+                    <div class="chart-bar bluesky" style="height:93%"></div>
+                    <div class="chart-bar bluesky" style="height:96%"></div>
+                    <div class="chart-bar bluesky" style="height:98%"></div>
+                    <div class="chart-bar bluesky" style="height:94%"></div>
+                    <div class="chart-bar bluesky" style="height:99%"></div>
+                    <div class="chart-bar bluesky" style="height:97%"></div>
+                    <div class="chart-bar bluesky" style="height:95%"></div>
+                    <div class="chart-bar bluesky" style="height:96%"></div>
+                    <div class="chart-bar bluesky" style="height:98%"></div>
+                    <div class="chart-bar bluesky" style="height:97%"></div>
+                    <div class="chart-bar bluesky" style="height:96%"></div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-row-header">
+                    <span class="platform-badge mastodon">Mastodon</span>
+                    <span style="font-size:0.8rem; color:var(--text-sec);">投稿成功率</span>
+                    <span class="chart-row-value">87.3%</span>
+                </div>
+                <div class="css-line-chart">
+                    <div class="chart-bar mastodon" style="height:95%"></div>
+                    <div class="chart-bar mastodon" style="height:92%"></div>
+                    <div class="chart-bar mastodon" style="height:90%"></div>
+                    <div class="chart-bar mastodon" style="height:88%"></div>
+                    <div class="chart-bar mastodon" style="height:85%"></div>
+                    <div class="chart-bar mastodon" style="height:78%"></div>
+                    <div class="chart-bar mastodon chart-marker" style="height:60%"></div>
+                    <div class="chart-bar mastodon" style="height:65%"></div>
+                    <div class="chart-bar mastodon" style="height:72%"></div>
+                    <div class="chart-bar mastodon" style="height:80%"></div>
+                    <div class="chart-bar mastodon" style="height:88%"></div>
+                    <div class="chart-bar mastodon" style="height:90%"></div>
+                    <div class="chart-bar mastodon" style="height:92%"></div>
+                    <div class="chart-bar mastodon" style="height:94%"></div>
+                </div>
+            </div>
+
+            <div class="chart-row">
+                <div class="chart-row-header">
+                    <span class="platform-badge threads">Threads</span>
+                    <span style="font-size:0.8rem; color:var(--text-sec);">投稿成功率</span>
+                    <span class="chart-row-value">99.1%</span>
+                </div>
+                <div class="css-line-chart">
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:99%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:98%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:99%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:99%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:98%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                    <div class="chart-bar threads" style="height:99%"></div>
+                    <div class="chart-bar threads" style="height:100%"></div>
+                </div>
+            </div>
+
+            <div class="chart-time-axis">
+                <span>3/15</span>
+                <span>3/16</span>
+                <span>3/17</span>
+                <span>3/18</span>
+                <span>3/19</span>
+                <span>3/20</span>
+                <span>3/21</span>
+            </div>
+        </div>
+
+        <div class="analyst-note">
+            <div>
+                <span class="analyst-note-tag">Analyst</span>
+                <span>Mastodonの成功率が3/18に急落（60%）しました。サーバー側の503エラーが集中しており、インスタンスのメンテナンスが原因と推定されます。現在は回復傾向にあります。</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="nier-divider">SECTION BREAK</div>
+
+<section>
+    <div class="ak-card">
+        <div class="ak-card-header">
+            <div>
+                <span class="section-id">C3</span>
+                <h2 style="font-size:1rem; margin-top:var(--sp-xs);">旬ワードレーダー</h2>
+                <span class="section-label">トレンドワードと自社アカウントとの相性分析</span>
+            </div>
+            <div style="display:flex; gap:var(--sp-sm); align-items:center;">
+                <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);">集計期間: 直近24時間</span>
+                <button class="btn btn-sm">更新</button>
+            </div>
+        </div>
+
+        <ul class="radar-list">
+            <li class="radar-item">
+                <span class="radar-rank top">01</span>
+                <span class="radar-word">#桜前線2026</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill high" style="width:95%"></div></div>
+                </div>
+                <span class="radar-volume">128.4K</span>
+                <span class="radar-affinity"><span class="affinity-tag high">高相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank top">02</span>
+                <span class="radar-word">#AI活用術</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill high" style="width:82%"></div></div>
+                </div>
+                <span class="radar-volume">96.1K</span>
+                <span class="radar-affinity"><span class="affinity-tag high">高相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank top">03</span>
+                <span class="radar-word">#新生活準備</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill mid" style="width:74%"></div></div>
+                </div>
+                <span class="radar-volume">71.8K</span>
+                <span class="radar-affinity"><span class="affinity-tag medium">中相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank">04</span>
+                <span class="radar-word">#確定申告</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill mid" style="width:68%"></div></div>
+                </div>
+                <span class="radar-volume">64.2K</span>
+                <span class="radar-affinity"><span class="affinity-tag low">低相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank">05</span>
+                <span class="radar-word">#春コスメ</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill" style="width:61%"></div></div>
+                </div>
+                <span class="radar-volume">58.5K</span>
+                <span class="radar-affinity"><span class="affinity-tag medium">中相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank">06</span>
+                <span class="radar-word">#WBC決勝</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill" style="width:55%"></div></div>
+                </div>
+                <span class="radar-volume">52.0K</span>
+                <span class="radar-affinity"><span class="affinity-tag low">低相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank">07</span>
+                <span class="radar-word">#リモートワーク</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill" style="width:48%"></div></div>
+                </div>
+                <span class="radar-volume">45.3K</span>
+                <span class="radar-affinity"><span class="affinity-tag high">高相性</span></span>
+            </li>
+            <li class="radar-item">
+                <span class="radar-rank">08</span>
+                <span class="radar-word">#SDGs推進</span>
+                <div class="radar-bar-wrap">
+                    <div class="radar-bar-bg"><div class="radar-bar-fill" style="width:42%"></div></div>
+                </div>
+                <span class="radar-volume">39.7K</span>
+                <span class="radar-affinity"><span class="affinity-tag medium">中相性</span></span>
+            </li>
+        </ul>
+
+        <div class="analyst-note" style="margin-top:var(--sp-lg);">
+            <div>
+                <span class="analyst-note-tag">Analyst</span>
+                <span>「#桜前線2026」は自社の季節キャンペーンと親和性が高く、投稿タイミングとして最適です。「#AI活用術」は過去投稿でも高エンゲージメントを記録しており、継続的な活用を推奨します。</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="nier-divider">SECTION BREAK</div>
+
+<section>
+    <div class="ak-card">
+        <div class="ak-card-header">
+            <div>
+                <span class="section-id">E3</span>
+                <h2 style="font-size:1rem; margin-top:var(--sp-xs);">
+                    <span class="pulse-dot alert"></span>
+                    炎上監視ダッシュボード
+                </h2>
+                <span class="section-label">公開済み投稿の反応変化を定期監視</span>
+            </div>
+            <div style="display:flex; gap:var(--sp-sm); align-items:center;">
+                <span class="fire-severity critical">異常検出 2件</span>
+                <span class="fire-severity warning">注意 1件</span>
+            </div>
+        </div>
+
+        <div class="grid-4" style="margin-bottom:var(--sp-lg);">
+            <div class="pod-stat-item">
+                <span class="pod-stat-num info">156</span>
+                <span class="pod-stat-label">監視中</span>
+            </div>
+            <div class="pod-stat-item">
+                <span class="pod-stat-num success">148</span>
+                <span class="pod-stat-label">正常</span>
+            </div>
+            <div class="pod-stat-item">
+                <span class="pod-stat-num warning">5</span>
+                <span class="pod-stat-label">注意</span>
+            </div>
+            <div class="pod-stat-item">
+                <span class="pod-stat-num error">3</span>
+                <span class="pod-stat-label">異常</span>
+            </div>
+        </div>
+
+        <div class="fire-post alert">
+            <div class="fire-post-header">
+                <span class="fire-severity critical">異常</span>
+                <span class="platform-badge twitter">Twitter</span>
+                <span class="status-badge published">公開中</span>
+                <span class="fire-post-time">2026-03-20 18:30 投稿</span>
+            </div>
+            <div class="fire-post-content">
+                新サービスのリリースに伴い、既存プランの価格を改定いたします。詳細は公式サイトをご確認ください。
+            </div>
+            <div class="fire-metrics">
+                <div class="fire-metric">
+                    返信 <span class="fire-metric-value">342</span>
+                    <span class="fire-metric-delta up">+285 (1h)</span>
+                </div>
+                <div class="fire-metric">
+                    引用 <span class="fire-metric-value">128</span>
+                    <span class="fire-metric-delta up">+96 (1h)</span>
+                </div>
+                <div class="fire-metric">
+                    いいね <span class="fire-metric-value">89</span>
+                    <span class="fire-metric-delta down">-</span>
+                </div>
+                <div class="fire-metric">
+                    ネガティブ率 <span class="fire-metric-value" style="color:var(--status-error);">72%</span>
+                    <span class="fire-metric-delta up">+45pt</span>
+                </div>
+            </div>
+            <div class="fire-ai-analysis">
+                <div class="fire-ai-label">AI状況分析</div>
+                <div class="fire-ai-text">
+                    価格改定の告知に対し、既存ユーザーから「値上げ」への反発が急拡大しています。返信の72%がネガティブで、引用リポストでの批判的拡散が進行中です。主な論点は「事前告知不足」と「代替プラン未提示」です。
+                </div>
+                <div class="fire-ai-actions">
+                    <button class="btn btn-primary btn-sm">補足投稿を作成</button>
+                    <button class="btn btn-sm">投稿を非表示</button>
+                    <button class="btn btn-sm">詳細分析を表示</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="fire-post alert">
+            <div class="fire-post-header">
+                <span class="fire-severity critical">異常</span>
+                <span class="platform-badge bluesky">Bluesky</span>
+                <span class="status-badge published">公開中</span>
+                <span class="fire-post-time">2026-03-21 09:15 投稿</span>
+            </div>
+            <div class="fire-post-content">
+                弊社AIアシスタントが生成した画像をご紹介します。クリエイターの皆さまの制作をサポートします。
+            </div>
+            <div class="fire-metrics">
+                <div class="fire-metric">
+                    返信 <span class="fire-metric-value">87</span>
+                    <span class="fire-metric-delta up">+64 (30m)</span>
+                </div>
+                <div class="fire-metric">
+                    引用 <span class="fire-metric-value">45</span>
+                    <span class="fire-metric-delta up">+38 (30m)</span>
+                </div>
+                <div class="fire-metric">
+                    いいね <span class="fire-metric-value">23</span>
+                    <span class="fire-metric-delta down">-</span>
+                </div>
+                <div class="fire-metric">
+                    ネガティブ率 <span class="fire-metric-value" style="color:var(--status-error);">68%</span>
+                    <span class="fire-metric-delta up">+52pt</span>
+                </div>
+            </div>
+            <div class="fire-ai-analysis">
+                <div class="fire-ai-label">AI状況分析</div>
+                <div class="fire-ai-text">
+                    AI生成画像の紹介に対し、クリエイターコミュニティから「著作権」「学習データの透明性」に関する批判が集中しています。Bluesky特有のコミュニティ連帯による拡散速度が速く、早期対応が必要です。
+                </div>
+                <div class="fire-ai-actions">
+                    <button class="btn btn-primary btn-sm">補足投稿を作成</button>
+                    <button class="btn btn-sm">投稿を非表示</button>
+                    <button class="btn btn-sm">詳細分析を表示</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="fire-post caution">
+            <div class="fire-post-header">
+                <span class="fire-severity warning">注意</span>
+                <span class="platform-badge mastodon">Mastodon</span>
+                <span class="status-badge published">公開中</span>
+                <span class="fire-post-time">2026-03-19 14:00 投稿</span>
+            </div>
+            <div class="fire-post-content">
+                今週末のイベント情報をお届けします。会場でお待ちしております！
+            </div>
+            <div class="fire-metrics">
+                <div class="fire-metric">
+                    返信 <span class="fire-metric-value">18</span>
+                    <span class="fire-metric-delta up">+8 (3h)</span>
+                </div>
+                <div class="fire-metric">
+                    ブースト <span class="fire-metric-value">6</span>
+                    <span class="fire-metric-delta down">-</span>
+                </div>
+                <div class="fire-metric">
+                    お気に入り <span class="fire-metric-value">12</span>
+                    <span class="fire-metric-delta down">-</span>
+                </div>
+                <div class="fire-metric">
+                    ネガティブ率 <span class="fire-metric-value" style="color:var(--status-warning);">35%</span>
+                    <span class="fire-metric-delta up">+18pt</span>
+                </div>
+            </div>
+            <div class="fire-ai-analysis">
+                <div class="fire-ai-label">AI状況分析</div>
+                <div class="fire-ai-text">
+                    アクセシビリティ対応への指摘が数件確認されています。現時点では拡散規模は小さいですが、ネガティブ率が上昇傾向にあるため注視を推奨します。
+                </div>
+                <div class="fire-ai-actions">
+                    <button class="btn btn-sm">詳細分析を表示</button>
+                    <button class="btn btn-sm">監視レベルを変更</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="nier-divider" style="margin-bottom:var(--sp-2xl);">END OF TRANSMISSION</div>
+
+</body>
+</html>

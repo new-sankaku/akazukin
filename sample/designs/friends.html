@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フレンド管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg-deep:#C4BDA6;--bg-main:#DAD4BE;--bg-surface:#EDE8D5;--bg-elevated:#F0EBD8;--bg-subtle:#E4DECC;--bg-field:#DDD6BB;
+--border:#B8B19C;--border-lt:#CCC5AE;--border-sub:#DDD6BB;
+--text-heading:#3D3A32;--text-primary:#4D493E;--text-body:#5A5548;--text-sec:#7A7464;--text-muted:#7A7464;--text-faint:#8A8470;
+--accent-gold:#C8964A;--accent-gold-light:#F2E6D0;--accent-gold-hover:#B5853E;
+--status-success:#6B8B4A;--status-warning:#C8A96E;--status-error:#B04040;--status-info:#5A8BA0;
+--status-error-bg:#EEDCDC;--status-warning-bg:#F0E6D0;--status-success-bg:#D5DDCA;
+--font-sans:'Noto Sans JP','Segoe UI','Meiryo','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+--font-mono:'Courier New',monospace;
+--sp-xs:0.25rem;--sp-sm:0.5rem;--sp-md:1rem;--sp-lg:1.5rem;--sp-xl:2rem;--sp-2xl:3rem;
+--radius-sm:0.2rem;--radius-md:0.4rem;--radius-lg:0.6rem;
+--shadow-sm:0 1px 4px rgba(75,65,50,0.10);--shadow-md:0 2px 8px rgba(75,65,50,0.15);--shadow-lg:0 4px 16px rgba(75,65,50,0.18);
+--transition:0.2s ease;
+}
+html{font-size:16px}
+body{font-family:var(--font-sans);background:var(--bg-main);color:var(--text-body);min-height:100vh;padding:var(--sp-lg)}
+h1{font-size:1.6rem;font-weight:700;color:var(--text-heading);letter-spacing:.08em;border-bottom:2px solid var(--border);padding-bottom:.6rem;margin-bottom:var(--sp-lg)}
+h2{font-size:1.15rem;font-weight:500;color:var(--text-heading);letter-spacing:.06em;margin-bottom:var(--sp-md);display:flex;align-items:center;gap:var(--sp-sm)}
+h2 .badge{font-size:.7rem;font-weight:400;background:var(--accent-gold);color:var(--bg-elevated);padding:.15rem var(--sp-sm);border-radius:var(--radius-sm);letter-spacing:.04em}
+h3{font-size:.95rem;font-weight:500;color:var(--text-primary);margin-bottom:.4rem}
+
+.page-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:var(--sp-lg)}
+.page-tab{padding:.6rem 1.2rem;cursor:pointer;color:var(--text-sec);font-size:.9rem;font-weight:500;letter-spacing:.04em;border:1px solid transparent;border-bottom:none;transition:all var(--transition)}
+.page-tab:hover{color:var(--text-heading);background:var(--bg-subtle)}
+.page-tab.active{color:var(--text-heading);background:var(--bg-surface);border-color:var(--border);border-bottom:2px solid var(--bg-surface);margin-bottom:-2px;position:relative}
+
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.card{background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem;margin-bottom:var(--sp-md);position:relative}
+.card::before,.card::after{content:'';position:absolute;width:6px;height:6px;border-color:var(--accent-gold);pointer-events:none}
+.card::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid}
+.card::after{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid}
+.card-elevated{background:var(--bg-elevated);border:1px solid var(--border)}
+
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:var(--sp-sm) var(--sp-md);font-family:var(--font-sans);font-size:.85rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);letter-spacing:.04em;transition:all .15s}
+.btn:hover{background:var(--accent-gold-light);border-color:var(--accent-gold)}
+.btn-primary{background:var(--accent-gold);color:var(--bg-elevated);border-color:var(--accent-gold)}
+.btn-primary:hover{background:var(--accent-gold-hover)}
+.btn-sm{padding:.3rem .7rem;font-size:.78rem}
+
+.tag{display:inline-block;padding:.15rem var(--sp-sm);font-size:.72rem;font-weight:500;border:1px solid var(--border-sub);background:var(--bg-subtle);color:var(--text-sec);letter-spacing:.02em}
+.tag-platform{border-color:var(--accent-gold);color:var(--accent-gold)}
+
+.score-bar{height:6px;background:var(--bg-field);border:1px solid var(--border-sub);flex:1}
+.score-bar-fill{height:100%;transition:width .3s}
+.score-high .score-bar-fill{background:var(--status-success)}
+.score-mid .score-bar-fill{background:var(--status-warning)}
+.score-low .score-bar-fill{background:var(--status-error)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md)}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-md)}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+.timeline{position:relative;padding-left:var(--sp-lg)}
+.timeline::before{content:'';position:absolute;left:.45rem;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{position:relative;padding-bottom:var(--sp-md)}
+.tl-item::before{content:'';position:absolute;left:-1.05rem;top:.35rem;width:8px;height:8px;border:1px solid var(--border);background:var(--bg-elevated)}
+.tl-item.tl-highlight::before{background:var(--accent-gold);border-color:var(--accent-gold)}
+.tl-date{font-size:.72rem;color:var(--text-muted);margin-bottom:.15rem}
+.tl-text{font-size:.85rem;color:var(--text-body)}
+.tl-meta{font-size:.72rem;color:var(--text-sec);margin-top:.15rem}
+
+.friend-select{display:flex;flex-wrap:wrap;gap:var(--sp-sm);margin-bottom:var(--sp-md)}
+.friend-chip{padding:.35rem .8rem;border:1px solid var(--border-lt);background:var(--bg-subtle);cursor:pointer;font-size:.82rem;color:var(--text-sec);transition:all .15s}
+.friend-chip:hover,.friend-chip.selected{border-color:var(--accent-gold);background:var(--accent-gold-light);color:var(--text-heading)}
+
+.priority-row{display:flex;align-items:center;gap:var(--sp-md);padding:.8rem;border:1px solid var(--border-lt);background:var(--bg-elevated);margin-bottom:var(--sp-sm);transition:border-color .15s}
+.priority-row:hover{border-color:var(--accent-gold)}
+.priority-rank{font-size:1.1rem;font-weight:700;color:var(--text-muted);min-width:var(--sp-lg);text-align:center}
+.priority-name{font-weight:500;color:var(--text-heading);flex:1}
+.priority-days{font-size:.82rem;padding:.2rem .6rem;font-weight:500;letter-spacing:.02em}
+.days-urgent{background:var(--status-error-bg);color:var(--status-error);border:1px solid var(--status-error)}
+.days-warning{background:var(--status-warning-bg);color:#8B7540;border:1px solid var(--status-warning)}
+.days-ok{background:var(--status-success-bg);color:var(--status-success);border:1px solid var(--status-success)}
+
+.bubble-map{position:relative;width:100%;min-height:360px;background:var(--bg-field);border:1px solid var(--border-lt);overflow:hidden}
+.bubble{position:absolute;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid var(--border);cursor:pointer;transition:transform var(--transition),box-shadow var(--transition)}
+.bubble:hover{transform:scale(1.08);box-shadow:0 0 0 3px var(--accent-gold-light)}
+.bubble-name{font-size:.72rem;font-weight:500;color:var(--text-heading);text-align:center;line-height:1.2}
+.bubble-score{font-size:.65rem;color:var(--text-sec)}
+.bubble-platform{font-size:.6rem;color:var(--accent-gold);font-weight:500}
+
+.textarea-field{width:100%;min-height:5rem;padding:.7rem;font-family:var(--font-sans);font-size:.85rem;background:var(--bg-field);border:1px solid var(--border-lt);color:var(--text-body);resize:vertical}
+.textarea-field:focus{outline:none;border-color:var(--accent-gold)}
+
+.toggle-wrap{display:flex;align-items:center;gap:.6rem;cursor:pointer;user-select:none}
+.toggle-track{width:2.4rem;height:1.3rem;background:var(--border);border-radius:var(--radius-sm);position:relative;transition:background var(--transition)}
+.toggle-track.on{background:var(--accent-gold)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:calc(1.3rem - 4px);height:calc(1.3rem - 4px);background:var(--bg-elevated);transition:left var(--transition)}
+.toggle-track.on .toggle-knob{left:calc(2.4rem - 1.3rem + 2px)}
+.toggle-label{font-size:.85rem;color:var(--text-primary);font-weight:500}
+
+.plan-card{background:var(--bg-elevated);border:1px solid var(--border-lt);padding:var(--sp-md);margin-bottom:.6rem}
+.plan-day{font-size:.78rem;font-weight:700;color:var(--accent-gold);margin-bottom:.3rem;letter-spacing:.04em}
+.plan-action{font-size:.85rem;color:var(--text-body);margin-bottom:.2rem}
+.plan-persona{font-size:.75rem;color:var(--text-sec);font-style:italic}
+
+.analyst-note{background:var(--accent-gold-light);border-left:3px solid var(--accent-gold);padding:.6rem .8rem;font-size:.82rem;color:var(--text-primary);margin-top:.6rem;margin-bottom:.6rem}
+
+.friend-detail-header{display:flex;align-items:center;gap:var(--sp-md);margin-bottom:var(--sp-md)}
+.friend-avatar{width:3rem;height:3rem;background:var(--bg-field);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--text-muted);font-weight:700}
+.friend-info{flex:1}
+.friend-display-name{font-size:1.05rem;font-weight:500;color:var(--text-heading)}
+.friend-id{font-size:.78rem;color:var(--text-muted)}
+
+.section-divider{border:none;border-top:1px solid var(--border-lt);margin:var(--sp-lg) 0}
+
+.sns-suggest{display:flex;align-items:center;gap:.6rem;padding:var(--sp-sm) .8rem;background:var(--bg-subtle);border:1px solid var(--border-sub);font-size:.82rem;color:var(--text-sec);margin-top:.4rem}
+.sns-suggest strong{color:var(--text-primary);font-weight:500}
+
+.empty-state{text-align:center;padding:var(--sp-xl);color:var(--text-muted);font-size:.9rem}
+
+.composer-output{background:var(--bg-field);border:1px solid var(--border-lt);padding:.8rem;font-size:.85rem;color:var(--text-body);min-height:4rem;margin-top:.6rem}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+
+<h1>フレンド管理</h1>
+
+<div class="page-tabs">
+<div class="page-tab active" data-tab="dashboard">エンゲージメント優先度</div>
+<div class="page-tab" data-tab="timeline">関係性タイムライン</div>
+<div class="page-tab" data-tab="plan">AI関係構築プラン</div>
+<div class="page-tab" data-tab="compose">フレンド宛投稿</div>
+<div class="page-tab" data-tab="map">関係性マップ</div>
+</div>
+
+<div class="tab-content active" id="tab-dashboard">
+<h2>今日アクションすべきフレンド <span class="badge">G4</span></h2>
+<p style="font-size:.82rem;color:var(--text-sec);margin-bottom:var(--sp-md)">エンゲージメント経過日数で優先度を算出しています。</p>
+
+<div class="priority-row">
+<span class="priority-rank">1</span>
+<span class="priority-name">桜庭 みなみ</span>
+<span class="tag tag-platform">X (Twitter)</span>
+<span class="priority-days days-urgent">14日経過</span>
+<button class="btn btn-sm">アクション</button>
+</div>
+<div class="priority-row">
+<span class="priority-rank">2</span>
+<span class="priority-name">Liam Chen</span>
+<span class="tag tag-platform">Instagram</span>
+<span class="priority-days days-urgent">11日経過</span>
+<button class="btn btn-sm">アクション</button>
+</div>
+<div class="priority-row">
+<span class="priority-rank">3</span>
+<span class="priority-name">高橋 蓮</span>
+<span class="tag tag-platform">X (Twitter)</span>
+<span class="priority-days days-warning">7日経過</span>
+<button class="btn btn-sm">アクション</button>
+</div>
+<div class="priority-row">
+<span class="priority-rank">4</span>
+<span class="priority-name">Emma Rodriguez</span>
+<span class="tag tag-platform">TikTok</span>
+<span class="priority-days days-warning">5日経過</span>
+<button class="btn btn-sm">アクション</button>
+</div>
+<div class="priority-row">
+<span class="priority-rank">5</span>
+<span class="priority-name">佐藤 あかり</span>
+<span class="tag tag-platform">Instagram</span>
+<span class="priority-days days-ok">2日経過</span>
+<button class="btn btn-sm">アクション</button>
+</div>
+
+<div class="analyst-note" style="margin-top:1.2rem">
+Analyst: 桜庭 みなみ さんとの接触が14日途絶えています。離脱予兆スコアが高まっているため、早めのアクションを推奨します。
+</div>
+</div>
+
+<div class="tab-content" id="tab-timeline">
+<h2>関係性タイムライン <span class="badge">G1</span></h2>
+
+<div style="margin-bottom:var(--sp-md)">
+<label style="font-size:.82rem;color:var(--text-sec);margin-bottom:.3rem;display:block">フレンドを選択</label>
+<div class="friend-select">
+<div class="friend-chip selected" data-friend="sakuraba">桜庭 みなみ</div>
+<div class="friend-chip" data-friend="liam">Liam Chen</div>
+<div class="friend-chip" data-friend="takahashi">高橋 蓮</div>
+<div class="friend-chip" data-friend="emma">Emma Rodriguez</div>
+<div class="friend-chip" data-friend="sato">佐藤 あかり</div>
+</div>
+</div>
+
+<div class="card" id="tl-sakuraba">
+<div class="friend-detail-header">
+<div class="friend-avatar">桜</div>
+<div class="friend-info">
+<div class="friend-display-name">桜庭 みなみ</div>
+<div class="friend-id">@sakuraba_373 / X (Twitter)</div>
+<div style="font-size:.78rem;color:var(--text-muted);margin-top:.2rem">メモ: イラストレーター。猫好き。</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:.72rem;color:var(--text-muted)">関係性スコア</div>
+<div style="font-size:1.4rem;font-weight:700;color:var(--status-warning)">62</div>
+<div style="font-size:.68rem;color:var(--status-error)">離脱予兆あり</div>
+</div>
+</div>
+
+<div class="grid-2" style="margin-bottom:var(--sp-md)">
+<div>
+<div style="font-size:.78rem;color:var(--text-sec);margin-bottom:.3rem">関係性スコア推移</div>
+<div style="display:flex;align-items:flex-end;gap:3px;height:60px">
+<div style="flex:1;background:var(--status-success);height:85%;opacity:.7"></div>
+<div style="flex:1;background:var(--status-success);height:80%;opacity:.7"></div>
+<div style="flex:1;background:var(--status-success);height:78%;opacity:.7"></div>
+<div style="flex:1;background:var(--status-warning);height:70%;opacity:.8"></div>
+<div style="flex:1;background:var(--status-warning);height:65%;opacity:.8"></div>
+<div style="flex:1;background:var(--status-warning);height:62%;opacity:.9"></div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--text-muted);margin-top:.2rem">
+<span>10月</span><span>11月</span><span>12月</span><span>1月</span><span>2月</span><span>3月</span>
+</div>
+</div>
+<div>
+<div style="font-size:.78rem;color:var(--text-sec);margin-bottom:.3rem">エンゲージメント指標</div>
+<div style="font-size:.82rem;margin-bottom:.3rem;display:flex;align-items:center;gap:var(--sp-sm)">
+<span style="min-width:5rem;color:var(--text-sec)">返信頻度</span>
+<div class="score-bar score-mid"><div class="score-bar-fill" style="width:45%"></div></div>
+</div>
+<div style="font-size:.82rem;margin-bottom:.3rem;display:flex;align-items:center;gap:var(--sp-sm)">
+<span style="min-width:5rem;color:var(--text-sec)">いいね率</span>
+<div class="score-bar score-mid"><div class="score-bar-fill" style="width:55%"></div></div>
+</div>
+<div style="font-size:.82rem;margin-bottom:.3rem;display:flex;align-items:center;gap:var(--sp-sm)">
+<span style="min-width:5rem;color:var(--text-sec)">相互反応</span>
+<div class="score-bar score-low"><div class="score-bar-fill" style="width:30%"></div></div>
+</div>
+</div>
+</div>
+
+<div class="analyst-note">
+Analyst: 直近2ヶ月で相互反応が低下傾向にあります。投稿テーマの変化が原因と推定されます。
+</div>
+
+<hr class="section-divider">
+<h3>エンゲージメント履歴</h3>
+<div class="timeline" style="margin-top:.8rem">
+<div class="tl-item">
+<div class="tl-date">2026/03/07</div>
+<div class="tl-text">あなたが桜庭さんの投稿にいいね</div>
+<div class="tl-meta">イラスト完成報告の投稿</div>
+</div>
+<div class="tl-item tl-highlight">
+<div class="tl-date">2026/02/28</div>
+<div class="tl-text">桜庭さんがあなたの投稿に返信</div>
+<div class="tl-meta">「素敵ですね！」</div>
+</div>
+<div class="tl-item">
+<div class="tl-date">2026/02/20</div>
+<div class="tl-text">あなたが桜庭さんの投稿にリプライ</div>
+<div class="tl-meta">新作イラストへの感想</div>
+</div>
+<div class="tl-item">
+<div class="tl-date">2026/02/10</div>
+<div class="tl-text">桜庭さんがあなたの投稿にいいね</div>
+</div>
+<div class="tl-item tl-highlight">
+<div class="tl-date">2026/01/25</div>
+<div class="tl-text">桜庭さんがあなたをリポスト</div>
+<div class="tl-meta">猫の写真投稿</div>
+</div>
+</div>
+</div>
+
+<div class="card" id="tl-liam" style="display:none">
+<div class="friend-detail-header">
+<div class="friend-avatar">L</div>
+<div class="friend-info">
+<div class="friend-display-name">Liam Chen</div>
+<div class="friend-id">@liamchen.art / Instagram</div>
+<div style="font-size:.78rem;color:var(--text-muted);margin-top:.2rem">メモ: 写真家。旅行系コンテンツ。</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:.72rem;color:var(--text-muted)">関係性スコア</div>
+<div style="font-size:1.4rem;font-weight:700;color:var(--status-error)">38</div>
+<div style="font-size:.68rem;color:var(--status-error)">離脱予兆あり</div>
+</div>
+</div>
+<div class="analyst-note">
+Analyst: 11日間の未接触状態です。以前は写真投稿へのコメントで関係が維持されていました。
+</div>
+<hr class="section-divider">
+<h3>エンゲージメント履歴</h3>
+<div class="timeline" style="margin-top:.8rem">
+<div class="tl-item">
+<div class="tl-date">2026/03/10</div>
+<div class="tl-text">あなたがLiamさんのストーリーを閲覧</div>
+</div>
+<div class="tl-item tl-highlight">
+<div class="tl-date">2026/02/25</div>
+<div class="tl-text">Liamさんがあなたの投稿にコメント</div>
+<div class="tl-meta">「Great shot!」</div>
+</div>
+<div class="tl-item">
+<div class="tl-date">2026/02/15</div>
+<div class="tl-text">あなたがLiamさんの投稿にいいね</div>
+</div>
+</div>
+</div>
+
+<div class="card" id="tl-takahashi" style="display:none">
+<div class="friend-detail-header">
+<div class="friend-avatar">高</div>
+<div class="friend-info">
+<div class="friend-display-name">高橋 蓮</div>
+<div class="friend-id">@ren_takahashi / X (Twitter)</div>
+<div style="font-size:.78rem;color:var(--text-muted);margin-top:.2rem">メモ: エンジニア。技術系ポスト中心。</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:.72rem;color:var(--text-muted)">関係性スコア</div>
+<div style="font-size:1.4rem;font-weight:700;color:var(--status-warning)">71</div>
+</div>
+</div>
+<div class="timeline" style="margin-top:.8rem">
+<div class="tl-item tl-highlight">
+<div class="tl-date">2026/03/14</div>
+<div class="tl-text">高橋さんがあなたの投稿にリプライ</div>
+<div class="tl-meta">技術記事への意見交換</div>
+</div>
+<div class="tl-item">
+<div class="tl-date">2026/03/08</div>
+<div class="tl-text">あなたが高橋さんの投稿にいいね</div>
+</div>
+</div>
+</div>
+
+<div class="card" id="tl-emma" style="display:none">
+<div class="friend-detail-header">
+<div class="friend-avatar">E</div>
+<div class="friend-info">
+<div class="friend-display-name">Emma Rodriguez</div>
+<div class="friend-id">@emma.rod / TikTok</div>
+<div style="font-size:.78rem;color:var(--text-muted);margin-top:.2rem">メモ: ダンサー。コラボ歓迎。</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:.72rem;color:var(--text-muted)">関係性スコア</div>
+<div style="font-size:1.4rem;font-weight:700;color:var(--status-success)">84</div>
+</div>
+</div>
+<div class="timeline" style="margin-top:.8rem">
+<div class="tl-item tl-highlight">
+<div class="tl-date">2026/03/16</div>
+<div class="tl-text">Emmaさんがあなたの動画にコメント</div>
+<div class="tl-meta">「Love this!」</div>
+</div>
+<div class="tl-item">
+<div class="tl-date">2026/03/12</div>
+<div class="tl-text">あなたがEmmaさんの動画にいいね</div>
+</div>
+</div>
+</div>
+
+<div class="card" id="tl-sato" style="display:none">
+<div class="friend-detail-header">
+<div class="friend-avatar">佐</div>
+<div class="friend-info">
+<div class="friend-display-name">佐藤 あかり</div>
+<div class="friend-id">@akari.sato / Instagram</div>
+<div style="font-size:.78rem;color:var(--text-muted);margin-top:.2rem">メモ: カフェ巡り。週末投稿が多い。</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:.72rem;color:var(--text-muted)">関係性スコア</div>
+<div style="font-size:1.4rem;font-weight:700;color:var(--status-success)">91</div>
+</div>
+</div>
+<div class="timeline" style="margin-top:.8rem">
+<div class="tl-item tl-highlight">
+<div class="tl-date">2026/03/19</div>
+<div class="tl-text">佐藤さんがあなたのストーリーに反応</div>
+</div>
+<div class="tl-item">
+<div class="tl-date">2026/03/17</div>
+<div class="tl-text">あなたが佐藤さんの投稿にコメント</div>
+<div class="tl-meta">カフェ写真への感想</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="tab-content" id="tab-plan">
+<h2>AI関係構築プラン <span class="badge">G2</span></h2>
+
+<div style="margin-bottom:var(--sp-md)">
+<label style="font-size:.82rem;color:var(--text-sec);margin-bottom:.3rem;display:block">対象フレンド</label>
+<div class="friend-select">
+<div class="friend-chip selected" data-plan="sakuraba">桜庭 みなみ</div>
+<div class="friend-chip" data-plan="liam">Liam Chen</div>
+<div class="friend-chip" data-plan="takahashi">高橋 蓮</div>
+<div class="friend-chip" data-plan="emma">Emma Rodriguez</div>
+<div class="friend-chip" data-plan="sato">佐藤 あかり</div>
+</div>
+</div>
+
+<button class="btn btn-primary" id="btn-generate-plan">関係構築プランを生成</button>
+
+<div id="plan-result" style="display:none;margin-top:1.2rem">
+<div class="card">
+<h3>桜庭 みなみ さんへの週間アクションプラン</h3>
+<div class="analyst-note" style="margin-top:.6rem">
+Analyst: 関係性スコア62（低下傾向）を踏まえ、共通の話題である猫・イラスト分野からの再接触を提案します。
+</div>
+
+<div style="margin-top:var(--sp-md)">
+<div style="font-size:.82rem;color:var(--text-sec);margin-bottom:.6rem">推奨ペルソナ: <strong style="color:var(--accent-gold)">共感型・カジュアル</strong></div>
+
+<div class="plan-card">
+<div class="plan-day">月曜日</div>
+<div class="plan-action">桜庭さんの最新イラスト投稿にいいね + 短い感想リプライ</div>
+<div class="plan-persona">ペルソナ: 「かわいい！色使いが好きです」程度の軽い反応</div>
+</div>
+<div class="plan-card">
+<div class="plan-day">水曜日</div>
+<div class="plan-action">猫関連の投稿をリポスト（桜庭さんが反応しやすい話題を選定）</div>
+<div class="plan-persona">ペルソナ: 共通の興味である猫をきっかけにした自然な接点</div>
+</div>
+<div class="plan-card">
+<div class="plan-day">金曜日</div>
+<div class="plan-action">桜庭さんの投稿に対して質問形式のリプライ（会話の糸口をつくる）</div>
+<div class="plan-persona">ペルソナ: 「このイラストの線画ツールは何を使っていますか？」のような興味を示す質問</div>
+</div>
+<div class="plan-card">
+<div class="plan-day">日曜日</div>
+<div class="plan-action">自分の投稿で桜庭さんに関連するタグを使用（自然に目に留まるようにする）</div>
+<div class="plan-persona">ペルソナ: 直接的なメンションではなく間接的な存在アピール</div>
+</div>
+</div>
+
+<div style="margin-top:var(--sp-md);display:flex;gap:var(--sp-sm)">
+<button class="btn btn-sm">プランを承認</button>
+<button class="btn btn-sm">再生成</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="tab-content" id="tab-compose">
+<h2>フレンド向け投稿作成モード <span class="badge">G3</span></h2>
+
+<div style="margin-bottom:var(--sp-md)">
+<div class="toggle-wrap" id="toggle-friend-post">
+<div class="toggle-track on" id="toggle-track">
+<div class="toggle-knob"></div>
+</div>
+<span class="toggle-label">フレンド宛に投稿</span>
+</div>
+</div>
+
+<div id="compose-area">
+<div style="margin-bottom:var(--sp-md)">
+<label style="font-size:.82rem;color:var(--text-sec);margin-bottom:.3rem;display:block">宛先フレンド</label>
+<div class="friend-select">
+<div class="friend-chip" data-compose="sakuraba">桜庭 みなみ</div>
+<div class="friend-chip selected" data-compose="takahashi">高橋 蓮</div>
+<div class="friend-chip" data-compose="emma">Emma Rodriguez</div>
+<div class="friend-chip" data-compose="liam">Liam Chen</div>
+<div class="friend-chip" data-compose="sato">佐藤 あかり</div>
+</div>
+</div>
+
+<div style="margin-bottom:var(--sp-md)">
+<label style="font-size:.82rem;color:var(--text-sec);margin-bottom:.3rem;display:block">投稿の目的</label>
+<div style="display:flex;flex-wrap:wrap;gap:var(--sp-sm)">
+<div class="friend-chip selected">返信</div>
+<div class="friend-chip">感想を伝える</div>
+<div class="friend-chip">質問する</div>
+<div class="friend-chip">情報共有</div>
+</div>
+</div>
+
+<div style="margin-bottom:var(--sp-md)">
+<label style="font-size:.82rem;color:var(--text-sec);margin-bottom:.3rem;display:block">参考にする相手の投稿（任意）</label>
+<textarea class="textarea-field" placeholder="返信先の投稿内容を貼り付け、またはURLを入力...">新しいフレームワークを試してみた。思ったよりパフォーマンスが良くて驚き。</textarea>
+</div>
+
+<button class="btn btn-primary" id="btn-compose">Composerで返信文を生成</button>
+
+<div id="compose-result" style="display:none;margin-top:var(--sp-md)">
+<div class="card">
+<div style="font-size:.82rem;color:var(--text-sec);margin-bottom:.4rem">生成された返信文</div>
+<div class="composer-output">
+お、試されたんですね！自分も気になってました。特にどの部分のパフォーマンスが改善されましたか？もし差し支えなければベンチマーク結果も見てみたいです。
+</div>
+<div style="display:flex;gap:var(--sp-sm);margin-top:.6rem">
+<button class="btn btn-sm btn-primary">この文面で投稿</button>
+<button class="btn btn-sm">トーンを変更</button>
+<button class="btn btn-sm">再生成</button>
+</div>
+<div class="analyst-note" style="margin-top:.6rem">
+Composer: 高橋さんの投稿テーマ（技術系）と関係性スコア（71）を踏まえ、興味を示しつつ会話が続く質問形式で生成しました。
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="tab-content" id="tab-map">
+<h2>関係性マップ <span class="badge">G5</span></h2>
+<p style="font-size:.82rem;color:var(--text-sec);margin-bottom:var(--sp-md)">バブルの大きさはエンゲージメント頻度、位置は関係性スコアの高低を表します。</p>
+
+<div class="bubble-map" id="bubble-map">
+<div class="bubble" style="width:110px;height:110px;left:65%;top:10%;background:var(--bg-elevated)">
+<div class="bubble-platform">Instagram</div>
+<div class="bubble-name">佐藤 あかり</div>
+<div class="bubble-score">スコア 91</div>
+</div>
+<div class="bubble" style="width:95px;height:95px;left:55%;top:40%;background:var(--bg-elevated)">
+<div class="bubble-platform">TikTok</div>
+<div class="bubble-name">Emma R.</div>
+<div class="bubble-score">スコア 84</div>
+</div>
+<div class="bubble" style="width:80px;height:80px;left:20%;top:35%;background:var(--bg-elevated)">
+<div class="bubble-platform">X (Twitter)</div>
+<div class="bubble-name">高橋 蓮</div>
+<div class="bubble-score">スコア 71</div>
+</div>
+<div class="bubble" style="width:85px;height:85px;left:10%;top:62%;background:var(--accent-gold-light);border-color:var(--status-warning)">
+<div class="bubble-platform">X (Twitter)</div>
+<div class="bubble-name">桜庭 みなみ</div>
+<div class="bubble-score">スコア 62</div>
+</div>
+<div class="bubble" style="width:65px;height:65px;left:50%;top:70%;background:var(--accent-gold-light);border-color:var(--status-error)">
+<div class="bubble-platform">Instagram</div>
+<div class="bubble-name">Liam</div>
+<div class="bubble-score">スコア 38</div>
+</div>
+</div>
+
+<div class="grid-2" style="margin-top:var(--sp-md)">
+<div class="card">
+<h3>SNS別エンゲージメント分布</h3>
+<div style="margin-top:.6rem">
+<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:var(--sp-sm)">
+<span style="min-width:6rem;font-size:.82rem;color:var(--text-sec)">X (Twitter)</span>
+<div class="score-bar score-mid" style="flex:1"><div class="score-bar-fill" style="width:66%"></div></div>
+<span style="font-size:.78rem;color:var(--text-muted);min-width:2rem">2名</span>
+</div>
+<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:var(--sp-sm)">
+<span style="min-width:6rem;font-size:.82rem;color:var(--text-sec)">Instagram</span>
+<div class="score-bar score-mid" style="flex:1"><div class="score-bar-fill" style="width:64%"></div></div>
+<span style="font-size:.78rem;color:var(--text-muted);min-width:2rem">2名</span>
+</div>
+<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:var(--sp-sm)">
+<span style="min-width:6rem;font-size:.82rem;color:var(--text-sec)">TikTok</span>
+<div class="score-bar score-high" style="flex:1"><div class="score-bar-fill" style="width:84%"></div></div>
+<span style="font-size:.78rem;color:var(--text-muted);min-width:2rem">1名</span>
+</div>
+</div>
+</div>
+<div class="card">
+<h3>SNS別注力提案</h3>
+<div class="sns-suggest">
+<strong>X (Twitter)</strong> 桜庭さんの離脱予兆が検出されています。リプライ頻度の向上を推奨します。
+</div>
+<div class="sns-suggest">
+<strong>Instagram</strong> Liamさんとのエンゲージメントが低下中。ストーリー反応から再開を推奨します。
+</div>
+<div class="sns-suggest">
+<strong>TikTok</strong> Emmaさんとの関係は良好です。現在の頻度を維持してください。
+</div>
+</div>
+</div>
+
+<div class="card" style="margin-top:var(--sp-md)">
+<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+<span style="font-size:.82rem;color:var(--text-sec)">凡例:</span>
+<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem"><span style="width:12px;height:12px;background:var(--bg-elevated);border:2px solid var(--border);display:inline-block"></span> 安定</span>
+<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem"><span style="width:12px;height:12px;background:var(--accent-gold-light);border:2px solid var(--status-warning);display:inline-block"></span> 注意</span>
+<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem"><span style="width:12px;height:12px;background:var(--accent-gold-light);border:2px solid var(--status-error);display:inline-block"></span> 離脱予兆</span>
+<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;margin-left:var(--sp-md)">バブル大 = 高頻度 / バブル小 = 低頻度</span>
+</div>
+</div>
+</div>
+
+<script>
+document.querySelectorAll('.page-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.page-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+var friendMap = {sakuraba:'tl-sakuraba',liam:'tl-liam',takahashi:'tl-takahashi',emma:'tl-emma',sato:'tl-sato'};
+document.querySelectorAll('#tab-timeline .friend-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('#tab-timeline .friend-chip').forEach(function(c) { c.classList.remove('selected'); });
+    chip.classList.add('selected');
+    Object.values(friendMap).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    var target = document.getElementById(friendMap[chip.dataset.friend]);
+    if (target) target.style.display = 'block';
+  });
+});
+
+document.getElementById('btn-generate-plan').addEventListener('click', function() {
+  var result = document.getElementById('plan-result');
+  result.style.display = 'block';
+  result.scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+
+document.getElementById('btn-compose').addEventListener('click', function() {
+  var result = document.getElementById('compose-result');
+  result.style.display = 'block';
+  result.scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+
+document.getElementById('toggle-friend-post').addEventListener('click', function() {
+  var track = document.getElementById('toggle-track');
+  var area = document.getElementById('compose-area');
+  track.classList.toggle('on');
+  area.style.display = track.classList.contains('on') ? 'block' : 'none';
+});
+
+document.querySelectorAll('.friend-chip[data-compose]').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.friend-chip[data-compose]').forEach(function(c) { c.classList.remove('selected'); });
+    chip.classList.add('selected');
+  });
+});
+
+document.querySelectorAll('.friend-chip[data-plan]').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.friend-chip[data-plan]').forEach(function(c) { c.classList.remove('selected'); });
+    chip.classList.add('selected');
+    document.getElementById('plan-result').style.display = 'none';
+  });
+});
+
+document.querySelectorAll('#tab-compose .friend-select:last-of-type .friend-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    var parent = chip.parentElement;
+    parent.querySelectorAll('.friend-chip').forEach(function(c) { c.classList.remove('selected'); });
+    chip.classList.add('selected');
+  });
+});
+</script>
+
+</body>
+</html>

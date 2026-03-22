@@ -1,5 +1,5 @@
 {#include base}
-{#title}A/Bテスト - Akazukin{/title}
+{#title}{msg:abtest_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,50 +7,145 @@
     {#sidebar active="ab-tests" /}
 
     <main class="ak-main">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">A/Bテスト管理</h2>
-            <button onclick="openCreateModal()" style="
-                background-color: var(--accent-gold, #C8964A);
-                border: none;
-                color: #fff;
-                font-size: 0.85rem;
-                padding: 0.5rem 1.2rem;
-                border-radius: 2px;
-                cursor: pointer;
-                letter-spacing: 0.05em;
-            ">新規テスト</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">{msg:abtest_management_title}</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button onclick="openWinPatternsModal()" style="
+                    background-color: var(--bg-surface, #EDE8D5);
+                    border: 1px solid var(--border, #B8B19C);
+                    color: var(--text-primary, #4D493E);
+                    font-size: 0.85rem;
+                    padding: 0.5rem 1.2rem;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    letter-spacing: 0.05em;
+                ">{msg:abtest_win_patterns}</button>
+                <button onclick="openCreateModal()" style="
+                    background-color: var(--accent-gold, #C8964A);
+                    border: none;
+                    color: #fff;
+                    font-size: 0.85rem;
+                    padding: 0.5rem 1.2rem;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    letter-spacing: 0.05em;
+                ">{msg:abtest_new_test}</button>
+            </div>
         </div>
 
         <div id="tests-list">
             <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
-                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">{msg:abtest_loading}</p>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Create Modal -->
-<div id="test-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border, #B8B19C); border-radius: 2px; padding: 2rem; width: 90%; max-width: 500px;">
-        <h3 style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">新規A/Bテスト</h3>
+<div id="test-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(75,65,50,0.4); z-index:1000; justify-content:center; align-items:center; padding: 1.5rem;">
+    <div style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border, #B8B19C); border-radius: 0.6rem; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 4px 16px rgba(75,65,50,0.18);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1.5rem 2rem; border-bottom:1px solid var(--border-sub, #DDD6BB);">
+            <h3 style="margin: 0; color: var(--text-heading, #3D3A32);">{msg:abtest_new_test_title}</h3>
+            <button onclick="closeModal()" style="background:none; border:none; font-size:1.3rem; color:var(--text-muted, #9B9580); cursor:pointer; padding:0.25rem; line-height:1;">&#10005;</button>
+        </div>
         <form id="test-form" onsubmit="createTest(event)">
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">テスト名</label>
-                <input type="text" id="test-name" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            <div style="padding: 2rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_test_name}</label>
+                    <input type="text" id="test-name" required style="width:100%; font-size:0.9rem; padding:0.55rem 0.75rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:0.4rem; background:var(--bg-field, #DDD6BB); color:var(--text-primary, #4D493E);" />
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_platforms}</label>
+                    <div id="platform-checkboxes" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(12rem, 1fr)); gap:0.5rem;"></div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_original_text}</label>
+                    <textarea id="test-original-text" rows="3" style="width:100%; font-size:0.9rem; padding:0.55rem 0.75rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:0.4rem; background:var(--bg-field, #DDD6BB); color:var(--text-primary, #4D493E); resize:vertical; min-height:80px;"></textarea>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_persona}</label>
+                    <select id="test-persona" style="width:100%; font-size:0.9rem; padding:0.55rem 0.75rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:0.4rem; background:var(--bg-field, #DDD6BB); color:var(--text-primary, #4D493E); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7464' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 0.75rem center; padding-right:2rem;">
+                        <option value="">{msg:abtest_no_persona}</option>
+                    </select>
+                </div>
+
+                <div style="text-align:center; margin-bottom: 1.5rem;">
+                    <button type="button" id="btn-generate" onclick="generateVariants()" style="background:var(--accent-gold, #C8964A); border:1px solid var(--accent-gold, #C8964A); color:#fff; font-size:0.9rem; font-weight:500; padding:0.55rem 1.2rem; border-radius:0.4rem; cursor:pointer;">
+                        {msg:abtest_ai_generate}
+                    </button>
+                </div>
+
+                <div id="ai-variants-result" style="display:none;">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_variant_a}</label>
+                    <textarea id="test-variant-a" rows="3" required style="width:100%; font-size:0.9rem; padding:0.55rem 0.75rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:0.4rem; background:var(--bg-field, #DDD6BB); color:var(--text-primary, #4D493E); resize:vertical; min-height:80px;"></textarea>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_variant_b}</label>
+                    <textarea id="test-variant-b" rows="3" required style="width:100%; font-size:0.9rem; padding:0.55rem 0.75rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:0.4rem; background:var(--bg-field, #DDD6BB); color:var(--text-primary, #4D493E); resize:vertical; min-height:80px;"></textarea>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display:block; font-size:0.85rem; font-weight:500; color: var(--text-primary, #4D493E); margin-bottom:0.25rem;">{msg:abtest_variant_c}</label>
+                    <textarea id="test-variant-c" rows="3" style="width:100%; font-size:0.9rem; padding:0.55rem 0.75rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:0.4rem; background:var(--bg-field, #DDD6BB); color:var(--text-primary, #4D493E); resize:vertical; min-height:80px;"></textarea>
+                </div>
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">バリアントA</label>
-                <textarea id="test-variant-a" rows="3" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);"></textarea>
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">バリアントB</label>
-                <textarea id="test-variant-b" rows="3" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);"></textarea>
-            </div>
-            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-                <button type="button" onclick="closeModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
-                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">作成</button>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end; padding:1.5rem 2rem; border-top:1px solid var(--border-sub, #DDD6BB);">
+                <button type="button" onclick="closeModal()" style="padding:0.55rem 1.2rem; border:1px solid var(--border, #B8B19C); background:var(--bg-elevated, #F0EBD8); border-radius:0.4rem; cursor:pointer; color: var(--text-primary, #4D493E); font-size:0.9rem;">{msg:abtest_cancel}</button>
+                <button type="submit" style="padding:0.55rem 1.2rem; background:var(--accent-gold, #C8964A); border:1px solid var(--accent-gold, #C8964A); color:#fff; border-radius:0.4rem; cursor:pointer; font-size:0.9rem;">{msg:abtest_create}</button>
             </div>
         </form>
+    </div>
+</div>
+
+<div id="prediction-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(75,65,50,0.4); z-index:1000; justify-content:center; align-items:center; padding:1.5rem;">
+    <div style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border, #B8B19C); border-radius: 0.6rem; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 4px 16px rgba(75,65,50,0.18);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1.5rem 2rem; border-bottom:1px solid var(--border-sub, #DDD6BB);">
+            <h3 style="margin: 0; color: var(--text-heading, #3D3A32);">{msg:abtest_prediction_title}</h3>
+            <button onclick="closePredictionModal()" style="background:none; border:none; font-size:1.3rem; color:var(--text-muted, #9B9580); cursor:pointer; padding:0.25rem; line-height:1;">&#10005;</button>
+        </div>
+        <div id="prediction-content" style="padding: 2rem;">
+            <p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>
+        </div>
+    </div>
+</div>
+
+<div id="analysis-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(75,65,50,0.4); z-index:1000; justify-content:center; align-items:center; padding:1.5rem;">
+    <div style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border, #B8B19C); border-radius: 0.6rem; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 4px 16px rgba(75,65,50,0.18);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1.5rem 2rem; border-bottom:1px solid var(--border-sub, #DDD6BB);">
+            <h3 style="margin: 0; color: var(--text-heading, #3D3A32);">{msg:abtest_analysis_title}</h3>
+            <button onclick="closeAnalysisModal()" style="background:none; border:none; font-size:1.3rem; color:var(--text-muted, #9B9580); cursor:pointer; padding:0.25rem; line-height:1;">&#10005;</button>
+        </div>
+        <div id="analysis-content" style="padding: 2rem;">
+            <p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>
+        </div>
+    </div>
+</div>
+
+<div id="multiplatform-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(75,65,50,0.4); z-index:1000; justify-content:center; align-items:center; padding:1.5rem;">
+    <div style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border, #B8B19C); border-radius: 0.6rem; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 4px 16px rgba(75,65,50,0.18);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1.5rem 2rem; border-bottom:1px solid var(--border-sub, #DDD6BB);">
+            <h3 style="margin: 0; color: var(--text-heading, #3D3A32);">{msg:abtest_multiplatform_title}</h3>
+            <button onclick="closeMultiPlatformModal()" style="background:none; border:none; font-size:1.3rem; color:var(--text-muted, #9B9580); cursor:pointer; padding:0.25rem; line-height:1;">&#10005;</button>
+        </div>
+        <div id="multiplatform-content" style="padding: 2rem;">
+            <p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>
+        </div>
+    </div>
+</div>
+
+<div id="winpatterns-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(75,65,50,0.4); z-index:1000; justify-content:center; align-items:center; padding:1.5rem;">
+    <div style="background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border, #B8B19C); border-radius: 0.6rem; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 4px 16px rgba(75,65,50,0.18);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:1.5rem 2rem; border-bottom:1px solid var(--border-sub, #DDD6BB);">
+            <h3 style="margin: 0; color: var(--text-heading, #3D3A32);">{msg:abtest_win_patterns_title}</h3>
+            <button onclick="closeWinPatternsModal()" style="background:none; border:none; font-size:1.3rem; color:var(--text-muted, #9B9580); cursor:pointer; padding:0.25rem; line-height:1;">&#10005;</button>
+        </div>
+        <div id="winpatterns-content" style="padding: 2rem;">
+            <p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>
+        </div>
     </div>
 </div>
 
@@ -58,28 +153,427 @@
     .test-card {
         background: var(--bg-surface, #EDE8D5);
         border: 1px solid var(--border-lt, #CCC5AE);
-        border-radius: 2px;
-        padding: 1.25rem 1.5rem;
+        border-radius: 0.6rem;
+        padding: 1.5rem;
         margin-bottom: 1rem;
+        box-shadow: 0 1px 4px rgba(75, 65, 50, 0.10);
+        position: relative;
+        transition: box-shadow 0.2s ease;
+    }
+    .test-card:hover {
+        box-shadow: 0 2px 8px rgba(75, 65, 50, 0.15);
     }
     .test-status {
         display: inline-block;
-        padding: 0.15rem 0.6rem;
-        border-radius: 2px;
+        padding: 0.15rem 0.55rem;
+        border-radius: 0.2rem;
         font-size: 0.7rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.03em;
+        border: 1px solid;
+    }
+    .status-DRAFT { background: var(--bg-subtle, #E4DECC); color: var(--text-muted, #9B9580); border-color: var(--border-lt, #CCC5AE); }
+    .status-RUNNING { background: var(--status-info-bg, #D8E8F0); color: var(--status-info, #5A8BA0); border-color: var(--status-info-border, #B0D0DD); }
+    .status-COMPLETED { background: var(--status-success-bg, #D5DDCA); color: var(--status-success, #6B8B4A); border-color: var(--status-success-border, #B0C89A); }
+    .status-CANCELLED { background: var(--status-error-bg, #EEDCDC); color: var(--status-error, #B04040); border-color: var(--status-error-border, #D4AAAA); }
+
+    .platform-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 0.2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+        border: 1px solid;
+    }
+    .platform-TWITTER { background: var(--platform-twitter-bg, #E8F4FD); color: var(--platform-twitter, #1a8cd8); border-color: var(--platform-twitter-border, #B8DDF5); }
+    .platform-BLUESKY { background: var(--platform-bluesky-bg, #E5F0FF); color: var(--platform-bluesky, #0070E0); border-color: var(--platform-bluesky-border, #B0D4FF); }
+    .platform-INSTAGRAM { background: var(--platform-instagram-bg, #FDE8ED); color: var(--platform-instagram, #C13584); border-color: var(--platform-instagram-border, #F5C0D0); }
+    .platform-THREADS { background: var(--platform-threads-bg, #F0F0F0); color: var(--platform-threads, #333333); border-color: var(--platform-threads-border, #D0D0D0); }
+    .platform-MASTODON { background: var(--platform-mastodon-bg, #EDEDFF); color: var(--platform-mastodon, #595AFF); border-color: var(--platform-mastodon-border, #C8C8FF); }
+    .platform-REDDIT { background: var(--platform-reddit-bg, #FFEEE8); color: var(--platform-reddit, #D93A00); border-color: var(--platform-reddit-border, #FFDACC); }
+
+    .platform-check-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.65rem;
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 0.4rem;
+        background: var(--bg-elevated, #F0EBD8);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .platform-check-label:hover {
+        border-color: var(--accent-gold, #C8964A);
+        box-shadow: 0 1px 4px rgba(75, 65, 50, 0.10);
+    }
+
+    .variant-block {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 0.4rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .variant-label-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted, #9B9580);
+        margin-bottom: 0.25rem;
+    }
+    .variant-text-preview {
+        font-size: 0.9rem;
+        color: var(--text-primary, #4D493E);
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+    .ai-diff-note {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.78rem;
+        color: var(--accent-gold, #C8964A);
+        padding: 0.25rem 0.5rem;
+        background: var(--accent-gold-light, #F2E6D0);
+        border-radius: 0.2rem;
+        border-left: 2px solid var(--accent-gold, #C8964A);
+    }
+
+    .stat-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .stat-item {
+        flex: 1;
+        min-width: 7rem;
+        text-align: center;
+        padding: 0.5rem;
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-sub, #DDD6BB);
+        border-radius: 0.4rem;
+    }
+    .stat-item-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--accent-gold, #C8964A);
+    }
+    .stat-item-label {
+        font-size: 0.72rem;
+        color: var(--text-muted, #9B9580);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .bar-label {
+        flex-shrink: 0;
+        width: 6rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-primary, #4D493E);
+        text-align: right;
+    }
+    .bar-track {
+        flex: 1;
+        height: 1.6rem;
+        background: var(--bg-field, #DDD6BB);
+        border-radius: 0.2rem;
+        border: 1px solid var(--border-sub, #DDD6BB);
+        overflow: hidden;
+        position: relative;
+    }
+    .bar-fill {
+        height: 100%;
+        border-radius: 0.2rem;
+        display: flex;
+        align-items: center;
+        padding-left: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #fff;
+        transition: width 0.6s ease;
+    }
+    .bar-fill-a { background: var(--accent-gold, #C8964A); }
+    .bar-fill-b { background: var(--status-info, #5A8BA0); }
+    .bar-value {
+        flex-shrink: 0;
+        width: 3.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary, #4D493E);
+    }
+
+    .confidence-meter {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .confidence-track {
+        flex: 1;
+        height: 0.4rem;
+        background: var(--bg-field, #DDD6BB);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .confidence-fill-bar {
+        height: 100%;
+        background: var(--status-success, #6B8B4A);
+        border-radius: 2px;
+    }
+    .confidence-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--status-success, #6B8B4A);
+        flex-shrink: 0;
+    }
+
+    .ai-verdict {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--accent-gold-light, #F2E6D0);
+        border: 1px solid var(--accent-gold, #C8964A);
+        border-radius: 0.4rem;
+        margin-top: 1rem;
+    }
+    .ai-verdict-icon {
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2rem;
+        background: var(--accent-gold, #C8964A);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+    .ai-verdict-body { flex: 1; }
+    .ai-verdict-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-heading, #3D3A32);
+        margin-bottom: 0.25rem;
+    }
+    .ai-verdict-text {
+        font-size: 0.82rem;
+        color: var(--text-body, #5A5548);
+        line-height: 1.5;
+    }
+
+    .win-factors-list {
+        margin: 1rem 0;
+        list-style: none;
+        padding: 0;
+    }
+    .win-factors-list li {
+        position: relative;
+        padding-left: 1.2rem;
+        font-size: 0.85rem;
+        color: var(--text-body, #5A5548);
+        line-height: 1.8;
+    }
+    .win-factors-list li::before {
+        content: '\25C6';
+        position: absolute;
+        left: 0;
+        color: var(--accent-gold, #C8964A);
+        font-size: 0.65rem;
+        top: 0.35rem;
+    }
+
+    .next-test-suggestion {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px dashed var(--accent-gold, #C8964A);
+        border-radius: 0.4rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .winner-tag {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        background: var(--status-success-bg, #D5DDCA);
+        color: var(--status-success, #6B8B4A);
+        border: 1px solid var(--status-success-border, #B0C89A);
+        border-radius: 0.2rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-left: 0.25rem;
+    }
+    .loser-tag {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        background: var(--status-error-bg, #EEDCDC);
+        color: var(--status-error, #B04040);
+        border: 1px solid var(--status-error-border, #D4AAAA);
+        border-radius: 0.2rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-left: 0.25rem;
+    }
+
+    .multi-variant-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+    .multi-variant-table thead th {
+        text-align: left;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted, #9B9580);
+        padding: 0.5rem 1rem;
+        border-bottom: 2px solid var(--border, #B8B19C);
+        font-weight: 600;
+    }
+    .multi-variant-table tbody td {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--border-sub, #DDD6BB);
+        color: var(--text-body, #5A5548);
+        vertical-align: top;
+    }
+    .multi-variant-table tbody tr:hover { background: var(--bg-subtle, #E4DECC); }
+
+    .section-label-tag {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-faint, #8A8470);
+        margin-bottom: 1rem;
+    }
+
+    .action-btn {
+        font-size: 0.78rem;
+        padding: 0.35rem 0.8rem;
+        border: 1px solid var(--border, #B8B19C);
+        background: var(--bg-surface, #EDE8D5);
+        border-radius: 0.4rem;
+        cursor: pointer;
+        margin-right: 0.3rem;
+        transition: all 0.2s ease;
+        color: var(--text-primary, #4D493E);
+    }
+    .action-btn:hover {
+        background: var(--bg-subtle, #E4DECC);
+        box-shadow: 0 1px 4px rgba(75, 65, 50, 0.10);
+    }
+    .action-btn-danger {
+        border-color: var(--status-error, #B04040);
+        color: var(--status-error, #B04040);
+    }
+    .action-btn-primary {
+        background: var(--accent-gold, #C8964A);
+        border-color: var(--accent-gold, #C8964A);
         color: #fff;
     }
-    .status-DRAFT { background: #7A7464; }
-    .status-RUNNING { background: #4A8FBA; }
-    .status-COMPLETED { background: #5A9A6A; }
-    .status-CANCELLED { background: #B04040; }
+    .action-btn-primary:hover {
+        background: var(--accent-gold-hover, #B5853E);
+    }
+
+    .win-pattern-card {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        border-radius: 0.4rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    .win-pattern-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-heading, #3D3A32);
+        margin-bottom: 0.25rem;
+    }
+    .win-pattern-stats {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.78rem;
+        color: var(--text-sec, #7A7464);
+        margin-bottom: 0.25rem;
+    }
+    .win-pattern-desc {
+        font-size: 0.82rem;
+        color: var(--text-body, #5A5548);
+        line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+        .bar-label { width: 4.5rem; font-size: 0.72rem; }
+        .stat-row { flex-direction: column; }
+    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() { loadTests(); });
+    var PLATFORMS = [
+        { value: 'TWITTER', label: 'Twitter / X' },
+        { value: 'BLUESKY', label: 'Bluesky' },
+        { value: 'INSTAGRAM', label: 'Instagram' },
+        { value: 'THREADS', label: 'Threads' }
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTests();
+        loadPersonas();
+        renderPlatformCheckboxes();
+    });
+
+    function renderPlatformCheckboxes() {
+        var container = document.getElementById('platform-checkboxes');
+        container.innerHTML = PLATFORMS.map(function(p) {
+            return '<label class="platform-check-label">' +
+                '<input type="checkbox" name="platforms" value="' + p.value + '" style="accent-color:var(--accent-gold, #C8964A); margin-right:0.25rem;">' +
+                '<span style="font-size:0.85rem; font-weight:500; color:var(--text-primary, #4D493E); line-height:1;">' + escapeHtmlGlobal(p.label) + '</span>' +
+                '</label>';
+        }).join('');
+    }
+
+    async function loadPersonas() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+        try {
+            var response = await fetch('/api/v1/ai/personas', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var personas = await response.json();
+                var select = document.getElementById('test-persona');
+                personas.forEach(function(p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_load_personas}');
+        }
+    }
 
     async function loadTests() {
         var token = localStorage.getItem('accessToken');
@@ -93,50 +587,183 @@
                 var tests = await response.json();
                 renderTests(tests);
             } else {
-                await showApiError(response, 'テストの読み込みに失敗しました');
+                await showApiError(response, '{msg:abtest_error_load}');
             }
         } catch (err) {
-            showToast('error', 'テストの読み込みに失敗しました');
+            showToast('error', '{msg:abtest_error_load}');
         }
     }
 
     function renderTests(tests) {
         var container = document.getElementById('tests-list');
         if (tests.length === 0) {
-            container.innerHTML = '<div class="test-card" style="text-align:center; padding:3rem;"><p style="color: var(--text-sec, #7A7464);">A/Bテストがまだありません</p></div>';
+            container.innerHTML = '<div class="test-card" style="text-align:center; padding:3rem;"><p style="color: var(--text-sec, #7A7464);">{msg:abtest_empty}</p></div>';
             return;
         }
-        container.innerHTML = tests.map(function(t) {
-            var actions = '';
-            if (t.status !== 'COMPLETED') {
-                actions = '<button onclick="completeTest(\'' + t.id + '\', \'A\')" style="font-size:0.78rem; padding:0.3rem 0.7rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; margin-right:0.3rem;">A勝利</button>' +
-                    '<button onclick="completeTest(\'' + t.id + '\', \'B\')" style="font-size:0.78rem; padding:0.3rem 0.7rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; margin-right:0.3rem;">B勝利</button>';
-            }
-            actions += '<button onclick="deleteTest(\'' + t.id + '\')" style="font-size:0.78rem; padding:0.3rem 0.7rem; border:1px solid #C1574B; color:#C1574B; background:transparent; border-radius:2px; cursor:pointer;">削除</button>';
 
-            var winnerInfo = t.winnerVariant ? '<div style="margin-top:0.5rem; color:var(--accent-gold, #C8964A); font-weight:600; font-size:0.85rem;">勝者: バリアント ' + escapeHtmlGlobal(t.winnerVariant) + '</div>' : '';
+        var running = tests.filter(function(t) { return t.status === 'RUNNING'; });
+        var completed = tests.filter(function(t) { return t.status === 'COMPLETED'; });
+        var drafts = tests.filter(function(t) { return t.status === 'DRAFT'; });
+        var cancelled = tests.filter(function(t) { return t.status === 'CANCELLED'; });
 
-            return '<div class="test-card">' +
-                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">' +
-                '<strong style="color:var(--text-heading, #3D3A32);">' + escapeHtmlGlobal(t.name) + '</strong>' +
-                '<span class="test-status status-' + t.status + '">' + t.status + '</span>' +
-                '</div>' +
-                '<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:0.75rem;">' +
-                '<div style="padding:0.75rem; background:var(--bg-base, #F5F0DD); border-radius:2px;">' +
-                '<div style="font-size:0.75rem; color:var(--text-muted, #9B9580); margin-bottom:0.3rem;">バリアントA</div>' +
-                '<div style="font-size:0.85rem; color:var(--text-primary, #4D493E);">' + escapeHtmlGlobal(t.variantA) + '</div></div>' +
-                '<div style="padding:0.75rem; background:var(--bg-base, #F5F0DD); border-radius:2px;">' +
-                '<div style="font-size:0.75rem; color:var(--text-muted, #9B9580); margin-bottom:0.3rem;">バリアントB</div>' +
-                '<div style="font-size:0.85rem; color:var(--text-primary, #4D493E);">' + escapeHtmlGlobal(t.variantB) + '</div></div>' +
-                '</div>' +
-                winnerInfo +
-                '<div style="margin-top:0.75rem; text-align:right;">' + actions + '</div>' +
-                '</div>';
-        }).join('');
+        var html = '';
+
+        if (running.length > 0) {
+            html += '<p class="section-label-tag">{msg:abtest_section_running}</p>';
+            html += running.map(renderTestCard).join('');
+        }
+        if (completed.length > 0) {
+            if (html) html += '<hr style="border:none; border-top:1px solid var(--border-lt, #CCC5AE); margin:2rem 0;">';
+            html += '<p class="section-label-tag">{msg:abtest_section_completed}</p>';
+            html += completed.map(renderTestCard).join('');
+        }
+        if (drafts.length > 0) {
+            if (html) html += '<hr style="border:none; border-top:1px solid var(--border-lt, #CCC5AE); margin:2rem 0;">';
+            html += '<p class="section-label-tag">{msg:abtest_section_draft}</p>';
+            html += drafts.map(renderTestCard).join('');
+        }
+        if (cancelled.length > 0) {
+            if (html) html += '<hr style="border:none; border-top:1px solid var(--border-lt, #CCC5AE); margin:2rem 0;">';
+            html += '<p class="section-label-tag">{msg:abtest_section_cancelled}</p>';
+            html += cancelled.map(renderTestCard).join('');
+        }
+
+        container.innerHTML = html;
     }
 
-    function openCreateModal() { document.getElementById('test-modal').style.display = 'flex'; }
+    function renderTestCard(t) {
+        var platformBadges = '';
+        if (t.platforms && t.platforms.length > 0) {
+            platformBadges = '<div style="margin-bottom:0.5rem;">' +
+                t.platforms.map(function(p) {
+                    return '<span class="platform-badge platform-' + escapeHtmlGlobal(p) + '">' + escapeHtmlGlobal(p) + '</span>';
+                }).join('') + '</div>';
+        }
+
+        var variants = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:0.75rem;">' +
+            '<div class="variant-block">' +
+            '<div class="variant-label-tag">{msg:abtest_variant_a}</div>' +
+            '<div class="variant-text-preview">' + escapeHtmlGlobal(t.variantA) + '</div></div>' +
+            '<div class="variant-block">' +
+            '<div class="variant-label-tag">{msg:abtest_variant_b}</div>' +
+            '<div class="variant-text-preview">' + escapeHtmlGlobal(t.variantB) + '</div></div>' +
+            '</div>';
+
+        if (t.variantC) {
+            variants += '<div class="variant-block">' +
+                '<div class="variant-label-tag">{msg:abtest_variant_c}</div>' +
+                '<div class="variant-text-preview">' + escapeHtmlGlobal(t.variantC) + '</div></div>';
+        }
+
+        var winnerInfo = t.winnerVariant ? '<div style="margin-top:0.5rem; color:var(--accent-gold, #C8964A); font-weight:600; font-size:0.85rem;">{msg:abtest_winner}: ' + escapeHtmlGlobal(t.winnerVariant) + '</div>' : '';
+
+        var actions = '';
+        if (t.status === 'DRAFT') {
+            actions += '<button class="action-btn action-btn-primary" onclick="startTest(\'' + t.id + '\')">{msg:abtest_start}</button>';
+        }
+        if (t.status === 'RUNNING') {
+            actions += '<button class="action-btn" onclick="openPredictionModal(\'' + t.id + '\')">{msg:abtest_prediction}</button>';
+            actions += '<button class="action-btn" onclick="completeTest(\'' + t.id + '\', \'A\')">{msg:abtest_win_a}</button>';
+            actions += '<button class="action-btn" onclick="completeTest(\'' + t.id + '\', \'B\')">{msg:abtest_win_b}</button>';
+            if (t.variantC) {
+                actions += '<button class="action-btn" onclick="completeTest(\'' + t.id + '\', \'C\')">{msg:abtest_win_c}</button>';
+            }
+        }
+        if (t.status === 'COMPLETED') {
+            actions += '<button class="action-btn" onclick="openAnalysisModal(\'' + t.id + '\')">{msg:abtest_loser_analysis}</button>';
+            actions += '<button class="action-btn" onclick="createNextTestFromAnalysis(\'' + t.id + '\')">{msg:abtest_next_test}</button>';
+        }
+        if (t.platforms && t.platforms.length > 1) {
+            actions += '<button class="action-btn" onclick="openMultiPlatformModal(\'' + t.id + '\')">{msg:abtest_multiplatform}</button>';
+        }
+        actions += '<button class="action-btn action-btn-danger" onclick="deleteTest(\'' + t.id + '\')">{msg:abtest_delete}</button>';
+
+        var startedInfo = '';
+        if (t.startedAt) {
+            startedInfo = '<small style="color:var(--text-sec, #7A7464);">{msg:abtest_started}: ' + new Date(t.startedAt).toLocaleDateString() + '</small>';
+        }
+        if (t.completedAt) {
+            startedInfo = '<small style="color:var(--text-sec, #7A7464);">' + new Date(t.startedAt || t.createdAt).toLocaleDateString() + ' — ' + new Date(t.completedAt).toLocaleDateString() + '</small>';
+        }
+
+        return '<div class="test-card">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">' +
+            '<div><strong style="color:var(--text-heading, #3D3A32);">' + escapeHtmlGlobal(t.name) + '</strong>' +
+            (startedInfo ? '<br>' + startedInfo : '') + '</div>' +
+            '<span class="test-status status-' + t.status + '">' + t.status + '</span>' +
+            '</div>' +
+            platformBadges +
+            variants +
+            winnerInfo +
+            '<div style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.3rem;">' + actions + '</div>' +
+            '</div>';
+    }
+
+    function openCreateModal() {
+        document.getElementById('test-modal').style.display = 'flex';
+        document.getElementById('ai-variants-result').style.display = 'none';
+        document.getElementById('test-form').reset();
+    }
     function closeModal() { document.getElementById('test-modal').style.display = 'none'; }
+
+    function getSelectedPlatforms() {
+        var checkboxes = document.querySelectorAll('input[name="platforms"]:checked');
+        var result = [];
+        checkboxes.forEach(function(cb) { result.push(cb.value); });
+        return result;
+    }
+
+    async function generateVariants() {
+        var token = localStorage.getItem('accessToken');
+        var originalText = document.getElementById('test-original-text').value;
+        if (!originalText.trim()) {
+            showToast('error', '{msg:abtest_error_original_required}');
+            return;
+        }
+        var personaId = document.getElementById('test-persona').value || null;
+
+        var btn = document.getElementById('btn-generate');
+        btn.disabled = true;
+        btn.textContent = '{msg:abtest_generating}';
+
+        try {
+            var response = await fetch('/api/v1/ab-tests/generate-variants', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ originalText: originalText, personaId: personaId })
+            });
+            if (response.ok) {
+                var data = await response.json();
+                document.getElementById('test-variant-a').value = data.variantA;
+                document.getElementById('test-variant-b').value = data.variantB;
+                document.getElementById('test-variant-c').value = data.variantC || '';
+
+                var resultDiv = document.getElementById('ai-variants-result');
+                resultDiv.style.display = 'block';
+                var html = '';
+                html += '<div class="variant-block"><div class="variant-label-tag">{msg:abtest_variant_a} (' + escapeHtmlGlobal(data.variantALabel) + ')</div>' +
+                    '<div class="variant-text-preview">' + escapeHtmlGlobal(data.variantA) + '</div></div>';
+                html += '<div class="variant-block"><div class="variant-label-tag">{msg:abtest_variant_b} (' + escapeHtmlGlobal(data.variantBLabel) + ')</div>' +
+                    '<div class="variant-text-preview">' + escapeHtmlGlobal(data.variantB) + '</div>' +
+                    '<div class="ai-diff-note"><span>AI</span> ' + escapeHtmlGlobal(data.variantBDiff) + '</div></div>';
+                if (data.variantC) {
+                    html += '<div class="variant-block"><div class="variant-label-tag">{msg:abtest_variant_c} (' + escapeHtmlGlobal(data.variantCLabel) + ')</div>' +
+                        '<div class="variant-text-preview">' + escapeHtmlGlobal(data.variantC) + '</div>' +
+                        '<div class="ai-diff-note"><span>AI</span> ' + escapeHtmlGlobal(data.variantCDiff) + '</div></div>';
+                }
+                resultDiv.innerHTML = html;
+
+                showToast('success', '{msg:abtest_variants_generated}');
+            } else {
+                await showApiError(response, '{msg:abtest_error_generate}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_generate}');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '{msg:abtest_ai_generate}';
+        }
+    }
 
     async function createTest(e) {
         e.preventDefault();
@@ -144,7 +771,9 @@
         var body = {
             name: document.getElementById('test-name').value,
             variantA: document.getElementById('test-variant-a').value,
-            variantB: document.getElementById('test-variant-b').value
+            variantB: document.getElementById('test-variant-b').value,
+            variantC: document.getElementById('test-variant-c').value || null,
+            platforms: getSelectedPlatforms()
         };
         try {
             var response = await fetch('/api/v1/ab-tests', {
@@ -153,13 +782,29 @@
                 body: JSON.stringify(body)
             });
             if (response.ok || response.status === 201) {
-                showToast('success', 'A/Bテストを作成しました');
+                showToast('success', '{msg:abtest_created}');
                 closeModal();
                 loadTests();
             } else {
-                await showApiError(response, 'テストの作成に失敗しました');
+                await showApiError(response, '{msg:abtest_error_create}');
             }
-        } catch (err) { showToast('error', 'テストの作成に失敗しました'); }
+        } catch (err) { showToast('error', '{msg:abtest_error_create}'); }
+    }
+
+    async function startTest(id) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/' + id + '/start', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                showToast('success', '{msg:abtest_started_success}');
+                loadTests();
+            } else {
+                await showApiError(response, '{msg:abtest_error_start}');
+            }
+        } catch (err) { showToast('error', '{msg:abtest_error_start}'); }
     }
 
     async function completeTest(id, winner) {
@@ -170,16 +815,16 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.ok) {
-                showToast('success', 'テストを完了しました');
+                showToast('success', '{msg:abtest_completed_success}');
                 loadTests();
             } else {
-                await showApiError(response, 'テストの完了に失敗しました');
+                await showApiError(response, '{msg:abtest_error_complete}');
             }
-        } catch (err) { showToast('error', 'テストの完了に失敗しました'); }
+        } catch (err) { showToast('error', '{msg:abtest_error_complete}'); }
     }
 
     async function deleteTest(id) {
-        if (!confirm('このA/Bテストを削除してもよろしいですか？')) return;
+        if (!confirm('{msg:abtest_confirm_delete}')) return;
         var token = localStorage.getItem('accessToken');
         try {
             var response = await fetch('/api/v1/ab-tests/' + id, {
@@ -187,23 +832,300 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.ok || response.status === 204) {
-                showToast('success', 'テストを削除しました');
+                showToast('success', '{msg:abtest_deleted}');
                 loadTests();
             } else {
-                await showApiError(response, 'テストの削除に失敗しました');
+                await showApiError(response, '{msg:abtest_error_delete}');
             }
-        } catch (err) { showToast('error', 'テストの削除に失敗しました'); }
+        } catch (err) { showToast('error', '{msg:abtest_error_delete}'); }
+    }
+
+    function openPredictionModal(testId) {
+        document.getElementById('prediction-modal').style.display = 'flex';
+        document.getElementById('prediction-content').innerHTML = '<p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>';
+        loadPrediction(testId);
+    }
+    function closePredictionModal() { document.getElementById('prediction-modal').style.display = 'none'; }
+
+    async function loadPrediction(testId) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/' + testId + '/prediction', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderPrediction(data);
+            } else {
+                await showApiError(response, '{msg:abtest_error_prediction}');
+                closePredictionModal();
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_prediction}');
+            closePredictionModal();
+        }
+    }
+
+    function renderPrediction(data) {
+        var html = '<div class="stat-row">' +
+            '<div class="stat-item"><div class="stat-item-value">' + formatNumber(data.totalImpressions) + '</div><div class="stat-item-label">{msg:abtest_total_impressions}</div></div>' +
+            '<div class="stat-item"><div class="stat-item-value">' + formatNumber(data.totalEngagements) + '</div><div class="stat-item-label">{msg:abtest_total_engagements}</div></div>' +
+            '<div class="stat-item"><div class="stat-item-value">' + data.averageEngagementRate.toFixed(1) + '%</div><div class="stat-item-label">{msg:abtest_avg_engagement}</div></div>' +
+            '</div>';
+
+        html += '<p class="section-label-tag">{msg:abtest_engagement_comparison}</p>';
+        html += '<div style="margin-bottom:1rem;">';
+        data.variantStats.forEach(function(vs) {
+            var width = Math.min(vs.engagementRate * 10, 100);
+            var fillClass = vs.variant === 'A' ? 'bar-fill-a' : 'bar-fill-b';
+            html += '<div class="bar-row">' +
+                '<div class="bar-label">' + escapeHtmlGlobal(vs.variant) + '</div>' +
+                '<div class="bar-track"><div class="bar-fill ' + fillClass + '" style="width:' + width + '%;">' + vs.engagementRate.toFixed(1) + '%</div></div>' +
+                '<div class="bar-value">' + vs.engagementRate.toFixed(1) + '%</div></div>';
+        });
+        html += '</div>';
+
+        html += '<div class="confidence-meter">' +
+            '<small style="color:var(--text-sec, #7A7464);">{msg:abtest_confidence}:</small>' +
+            '<div class="confidence-track"><div class="confidence-fill-bar" style="width:' + data.confidencePercent + '%;"></div></div>' +
+            '<span class="confidence-label">' + data.confidencePercent.toFixed(0) + '%</span></div>';
+
+        html += '<div class="ai-verdict">' +
+            '<div class="ai-verdict-icon">AI</div>' +
+            '<div class="ai-verdict-body">' +
+            '<div class="ai-verdict-title">{msg:abtest_ai_verdict}</div>' +
+            '<div class="ai-verdict-text">' + escapeHtmlGlobal(data.aiVerdict) + '</div>' +
+            '</div></div>';
+
+        document.getElementById('prediction-content').innerHTML = html;
+    }
+
+    function openAnalysisModal(testId) {
+        document.getElementById('analysis-modal').style.display = 'flex';
+        document.getElementById('analysis-content').innerHTML = '<p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>';
+        loadAnalysis(testId);
+    }
+    function closeAnalysisModal() { document.getElementById('analysis-modal').style.display = 'none'; }
+
+    async function loadAnalysis(testId) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/' + testId + '/loser-analysis', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderAnalysis(data, testId);
+            } else {
+                await showApiError(response, '{msg:abtest_error_analysis}');
+                closeAnalysisModal();
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_analysis}');
+            closeAnalysisModal();
+        }
+    }
+
+    function renderAnalysis(data, testId) {
+        var html = '<div class="ai-verdict">' +
+            '<div class="ai-verdict-icon">AI</div>' +
+            '<div class="ai-verdict-body">' +
+            '<div class="ai-verdict-title">{msg:abtest_win_factor_analysis}</div>' +
+            '<ul class="win-factors-list">';
+        data.winFactors.forEach(function(f) {
+            html += '<li>' + escapeHtmlGlobal(f) + '</li>';
+        });
+        html += '</ul></div></div>';
+
+        html += '<div class="ai-verdict" style="margin-top:1rem; border-color:var(--border, #B8B19C); background:var(--bg-elevated, #F0EBD8);">' +
+            '<div class="ai-verdict-body">' +
+            '<div class="ai-verdict-text">' + escapeHtmlGlobal(data.aiSummary) + '</div>' +
+            '</div></div>';
+
+        html += '<div class="next-test-suggestion">' +
+            '<p style="font-size:0.85rem; color:var(--text-sec, #7A7464); margin-bottom:0.5rem;">{msg:abtest_next_test_suggestion}</p>' +
+            '<button class="action-btn action-btn-primary" onclick="applyNextTestSuggestion(\'' + escapeAttr(data.suggestedNextTestName) + '\', \'' + escapeAttr(data.suggestedNextTestText) + '\')">{msg:abtest_next_test}</button>' +
+            '</div>';
+
+        document.getElementById('analysis-content').innerHTML = html;
+    }
+
+    function escapeAttr(str) {
+        if (!str) return '';
+        return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+    }
+
+    function applyNextTestSuggestion(name, text) {
+        closeAnalysisModal();
+        openCreateModal();
+        document.getElementById('test-name').value = name.replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+        document.getElementById('test-original-text').value = text.replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+    }
+
+    async function createNextTestFromAnalysis(testId) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/' + testId + '/loser-analysis', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                openCreateModal();
+                document.getElementById('test-name').value = data.suggestedNextTestName;
+                document.getElementById('test-original-text').value = data.suggestedNextTestText;
+            } else {
+                await showApiError(response, '{msg:abtest_error_analysis}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_analysis}');
+        }
+    }
+
+    function openMultiPlatformModal(testId) {
+        document.getElementById('multiplatform-modal').style.display = 'flex';
+        document.getElementById('multiplatform-content').innerHTML = '<p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>';
+        loadMultiPlatform(testId);
+    }
+    function closeMultiPlatformModal() { document.getElementById('multiplatform-modal').style.display = 'none'; }
+
+    async function loadMultiPlatform(testId) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var testResponse = await fetch('/api/v1/ab-tests', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!testResponse.ok) {
+                await showApiError(testResponse, '{msg:abtest_error_load}');
+                closeMultiPlatformModal();
+                return;
+            }
+            var tests = await testResponse.json();
+            var test = tests.find(function(t) { return t.id === testId; });
+            if (!test) {
+                showToast('error', '{msg:abtest_error_load}');
+                closeMultiPlatformModal();
+                return;
+            }
+
+            var response = await fetch('/api/v1/ab-tests/multi-platform', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: test.name,
+                    originalText: test.variantA,
+                    platforms: test.platforms
+                })
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderMultiPlatform(data, test);
+            } else {
+                await showApiError(response, '{msg:abtest_error_multiplatform}');
+                closeMultiPlatformModal();
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_multiplatform}');
+            closeMultiPlatformModal();
+        }
+    }
+
+    function renderMultiPlatform(data, test) {
+        var html = '<p class="section-label-tag">{msg:abtest_target_platforms}</p>';
+        html += '<div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:1rem;">';
+        test.platforms.forEach(function(p) {
+            html += '<span class="platform-badge platform-' + escapeHtmlGlobal(p) + '">' + escapeHtmlGlobal(p) + '</span>';
+        });
+        html += '</div>';
+
+        html += '<p class="section-label-tag">{msg:abtest_optimized_variants}</p>';
+        html += '<table class="multi-variant-table"><thead><tr>' +
+            '<th>{msg:abtest_col_platform}</th>' +
+            '<th>{msg:abtest_col_variant}</th>' +
+            '<th>{msg:abtest_col_preview}</th>' +
+            '<th>{msg:abtest_col_optimization}</th>' +
+            '</tr></thead><tbody>';
+        data.variants.forEach(function(v) {
+            html += '<tr>' +
+                '<td><span class="platform-badge platform-' + escapeHtmlGlobal(v.platform) + '">' + escapeHtmlGlobal(v.platform) + '</span></td>' +
+                '<td>' + escapeHtmlGlobal(v.variant) + '</td>' +
+                '<td style="font-size:0.82rem; line-height:1.5; color:var(--text-primary, #4D493E);">' + escapeHtmlGlobal(v.preview) + '</td>' +
+                '<td><small style="color:var(--text-sec, #7A7464);">' + escapeHtmlGlobal(v.optimizationNote) + '</small></td>' +
+                '</tr>';
+        });
+        html += '</tbody></table>';
+
+        document.getElementById('multiplatform-content').innerHTML = html;
+    }
+
+    function openWinPatternsModal() {
+        document.getElementById('winpatterns-modal').style.display = 'flex';
+        document.getElementById('winpatterns-content').innerHTML = '<p style="color: var(--text-muted, #9B9580); text-align:center;">{msg:abtest_loading}</p>';
+        loadWinPatterns();
+    }
+    function closeWinPatternsModal() { document.getElementById('winpatterns-modal').style.display = 'none'; }
+
+    async function loadWinPatterns() {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/ab-tests/win-patterns', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderWinPatterns(data);
+            } else {
+                await showApiError(response, '{msg:abtest_error_win_patterns}');
+                closeWinPatternsModal();
+            }
+        } catch (err) {
+            showToast('error', '{msg:abtest_error_win_patterns}');
+            closeWinPatternsModal();
+        }
+    }
+
+    function renderWinPatterns(data) {
+        if (data.totalTestsAnalyzed === 0) {
+            document.getElementById('winpatterns-content').innerHTML =
+                '<p style="color:var(--text-sec, #7A7464); text-align:center;">{msg:abtest_no_completed_tests}</p>';
+            return;
+        }
+
+        var html = '<div class="stat-row">' +
+            '<div class="stat-item"><div class="stat-item-value">' + data.totalTestsAnalyzed + '</div><div class="stat-item-label">{msg:abtest_tests_analyzed}</div></div>' +
+            '</div>';
+
+        data.patterns.forEach(function(p) {
+            html += '<div class="win-pattern-card">' +
+                '<div class="win-pattern-name">' + escapeHtmlGlobal(p.patternName) + '</div>' +
+                '<div class="win-pattern-stats">' +
+                '<span>{msg:abtest_win_count}: ' + p.winCount + '</span>' +
+                '<span>{msg:abtest_win_rate}: ' + p.winRate.toFixed(0) + '%</span>' +
+                '</div>' +
+                '<div class="win-pattern-desc">' + escapeHtmlGlobal(p.description) + '</div>' +
+                '</div>';
+        });
+
+        html += '<div class="ai-verdict">' +
+            '<div class="ai-verdict-icon">AI</div>' +
+            '<div class="ai-verdict-body">' +
+            '<div class="ai-verdict-title">{msg:abtest_overall_analysis}</div>' +
+            '<div class="ai-verdict-text">' + escapeHtmlGlobal(data.aiSummary) + '</div>' +
+            '</div></div>';
+
+        document.getElementById('winpatterns-content').innerHTML = html;
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000) {
+            return num.toLocaleString();
+        }
+        return String(num);
     }
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

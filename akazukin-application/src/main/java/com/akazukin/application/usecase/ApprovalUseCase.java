@@ -159,6 +159,12 @@ public class ApprovalUseCase {
                 postRepository.save(post);
                 postPublisher.publishForProcessing(post.getId());
                 LOG.log(Level.INFO, "Post {0} approved and sent for publishing", post.getId());
+            } else if (action == ApprovalAction.REQUEST_CHANGES) {
+                post.setStatus(PostStatus.RETURNED);
+                post.setUpdatedAt(now);
+                postRepository.save(post);
+                LOG.log(Level.INFO, "Post {0} returned for changes",
+                        post.getId());
             } else {
                 post.setStatus(PostStatus.REJECTED);
                 post.setUpdatedAt(now);
@@ -167,7 +173,14 @@ public class ApprovalUseCase {
                         new Object[]{post.getId(), action});
             }
 
-            String decisionText = action == ApprovalAction.APPROVE ? "approved" : "rejected";
+            String decisionText;
+            if (action == ApprovalAction.APPROVE) {
+                decisionText = "approved";
+            } else if (action == ApprovalAction.REQUEST_CHANGES) {
+                decisionText = "returned for changes";
+            } else {
+                decisionText = "rejected";
+            }
             Notification notification = new Notification(
                     UUID.randomUUID(),
                     approval.getRequesterId(),
@@ -187,6 +200,29 @@ public class ApprovalUseCase {
                 LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ApprovalUseCase.decide", perfMs});
             } else {
                 LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ApprovalUseCase.decide", perfMs});
+            }
+        }
+    }
+
+    public ApprovalRequestDto getApproval(UUID approvalId, UUID userId) {
+        long perfStart = System.nanoTime();
+        try {
+            ApprovalRequest approval = approvalRequestRepository.findById(approvalId)
+                    .orElseThrow(() -> new DomainException("APPROVAL_NOT_FOUND",
+                            "Approval request not found: " + approvalId));
+
+            if (!approval.getApproverId().equals(userId)) {
+                throw new DomainException("FORBIDDEN",
+                        "You are not the designated approver for this request");
+            }
+
+            return toApprovalRequestDto(approval);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ApprovalUseCase.getApproval", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ApprovalUseCase.getApproval", perfMs});
             }
         }
     }

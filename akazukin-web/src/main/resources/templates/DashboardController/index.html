@@ -2,7 +2,6 @@
 {#title}ダッシュボード - Akazukin{/title}
 {#body}
 <style>
-    /* Dashboard Stats — Terminal Readout */
     .dashboard-stats-strip {
         display: flex;
         align-items: stretch;
@@ -82,7 +81,6 @@
         }
     }
 
-    /* Welcome Section */
     .dashboard-welcome {
         margin-bottom: 2rem;
         padding-bottom: 1.5rem;
@@ -101,7 +99,6 @@
         letter-spacing: 0.02em;
     }
 
-    /* Quick Actions */
     .quick-actions-group {
         display: flex;
         gap: 0.75rem;
@@ -157,7 +154,6 @@
         border-color: var(--accent-gold);
     }
 
-    /* Section Cards */
     .dashboard-section-title {
         font-size: 0.85rem;
         font-weight: 500;
@@ -169,7 +165,6 @@
         border-bottom: 1px solid var(--border-lt);
     }
 
-    /* Recent Posts */
     .recent-post-item {
         display: flex;
         align-items: flex-start;
@@ -205,7 +200,6 @@
         color: var(--text-muted);
     }
 
-    /* Status Badges */
     .status-badge {
         display: inline-block;
         padding: 0.2rem 0.6rem;
@@ -237,7 +231,6 @@
         background: rgba(180, 100, 100, 0.1);
     }
 
-    /* Platform Badges */
     .platform-badge {
         display: inline-block;
         padding: 0.3rem 0.7rem;
@@ -262,7 +255,6 @@
     .platform-badge.vk { border-left: 3px solid #4A76A8; }
     .platform-badge.pinterest { border-left: 3px solid #BD081C; }
 
-    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 2rem 1rem;
@@ -278,7 +270,6 @@
         margin-bottom: 0.75rem;
     }
 
-    /* Section Link */
     .section-footer-link {
         display: block;
         text-align: right;
@@ -295,7 +286,6 @@
         color: var(--accent-gold-hover);
     }
 
-    /* Content Grid for bottom sections */
     .dashboard-content-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -308,7 +298,6 @@
         }
     }
 
-    /* Loading skeleton */
     .skeleton {
         background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--bg-elevated) 50%, var(--bg-subtle) 75%);
         background-size: 200% 100%;
@@ -318,6 +307,406 @@
         0% { background-position: 200% 0; }
         100% { background-position: -200% 0; }
     }
+
+    .pod-monitor-log {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 0.78rem;
+        line-height: 1.9;
+        background: var(--bg-deep, var(--bg-subtle));
+        border: 1px solid var(--border);
+        padding: 1rem;
+        max-height: 420px;
+        overflow-y: auto;
+    }
+    .pod-log-entry {
+        display: flex;
+        gap: 1rem;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid rgba(184, 177, 156, 0.3);
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .pod-log-entry:last-child { border-bottom: none; }
+    .pod-log-timestamp {
+        color: var(--text-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .pod-log-level {
+        font-weight: 700;
+        text-transform: uppercase;
+        width: 3.5rem;
+        text-align: center;
+        flex-shrink: 0;
+        font-size: 0.7rem;
+        padding: 0.1rem 0;
+    }
+    .pod-log-level.ok   { color: var(--status-success, #6B8B4A); background: var(--status-success-bg, #D5DDCA); }
+    .pod-log-level.warn { color: #8A7030; background: var(--status-warning-bg, #F0E6D0); }
+    .pod-log-level.err  { color: var(--status-error, #B04040); background: var(--status-error-bg, #EEDCDC); }
+    .pod-log-level.info { color: var(--status-info, #5A8BA0); background: var(--status-info-bg, #D8E8F0); }
+    .pod-log-message {
+        color: var(--text-primary);
+        flex: 1;
+        min-width: 0;
+        word-break: break-word;
+    }
+    .pod-log-platform {
+        flex-shrink: 0;
+    }
+
+    .pod-stat-bar {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .pod-stat-item {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-lt);
+        padding: 0.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        min-width: 5rem;
+    }
+    .pod-stat-num {
+        font-size: 1.4rem;
+        font-weight: 700;
+        font-family: 'Consolas', 'SF Mono', monospace;
+        line-height: 1.2;
+    }
+    .pod-stat-num.success { color: var(--status-success, #6B8B4A); }
+    .pod-stat-num.warning { color: var(--status-warning, #C8A96E); }
+    .pod-stat-num.error   { color: var(--status-error, #B04040); }
+    .pod-stat-num.info    { color: var(--status-info, #5A8BA0); }
+    .pod-stat-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .pulse-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    .pulse-dot.active { background: var(--status-success, #6B8B4A); }
+    .pulse-dot.alert  { background: var(--status-error, #B04040); }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+
+    .scan-line {
+        position: relative;
+        overflow: hidden;
+    }
+    .scan-line::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(to right, transparent, var(--accent-gold), transparent);
+        animation: scan 4s linear infinite;
+    }
+    @keyframes scan {
+        0%   { top: 0; opacity: 0; }
+        10%  { opacity: 1; }
+        90%  { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+    }
+
+    .timeline-chart-area {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-lt);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .chart-row {
+        margin-bottom: 1.5rem;
+    }
+    .chart-row:last-child { margin-bottom: 0; }
+    .chart-row-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .chart-row-value {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-sec);
+        margin-left: auto;
+    }
+    .css-line-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 60px;
+        padding: 0.25rem 0;
+        position: relative;
+    }
+    .css-line-chart::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--border-lt);
+    }
+    .chart-bar {
+        flex: 1;
+        min-width: 0;
+        transition: opacity 0.2s ease;
+        position: relative;
+    }
+    .chart-bar:hover { opacity: 0.8; }
+    .chart-bar.twitter  { background: #1DA1F2; }
+    .chart-bar.bluesky  { background: #0085FF; }
+    .chart-bar.mastodon { background: #6364FF; }
+    .chart-bar.threads  { background: #333333; }
+    .chart-bar.instagram { background: #E4405F; }
+    .chart-bar.reddit   { background: #FF4500; }
+    .chart-bar.telegram { background: #0088CC; }
+    .chart-time-axis {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        font-family: 'Consolas', 'SF Mono', monospace;
+        padding-top: 0.25rem;
+    }
+    .trend-legend {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+    .trend-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--text-sec);
+    }
+    .trend-legend-dot {
+        width: 10px;
+        height: 3px;
+    }
+    .trend-legend-dot.twitter  { background: #1DA1F2; }
+    .trend-legend-dot.bluesky  { background: #0085FF; }
+    .trend-legend-dot.mastodon { background: #6364FF; }
+    .trend-legend-dot.threads  { background: #333333; }
+
+    .radar-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .radar-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-lt);
+    }
+    .radar-item:last-child { border-bottom: none; }
+    .radar-rank {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        width: 2rem;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    .radar-rank.top { color: var(--accent-gold); }
+    .radar-word {
+        font-weight: 600;
+        color: var(--text-heading);
+        flex-shrink: 0;
+        min-width: 7rem;
+    }
+    .radar-bar-wrap {
+        flex: 1;
+        min-width: 0;
+    }
+    .radar-bar-bg {
+        height: 6px;
+        background: var(--bg-subtle);
+        overflow: hidden;
+    }
+    .radar-bar-fill {
+        height: 100%;
+        background: var(--accent-gold);
+        transition: width 0.4s ease;
+    }
+    .radar-bar-fill.high { background: var(--status-error, #B04040); }
+    .radar-bar-fill.mid  { background: var(--status-warning, #C8A96E); }
+    .radar-volume {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-sec);
+        width: 4rem;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .radar-affinity {
+        flex-shrink: 0;
+        width: 5rem;
+        text-align: center;
+    }
+    .affinity-tag {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.1rem 0.5rem;
+        border: 1px solid;
+    }
+    .affinity-tag.high    { background: var(--status-success-bg, #D5DDCA); color: var(--status-success, #6B8B4A); border-color: #B0C89A; }
+    .affinity-tag.medium  { background: var(--status-warning-bg, #F0E6D0); color: #8A7030; border-color: #D4C090; }
+    .affinity-tag.low     { background: var(--status-error-bg, #EEDCDC);   color: var(--status-error, #B04040);   border-color: #D4AAAA; }
+    @media (max-width: 768px) {
+        .radar-item { flex-wrap: wrap; }
+        .radar-bar-wrap { width: 100%; order: 10; }
+    }
+
+    .fire-post {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-lt);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease;
+    }
+    .fire-post:last-child { margin-bottom: 0; }
+    .fire-post.alert {
+        border-color: var(--status-error, #B04040);
+        border-left: 3px solid var(--status-error, #B04040);
+    }
+    .fire-post.caution {
+        border-color: var(--status-warning, #C8A96E);
+        border-left: 3px solid var(--status-warning, #C8A96E);
+    }
+    .fire-post-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .fire-post-time {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+    }
+    .fire-metrics {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .fire-metric {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.78rem;
+        color: var(--text-sec);
+    }
+    .fire-metric-value {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-weight: 600;
+    }
+    .fire-metric-delta {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    .fire-metric-delta.up   { color: var(--status-error, #B04040); }
+    .fire-metric-delta.down { color: var(--status-success, #6B8B4A); }
+    .fire-severity {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.15rem 0.6rem;
+        border: 1px solid;
+    }
+    .fire-severity.critical { background: var(--status-error-bg, #EEDCDC); color: var(--status-error, #B04040); border-color: #D4AAAA; }
+    .fire-severity.warning  { background: var(--status-warning-bg, #F0E6D0); color: #8A7030; border-color: #D4C090; }
+
+    .dashboard-widget-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-lt);
+    }
+    .dashboard-widget-header h3 {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-heading);
+        margin: 0;
+    }
+    .dashboard-widget-meta {
+        font-family: 'Consolas', 'SF Mono', monospace;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    .dashboard-section-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .dashboard-full-width {
+        margin-top: 1.25rem;
+    }
+
+    .queue-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+    @media (max-width: 768px) {
+        .queue-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .timeline-period-btns {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .timeline-period-btn {
+        padding: 0.25rem 0.6rem;
+        font-size: 0.75rem;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-lt);
+        color: var(--text-sec);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .timeline-period-btn:hover {
+        border-color: var(--accent-gold);
+    }
+    .timeline-period-btn.active {
+        background: var(--accent-gold-light, rgba(200, 150, 74, 0.15));
+        border-color: var(--accent-gold);
+        color: var(--text-heading);
+    }
 </style>
 
 {#appheader /}
@@ -326,66 +715,197 @@
     {#sidebar active="dashboard" /}
 
     <main class="ak-main">
-        <!-- Welcome -->
         <div class="dashboard-welcome">
-            <h2>ダッシュボード</h2>
-            <p>SNSアカウントの管理と投稿の状況を確認できます</p>
+            <h2>{msg:dashboard_title}</h2>
+            <p>{msg:dashboard_subtitle}</p>
         </div>
 
-        <!-- Stats Strip -->
         <div class="dashboard-stats-strip" id="dashboard-stats">
             <div class="dashboard-stat-cell">
-                <span class="dashboard-stat-label">総投稿</span>
+                <span class="dashboard-stat-label">{msg:dashboard_stat_total}</span>
                 <span class="dashboard-stat-value" id="stat-total">--</span>
             </div>
             <div class="dashboard-stat-cell">
-                <span class="dashboard-stat-label">公開済</span>
+                <span class="dashboard-stat-label">{msg:dashboard_stat_published}</span>
                 <span class="dashboard-stat-value" id="stat-published">--</span>
             </div>
             <div class="dashboard-stat-cell">
-                <span class="dashboard-stat-label">下書き</span>
+                <span class="dashboard-stat-label">{msg:dashboard_stat_drafts}</span>
                 <span class="dashboard-stat-value" id="stat-drafts">--</span>
             </div>
             <div class="dashboard-stat-cell">
-                <span class="dashboard-stat-label">連携</span>
+                <span class="dashboard-stat-label">{msg:dashboard_stat_accounts}</span>
                 <span class="dashboard-stat-value" id="stat-accounts">--</span>
             </div>
         </div>
 
-        <!-- Quick Actions -->
         <div class="ak-card" style="margin-bottom: 1.25rem;">
-            <div class="dashboard-section-title">クイックアクション</div>
+            <div class="dashboard-section-title">{msg:dashboard_quick_actions}</div>
             <div class="quick-actions-group">
-                <a href="/posts/compose" class="btn-primary">新規投稿を作成</a>
-                <a href="/accounts/connect" class="btn-secondary">アカウントを連携</a>
-                <a href="/posts" class="btn-outline">投稿一覧を表示</a>
+                <a href="/posts/compose" class="btn-primary">{msg:dashboard_action_new_post}</a>
+                <a href="/accounts/connect" class="btn-secondary">{msg:dashboard_action_connect}</a>
+                <a href="/posts" class="btn-outline">{msg:dashboard_action_view_posts}</a>
             </div>
         </div>
 
-        <!-- Bottom Content Grid -->
-        <div class="dashboard-content-grid">
-            <!-- Recent Posts -->
-            <div class="ak-card">
-                <div class="dashboard-section-title">最近の投稿</div>
-                <div id="recent-posts">
-                    <div class="empty-state">読み込み中...</div>
+        <div class="ak-card scan-line dashboard-full-width">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h3>
+                        <span class="pulse-dot active"></span>
+                        {msg:dashboard_pod_monitor_title}
+                    </h3>
+                    <span class="dashboard-section-label">{msg:dashboard_pod_monitor_desc}</span>
                 </div>
-                <a href="/posts" class="section-footer-link">すべての投稿を見る</a>
+                <div class="dashboard-widget-meta" id="pod-monitor-time"></div>
+            </div>
+            <div class="pod-stat-bar" id="pod-stats">
+                <div class="pod-stat-item"><span class="pod-stat-num info">--</span><span class="pod-stat-label">{msg:dashboard_pod_total_events}</span></div>
+                <div class="pod-stat-item"><span class="pod-stat-num success">--</span><span class="pod-stat-label">{msg:dashboard_pod_success}</span></div>
+                <div class="pod-stat-item"><span class="pod-stat-num warning">--</span><span class="pod-stat-label">{msg:dashboard_pod_warn}</span></div>
+                <div class="pod-stat-item"><span class="pod-stat-num error">--</span><span class="pod-stat-label">{msg:dashboard_pod_error}</span></div>
+            </div>
+            <div class="pod-monitor-log" id="pod-log-entries">
+                <div class="empty-state">{msg:dashboard_loading}</div>
+            </div>
+        </div>
+
+        <div class="ak-card dashboard-full-width">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h3>{msg:dashboard_queue_title}</h3>
+                    <span class="dashboard-section-label">{msg:dashboard_queue_desc}</span>
+                </div>
+            </div>
+            <div class="queue-grid" id="queue-status">
+                <div class="pod-stat-item"><span class="pod-stat-num warning">--</span><span class="pod-stat-label">{msg:dashboard_queue_pending}</span></div>
+                <div class="pod-stat-item"><span class="pod-stat-num info">--</span><span class="pod-stat-label">{msg:dashboard_queue_processing}</span></div>
+                <div class="pod-stat-item"><span class="pod-stat-num success">--</span><span class="pod-stat-label">{msg:dashboard_queue_completed}</span></div>
+                <div class="pod-stat-item"><span class="pod-stat-num error">--</span><span class="pod-stat-label">{msg:dashboard_queue_failed}</span></div>
+            </div>
+        </div>
+
+        <div class="ak-card dashboard-full-width">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h3>{msg:dashboard_timeline_title}</h3>
+                    <span class="dashboard-section-label">{msg:dashboard_timeline_desc}</span>
+                </div>
+                <div class="timeline-period-btns">
+                    <button class="timeline-period-btn" data-days="1">{msg:dashboard_timeline_24h}</button>
+                    <button class="timeline-period-btn active" data-days="7">{msg:dashboard_timeline_7d}</button>
+                    <button class="timeline-period-btn" data-days="30">{msg:dashboard_timeline_30d}</button>
+                </div>
+            </div>
+            <div id="timeline-legend" class="trend-legend"></div>
+            <div class="timeline-chart-area" id="timeline-chart">
+                <div class="empty-state">{msg:dashboard_loading}</div>
+            </div>
+        </div>
+
+        <div class="dashboard-content-grid">
+            <div class="ak-card">
+                <div class="dashboard-widget-header">
+                    <div>
+                        <h3>{msg:dashboard_trend_title}</h3>
+                        <span class="dashboard-section-label">{msg:dashboard_trend_desc}</span>
+                    </div>
+                </div>
+                <ul class="radar-list" id="trend-words">
+                    <li class="empty-state">{msg:dashboard_loading}</li>
+                </ul>
             </div>
 
-            <!-- Connected Accounts -->
             <div class="ak-card">
-                <div class="dashboard-section-title">連携済みアカウント</div>
-                <div id="connected-accounts">
-                    <div class="empty-state">読み込み中...</div>
+                <div class="dashboard-widget-header">
+                    <div>
+                        <h3>
+                            <span class="pulse-dot alert"></span>
+                            {msg:dashboard_fire_title}
+                        </h3>
+                        <span class="dashboard-section-label">{msg:dashboard_fire_desc}</span>
+                    </div>
+                    <div id="fire-severity-summary"></div>
                 </div>
-                <a href="/accounts/connect" class="section-footer-link">新しいアカウントを連携</a>
+                <div class="pod-stat-bar" id="fire-stats">
+                    <div class="pod-stat-item"><span class="pod-stat-num info">--</span><span class="pod-stat-label">{msg:dashboard_fire_monitored}</span></div>
+                    <div class="pod-stat-item"><span class="pod-stat-num success">--</span><span class="pod-stat-label">{msg:dashboard_fire_normal}</span></div>
+                    <div class="pod-stat-item"><span class="pod-stat-num warning">--</span><span class="pod-stat-label">{msg:dashboard_fire_caution}</span></div>
+                    <div class="pod-stat-item"><span class="pod-stat-num error">--</span><span class="pod-stat-label">{msg:dashboard_fire_critical}</span></div>
+                </div>
+                <div id="fire-posts">
+                    <div class="empty-state">{msg:dashboard_loading}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-content-grid">
+            <div class="ak-card">
+                <div class="dashboard-section-title">{msg:dashboard_recent_posts}</div>
+                <div id="recent-posts">
+                    <div class="empty-state">{msg:dashboard_loading}</div>
+                </div>
+                <a href="/posts" class="section-footer-link">{msg:dashboard_view_all_posts}</a>
+            </div>
+
+            <div class="ak-card">
+                <div class="dashboard-section-title">{msg:dashboard_connected_accounts}</div>
+                <div id="connected-accounts">
+                    <div class="empty-state">{msg:dashboard_loading}</div>
+                </div>
+                <a href="/accounts/connect" class="section-footer-link">{msg:dashboard_connect_new}</a>
             </div>
         </div>
     </main>
 </div>
 
 <script>
+    var I18N_DASHBOARD_ERROR_STATS = '{msg:dashboard_error_stats}';
+    var I18N_DASHBOARD_ERROR_STATS_TITLE = '{msg:dashboard_error_stats_title}';
+    var I18N_DASHBOARD_ERROR_POSTS = '{msg:dashboard_error_posts}';
+    var I18N_DASHBOARD_ERROR_POSTS_TITLE = '{msg:dashboard_error_posts_title}';
+    var I18N_DASHBOARD_ERROR_ACCOUNTS = '{msg:dashboard_error_accounts}';
+    var I18N_DASHBOARD_ERROR_ACCOUNTS_TITLE = '{msg:dashboard_error_accounts_title}';
+    var I18N_DASHBOARD_ERROR_MONITOR = '{msg:dashboard_error_monitor}';
+    var I18N_DASHBOARD_ERROR_MONITOR_TITLE = '{msg:dashboard_error_monitor_title}';
+    var I18N_DASHBOARD_ERROR_QUEUE = '{msg:dashboard_error_queue}';
+    var I18N_DASHBOARD_ERROR_QUEUE_TITLE = '{msg:dashboard_error_queue_title}';
+    var I18N_DASHBOARD_ERROR_TRENDS = '{msg:dashboard_error_trends}';
+    var I18N_DASHBOARD_ERROR_TRENDS_TITLE = '{msg:dashboard_error_trends_title}';
+    var I18N_DASHBOARD_ERROR_TIMELINE = '{msg:dashboard_error_timeline}';
+    var I18N_DASHBOARD_ERROR_TIMELINE_TITLE = '{msg:dashboard_error_timeline_title}';
+    var I18N_DASHBOARD_ERROR_FIRE = '{msg:dashboard_error_fire}';
+    var I18N_DASHBOARD_ERROR_FIRE_TITLE = '{msg:dashboard_error_fire_title}';
+    var I18N_DASHBOARD_EMPTY_POSTS = '{msg:dashboard_empty_posts}';
+    var I18N_DASHBOARD_EMPTY_POSTS_LOAD_FAILED = '{msg:dashboard_empty_posts_load_failed}';
+    var I18N_DASHBOARD_EMPTY_ACCOUNTS = '{msg:dashboard_empty_accounts}';
+    var I18N_DASHBOARD_EMPTY_ACCOUNTS_LOAD_FAILED = '{msg:dashboard_empty_accounts_load_failed}';
+    var I18N_DASHBOARD_EMPTY_LOG = '{msg:dashboard_empty_log}';
+    var I18N_DASHBOARD_EMPTY_LOG_LOAD_FAILED = '{msg:dashboard_empty_log_load_failed}';
+    var I18N_DASHBOARD_EMPTY_TRENDS = '{msg:dashboard_empty_trends}';
+    var I18N_DASHBOARD_EMPTY_TRENDS_LOAD_FAILED = '{msg:dashboard_empty_trends_load_failed}';
+    var I18N_DASHBOARD_EMPTY_TIMELINE = '{msg:dashboard_empty_timeline}';
+    var I18N_DASHBOARD_EMPTY_TIMELINE_LOAD_FAILED = '{msg:dashboard_empty_timeline_load_failed}';
+    var I18N_DASHBOARD_EMPTY_FIRE = '{msg:dashboard_empty_fire}';
+    var I18N_DASHBOARD_EMPTY_FIRE_LOAD_FAILED = '{msg:dashboard_empty_fire_load_failed}';
+    var I18N_DASHBOARD_LAST_UPDATED = '{msg:dashboard_last_updated}';
+    var I18N_DASHBOARD_POST_SUCCESS_RATE = '{msg:dashboard_post_success_rate}';
+    var I18N_DASHBOARD_STATUS_DRAFT = '{msg:dashboard_status_draft}';
+    var I18N_DASHBOARD_STATUS_SCHEDULED = '{msg:dashboard_status_scheduled}';
+    var I18N_DASHBOARD_STATUS_PUBLISHED = '{msg:dashboard_status_published}';
+    var I18N_DASHBOARD_STATUS_FAILED = '{msg:dashboard_status_failed}';
+    var I18N_DASHBOARD_STATUS_UNKNOWN = '{msg:dashboard_status_unknown}';
+    var I18N_DASHBOARD_AFFINITY_HIGH = '{msg:dashboard_affinity_high}';
+    var I18N_DASHBOARD_AFFINITY_MEDIUM = '{msg:dashboard_affinity_medium}';
+    var I18N_DASHBOARD_AFFINITY_LOW = '{msg:dashboard_affinity_low}';
+    var I18N_DASHBOARD_FIRE_ANOMALY_DETECTED = '{msg:dashboard_fire_anomaly_detected}';
+    var I18N_DASHBOARD_FIRE_CAUTION_LABEL = '{msg:dashboard_fire_caution_label}';
+    var I18N_DASHBOARD_FIRE_COUNT_SUFFIX = '{msg:dashboard_fire_count_suffix}';
+    var I18N_DASHBOARD_FIRE_ENGAGEMENT_RATE = '{msg:dashboard_fire_engagement_rate}';
+    var I18N_DASHBOARD_FIRE_IMPRESSIONS = '{msg:dashboard_fire_impressions}';
+    var I18N_DASHBOARD_FIRE_SEVERITY_ANOMALY = '{msg:dashboard_fire_severity_anomaly}';
+    var I18N_DASHBOARD_FIRE_SEVERITY_CAUTION = '{msg:dashboard_fire_severity_caution}';
+
     document.addEventListener('DOMContentLoaded', function() {
         var token = localStorage.getItem('accessToken');
         if (!token) {
@@ -395,6 +915,22 @@
         loadDashboardStats(token);
         loadRecentPosts(token);
         loadConnectedAccounts(token);
+        loadPodMonitor(token);
+        loadQueueStatus(token);
+        loadTrendWords(token);
+        loadPlatformTimeline(token, 7);
+        loadFireWatch(token);
+
+        document.querySelectorAll('.timeline-period-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.timeline-period-btn').forEach(function(b) {
+                    b.classList.remove('active');
+                });
+                btn.classList.add('active');
+                var days = parseInt(btn.getAttribute('data-days'), 10);
+                loadPlatformTimeline(token, days);
+            });
+        });
     });
 
     function handleAuthError(status) {
@@ -423,7 +959,7 @@
             document.getElementById('stat-drafts').textContent = data.draftPosts != null ? data.draftPosts : 0;
             document.getElementById('stat-accounts').textContent = data.connectedAccounts != null ? data.connectedAccounts : 0;
         } catch (err) {
-            showToast('error', 'データ取得エラー', 'ダッシュボード情報を読み込めませんでした');
+            showToast('error', I18N_DASHBOARD_ERROR_STATS_TITLE, I18N_DASHBOARD_ERROR_STATS);
         }
     }
 
@@ -435,14 +971,14 @@
             });
             if (handleAuthError(response.status)) return;
             if (!response.ok) {
-                container.innerHTML = '<div class="empty-state">投稿の読み込みに失敗しました</div>';
+                container.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_POSTS_LOAD_FAILED + '</div>';
                 showApiError(response);
                 return;
             }
             var data = await response.json();
             var posts = data.content || data;
             if (!posts || posts.length === 0) {
-                container.innerHTML = '<div class="empty-state">まだ投稿がありません。最初の投稿を作成しましょう！</div>';
+                container.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_POSTS + '</div>';
                 return;
             }
             var html = '';
@@ -461,8 +997,8 @@
             }
             container.innerHTML = html;
         } catch (err) {
-            container.innerHTML = '<div class="empty-state">投稿の読み込みに失敗しました</div>';
-            showToast('error', '通信エラー', '投稿情報を取得できませんでした');
+            container.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_POSTS_LOAD_FAILED + '</div>';
+            showToast('error', I18N_DASHBOARD_ERROR_POSTS_TITLE, I18N_DASHBOARD_ERROR_POSTS);
         }
     }
 
@@ -474,13 +1010,13 @@
             });
             if (handleAuthError(response.status)) return;
             if (!response.ok) {
-                container.innerHTML = '<div class="empty-state">アカウント情報の読み込みに失敗しました</div>';
+                container.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_ACCOUNTS_LOAD_FAILED + '</div>';
                 showApiError(response);
                 return;
             }
             var accounts = await response.json();
             if (!accounts || accounts.length === 0) {
-                container.innerHTML = '<div class="empty-state">SNSアカウントが連携されていません</div>';
+                container.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_ACCOUNTS + '</div>';
                 return;
             }
             var html = '<div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">';
@@ -493,19 +1029,272 @@
             html += '</div>';
             container.innerHTML = html;
         } catch (err) {
-            container.innerHTML = '<div class="empty-state">アカウント情報の読み込みに失敗しました</div>';
-            showToast('error', '通信エラー', 'アカウント情報を取得できませんでした');
+            container.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_ACCOUNTS_LOAD_FAILED + '</div>';
+            showToast('error', I18N_DASHBOARD_ERROR_ACCOUNTS_TITLE, I18N_DASHBOARD_ERROR_ACCOUNTS);
+        }
+    }
+
+    async function loadPodMonitor(token) {
+        var logContainer = document.getElementById('pod-log-entries');
+        try {
+            var response = await fetch('/api/v1/dashboard/pod-monitor?limit=20', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                logContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_LOG_LOAD_FAILED + '</div>';
+                showApiError(response);
+                return;
+            }
+            var data = await response.json();
+
+            var statsItems = document.querySelectorAll('#pod-stats .pod-stat-item .pod-stat-num');
+            if (statsItems.length >= 4) {
+                statsItems[0].textContent = data.totalEvents;
+                statsItems[1].textContent = data.successCount;
+                statsItems[2].textContent = data.warnCount;
+                statsItems[3].textContent = data.errorCount;
+            }
+
+            var now = new Date();
+            var timeStr = String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            var timeEl = document.getElementById('pod-monitor-time');
+            if (timeEl) timeEl.textContent = I18N_DASHBOARD_LAST_UPDATED + ' ' + timeStr;
+
+            if (!data.entries || data.entries.length === 0) {
+                logContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_LOG + '</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < data.entries.length; i++) {
+                var entry = data.entries[i];
+                var platformHtml = entry.platform
+                    ? '<span class="pod-log-platform"><span class="platform-badge ' + escapeHtmlGlobal(entry.platform) + '">' + escapeHtmlGlobal(entry.platform) + '</span></span>'
+                    : '';
+                html += '<div class="pod-log-entry">' +
+                    '<span class="pod-log-timestamp">' + escapeHtmlGlobal(entry.timestamp) + '</span>' +
+                    '<span class="pod-log-level ' + escapeHtmlGlobal(entry.level) + '">' + escapeHtmlGlobal(entry.level.toUpperCase()) + '</span>' +
+                    platformHtml +
+                    '<span class="pod-log-message">' + escapeHtmlGlobal(entry.message) + '</span>' +
+                    '</div>';
+            }
+            logContainer.innerHTML = html;
+        } catch (err) {
+            logContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_LOG_LOAD_FAILED + '</div>';
+            showToast('error', I18N_DASHBOARD_ERROR_MONITOR_TITLE, I18N_DASHBOARD_ERROR_MONITOR);
+        }
+    }
+
+    async function loadQueueStatus(token) {
+        try {
+            var response = await fetch('/api/v1/dashboard/queue-status', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                showApiError(response);
+                return;
+            }
+            var data = await response.json();
+            var items = document.querySelectorAll('#queue-status .pod-stat-item .pod-stat-num');
+            if (items.length >= 4) {
+                items[0].textContent = data.pending;
+                items[1].textContent = data.processing;
+                items[2].textContent = data.completed;
+                items[3].textContent = data.failed;
+            }
+        } catch (err) {
+            showToast('error', I18N_DASHBOARD_ERROR_QUEUE_TITLE, I18N_DASHBOARD_ERROR_QUEUE);
+        }
+    }
+
+    async function loadTrendWords(token) {
+        var container = document.getElementById('trend-words');
+        try {
+            var response = await fetch('/api/v1/dashboard/trend-words', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                container.innerHTML = '<li class="empty-state">' + I18N_DASHBOARD_EMPTY_TRENDS_LOAD_FAILED + '</li>';
+                showApiError(response);
+                return;
+            }
+            var words = await response.json();
+            if (!words || words.length === 0) {
+                container.innerHTML = '<li class="empty-state">' + I18N_DASHBOARD_EMPTY_TRENDS + '</li>';
+                return;
+            }
+            var maxVolume = words[0].volume;
+            var html = '';
+            for (var i = 0; i < words.length; i++) {
+                var w = words[i];
+                var rankClass = w.rank <= 3 ? 'top' : '';
+                var barPercent = maxVolume > 0 ? Math.round(w.volume / maxVolume * 100) : 0;
+                var barClass = w.affinity === 'high' ? 'high' : (w.affinity === 'medium' ? 'mid' : '');
+                var affinityLabel = w.affinity === 'high' ? I18N_DASHBOARD_AFFINITY_HIGH : (w.affinity === 'medium' ? I18N_DASHBOARD_AFFINITY_MEDIUM : I18N_DASHBOARD_AFFINITY_LOW);
+                html += '<li class="radar-item">' +
+                    '<span class="radar-rank ' + rankClass + '">' + String(w.rank).padStart(2, '0') + '</span>' +
+                    '<span class="radar-word">' + escapeHtmlGlobal(w.word) + '</span>' +
+                    '<div class="radar-bar-wrap"><div class="radar-bar-bg"><div class="radar-bar-fill ' + barClass + '" style="width:' + barPercent + '%"></div></div></div>' +
+                    '<span class="radar-volume">' + formatVolume(w.volume) + '</span>' +
+                    '<span class="radar-affinity"><span class="affinity-tag ' + escapeHtmlGlobal(w.affinity) + '">' + affinityLabel + '</span></span>' +
+                    '</li>';
+            }
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = '<li class="empty-state">' + I18N_DASHBOARD_EMPTY_TRENDS_LOAD_FAILED + '</li>';
+            showToast('error', I18N_DASHBOARD_ERROR_TRENDS_TITLE, I18N_DASHBOARD_ERROR_TRENDS);
+        }
+    }
+
+    async function loadPlatformTimeline(token, days) {
+        var chartContainer = document.getElementById('timeline-chart');
+        var legendContainer = document.getElementById('timeline-legend');
+        try {
+            var response = await fetch('/api/v1/dashboard/platform-timeline?days=' + days, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                chartContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_TIMELINE_LOAD_FAILED + '</div>';
+                showApiError(response);
+                return;
+            }
+            var platforms = await response.json();
+            if (!platforms || platforms.length === 0) {
+                chartContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_TIMELINE + '</div>';
+                legendContainer.innerHTML = '';
+                return;
+            }
+
+            var legendHtml = '';
+            for (var p = 0; p < platforms.length; p++) {
+                var pName = platforms[p].platform.toLowerCase();
+                legendHtml += '<div class="trend-legend-item"><span class="trend-legend-dot ' + escapeHtmlGlobal(pName) + '"></span>' + escapeHtmlGlobal(pName) + '</div>';
+            }
+            legendContainer.innerHTML = legendHtml;
+
+            var chartHtml = '';
+            for (var p = 0; p < platforms.length; p++) {
+                var pl = platforms[p];
+                var pClass = pl.platform.toLowerCase();
+                chartHtml += '<div class="chart-row">';
+                chartHtml += '<div class="chart-row-header">';
+                chartHtml += '<span class="platform-badge ' + escapeHtmlGlobal(pClass) + '">' + escapeHtmlGlobal(pl.platform) + '</span>';
+                chartHtml += '<span style="font-size:0.8rem; color:var(--text-sec);">' + I18N_DASHBOARD_POST_SUCCESS_RATE + '</span>';
+                chartHtml += '<span class="chart-row-value">' + pl.overallRate.toFixed(1) + '%</span>';
+                chartHtml += '</div>';
+                chartHtml += '<div class="css-line-chart">';
+                if (pl.dailyRates) {
+                    for (var d = 0; d < pl.dailyRates.length; d++) {
+                        var heightPct = Math.max(pl.dailyRates[d].rate, 1);
+                        chartHtml += '<div class="chart-bar ' + escapeHtmlGlobal(pClass) + '" style="height:' + heightPct + '%"></div>';
+                    }
+                }
+                chartHtml += '</div>';
+                chartHtml += '</div>';
+            }
+
+            if (platforms.length > 0 && platforms[0].dailyRates && platforms[0].dailyRates.length > 0) {
+                var rates = platforms[0].dailyRates;
+                chartHtml += '<div class="chart-time-axis">';
+                var step = Math.max(1, Math.floor(rates.length / 7));
+                for (var d = 0; d < rates.length; d += step) {
+                    chartHtml += '<span>' + escapeHtmlGlobal(rates[d].date) + '</span>';
+                }
+                chartHtml += '</div>';
+            }
+
+            chartContainer.innerHTML = chartHtml;
+        } catch (err) {
+            chartContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_TIMELINE_LOAD_FAILED + '</div>';
+            showToast('error', I18N_DASHBOARD_ERROR_TIMELINE_TITLE, I18N_DASHBOARD_ERROR_TIMELINE);
+        }
+    }
+
+    async function loadFireWatch(token) {
+        var postsContainer = document.getElementById('fire-posts');
+        try {
+            var response = await fetch('/api/v1/dashboard/fire-watch', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (handleAuthError(response.status)) return;
+            if (!response.ok) {
+                postsContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_FIRE_LOAD_FAILED + '</div>';
+                showApiError(response);
+                return;
+            }
+            var data = await response.json();
+
+            var statsItems = document.querySelectorAll('#fire-stats .pod-stat-item .pod-stat-num');
+            if (statsItems.length >= 4) {
+                statsItems[0].textContent = data.monitoredCount;
+                statsItems[1].textContent = data.normalCount;
+                statsItems[2].textContent = data.cautionCount;
+                statsItems[3].textContent = data.criticalCount;
+            }
+
+            var summaryEl = document.getElementById('fire-severity-summary');
+            if (summaryEl) {
+                var summaryHtml = '';
+                if (data.criticalCount > 0) {
+                    summaryHtml += '<span class="fire-severity critical">' + I18N_DASHBOARD_FIRE_ANOMALY_DETECTED + ' ' + data.criticalCount + I18N_DASHBOARD_FIRE_COUNT_SUFFIX + '</span> ';
+                }
+                if (data.cautionCount > 0) {
+                    summaryHtml += '<span class="fire-severity warning">' + I18N_DASHBOARD_FIRE_CAUTION_LABEL + ' ' + data.cautionCount + I18N_DASHBOARD_FIRE_COUNT_SUFFIX + '</span>';
+                }
+                summaryEl.innerHTML = summaryHtml;
+            }
+
+            if (!data.alertPosts || data.alertPosts.length === 0) {
+                postsContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_FIRE + '</div>';
+                return;
+            }
+
+            var html = '';
+            for (var i = 0; i < data.alertPosts.length; i++) {
+                var post = data.alertPosts[i];
+                var severityClass = post.severity === 'critical' ? 'alert' : 'caution';
+                var severityLabel = post.severity === 'critical' ? I18N_DASHBOARD_FIRE_SEVERITY_ANOMALY : I18N_DASHBOARD_FIRE_SEVERITY_CAUTION;
+                var severityBadgeClass = post.severity === 'critical' ? 'critical' : 'warning';
+                var platform = post.platform ? post.platform.toLowerCase() : '';
+                var timeStr = formatDate(post.publishedAt);
+
+                html += '<div class="fire-post ' + severityClass + '">';
+                html += '<div class="fire-post-header">';
+                html += '<span class="fire-severity ' + severityBadgeClass + '">' + severityLabel + '</span>';
+                if (platform) {
+                    html += '<span class="platform-badge ' + escapeHtmlGlobal(platform) + '">' + escapeHtmlGlobal(post.platform) + '</span>';
+                }
+                html += '<span class="fire-post-time">' + escapeHtmlGlobal(timeStr) + '</span>';
+                html += '</div>';
+                html += '<div class="fire-metrics">';
+                html += '<div class="fire-metric">' + I18N_DASHBOARD_FIRE_ENGAGEMENT_RATE + ' <span class="fire-metric-value">' + post.engagementRate.toFixed(1) + '%</span>';
+                var deltaClass = post.engagementDelta > 0 ? 'up' : 'down';
+                html += ' <span class="fire-metric-delta ' + deltaClass + '">' + (post.engagementDelta > 0 ? '+' : '') + post.engagementDelta.toFixed(1) + 'pt</span>';
+                html += '</div>';
+                html += '<div class="fire-metric">' + I18N_DASHBOARD_FIRE_IMPRESSIONS + ' <span class="fire-metric-value">' + formatVolume(post.impressionsCount) + '</span></div>';
+                html += '</div>';
+                html += '</div>';
+            }
+            postsContainer.innerHTML = html;
+        } catch (err) {
+            postsContainer.innerHTML = '<div class="empty-state">' + I18N_DASHBOARD_EMPTY_FIRE_LOAD_FAILED + '</div>';
+            showToast('error', I18N_DASHBOARD_ERROR_FIRE_TITLE, I18N_DASHBOARD_ERROR_FIRE);
         }
     }
 
     function getStatusLabel(status) {
         var labels = {
-            'DRAFT': '下書き',
-            'SCHEDULED': '予約済み',
-            'PUBLISHED': '公開済み',
-            'FAILED': '失敗'
+            'DRAFT': I18N_DASHBOARD_STATUS_DRAFT,
+            'SCHEDULED': I18N_DASHBOARD_STATUS_SCHEDULED,
+            'PUBLISHED': I18N_DASHBOARD_STATUS_PUBLISHED,
+            'FAILED': I18N_DASHBOARD_STATUS_FAILED
         };
-        return labels[status] || status || '不明';
+        return labels[status] || status || I18N_DASHBOARD_STATUS_UNKNOWN;
     }
 
     function formatDate(dateStr) {
@@ -527,17 +1316,16 @@
         return str.length > len ? str.substring(0, len) + '...' : str;
     }
 
+    function formatVolume(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return String(num);
+    }
+
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.classList.toggle('ak-sidebar--open');
-        }
     }
 </script>
 {/body}

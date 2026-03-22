@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>エージェント - Akazukin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--font-sans:'Noto Sans JP','Segoe UI','Meiryo','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+--font-mono:'Courier New',monospace;
+--sp-xs:0.25rem;--sp-sm:0.5rem;--sp-md:1rem;--sp-lg:1.5rem;--sp-xl:2rem;--sp-2xl:3rem;
+--radius-sm:0.2rem;--radius-md:0.4rem;--radius-lg:0.6rem;
+--shadow-sm:0 1px 4px rgba(75,65,50,0.10);--shadow-md:0 2px 8px rgba(75,65,50,0.15);--shadow-lg:0 4px 16px rgba(75,65,50,0.18);
+--bg-deep:#C4BDA6;--bg-main:#DAD4BE;--bg-surface:#EDE8D5;--bg-elevated:#F0EBD8;--bg-subtle:#E4DECC;--bg-field:#DDD6BB;
+--border:#B8B19C;--border-lt:#CCC5AE;--border-sub:#DDD6BB;
+--text-heading:#3D3A32;--text-primary:#4D493E;--text-body:#5A5548;--text-sec:#7A7464;--text-muted:#7A7464;--text-faint:#8A8470;
+--accent-gold:#C8964A;--accent-gold-light:#F2E6D0;--accent-gold-hover:#B5853E;
+--status-success:#6B8B4A;--status-warning:#C8A96E;--status-error:#B04040;--status-info:#5A8BA0;
+--transition:0.2s ease;
+--agent-director:#C8964A;--agent-director-bg:#F2E6D0;
+--agent-analyst:#5A8BA0;--agent-analyst-bg:#D6E5EC;
+--agent-composer:#6B8B4A;--agent-composer-bg:#DEE8D4;
+--agent-transformer:#8B6BAA;--agent-transformer-bg:#E2D8EC;
+--agent-scheduler:#C8864A;--agent-scheduler-bg:#F2DFC8;
+--agent-sentinel:#B04040;--agent-sentinel-bg:#EEDADA;
+--agent-compliance:#4A8B8B;--agent-compliance-bg:#D4E8E8;
+}
+html{font-size:16px}
+body{
+font-family:var(--font-sans);
+background:var(--bg-main);
+color:var(--text-body);
+min-height:100vh;
+padding:var(--sp-xl);
+}
+.page-frame{
+max-width:72rem;
+margin:0 auto;
+position:relative;
+}
+.page-frame::before{
+content:'';position:absolute;top:calc(var(--sp-md) * -1);left:calc(var(--sp-md) * -1);right:calc(var(--sp-md) * -1);bottom:calc(var(--sp-md) * -1);
+border:1px solid var(--border);pointer-events:none;
+}
+.page-frame::after{
+content:'';position:absolute;top:calc(var(--sp-sm) * -1);left:calc(var(--sp-sm) * -1);right:calc(var(--sp-sm) * -1);bottom:calc(var(--sp-sm) * -1);
+border:1px solid var(--border-lt);pointer-events:none;
+}
+.section-title{
+font-size:1.2rem;font-weight:500;color:var(--text-heading);
+letter-spacing:0.15em;
+padding:0.6rem 1.2rem;
+background:var(--bg-surface);
+border:1px solid var(--border);
+position:relative;
+display:flex;align-items:center;gap:var(--sp-sm);
+}
+.section-title::before{
+content:'';width:3px;height:1.4rem;background:var(--accent-gold);flex-shrink:0;
+}
+.section-title .sub{
+font-size:0.75rem;color:var(--text-muted);letter-spacing:0.2em;
+font-family:var(--font-mono);
+margin-left:auto;
+}
+.geo-line{
+height:1px;background:repeating-linear-gradient(90deg,var(--border) 0,var(--border) 8px,transparent 8px,transparent 16px);
+margin:0.3rem 0;
+}
+.geo-diamond{
+width:8px;height:8px;background:var(--accent-gold);transform:rotate(45deg);
+display:inline-block;flex-shrink:0;
+}
+.geo-corner{
+position:absolute;width:12px;height:12px;border-color:var(--border);border-style:solid;
+}
+.geo-corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.geo-corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.geo-corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px}
+.geo-corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+
+.board{
+background:var(--bg-main);
+border:1px solid var(--border);
+padding:var(--sp-lg);
+margin-top:0.3rem;
+position:relative;
+}
+.board-bg-pattern{
+position:absolute;inset:0;
+background:
+  repeating-linear-gradient(0deg,transparent,transparent var(--sp-2xl),var(--border-sub) var(--sp-2xl),var(--border-sub) calc(var(--sp-2xl) + 1px)),
+  repeating-linear-gradient(90deg,transparent,transparent var(--sp-2xl),var(--border-sub) var(--sp-2xl),var(--border-sub) calc(var(--sp-2xl) + 1px));
+opacity:0.4;pointer-events:none;
+}
+
+.agent-pool{
+display:flex;flex-wrap:wrap;gap:var(--sp-md);
+margin-bottom:var(--sp-lg);
+position:relative;z-index:1;
+}
+.agent-pool-label{
+font-size:0.7rem;color:var(--text-muted);letter-spacing:0.2em;
+font-family:var(--font-mono);
+margin-bottom:var(--sp-sm);
+text-transform:uppercase;
+}
+.agent-card{
+background:var(--bg-elevated);
+border:1px solid var(--border);
+border-radius:var(--radius-md);
+padding:0.7rem var(--sp-md);
+min-width:8rem;
+flex:1 1 8rem;
+position:relative;
+cursor:grab;
+transition:box-shadow var(--transition);
+display:flex;flex-direction:column;gap:var(--sp-xs);
+}
+.agent-card::before,.agent-card::after{
+position:absolute;font-size:0.85rem;color:var(--border);line-height:1;pointer-events:none;
+}
+.agent-card::before{content:'[';top:var(--sp-xs);left:var(--sp-xs)}
+.agent-card::after{content:']';bottom:var(--sp-xs);right:var(--sp-xs)}
+.agent-card:hover{
+box-shadow:var(--shadow-md);
+}
+.agent-card .card-accent{
+position:absolute;top:0;left:0;width:4px;height:100%;
+}
+.agent-card .card-id{
+font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);
+letter-spacing:0.15em;
+}
+.agent-card .card-name{
+font-size:0.95rem;font-weight:500;color:var(--text-heading);
+}
+.agent-card .card-role{
+font-size:0.75rem;color:var(--text-sec);
+}
+.agent-card .card-dot{
+position:absolute;right:var(--sp-sm);top:50%;transform:translateY(-50%);
+width:6px;height:6px;border-radius:50%;
+}
+.agent-card.director .card-accent,.agent-card.director .card-dot{background:var(--agent-director)}
+.agent-card.analyst .card-accent,.agent-card.analyst .card-dot{background:var(--agent-analyst)}
+.agent-card.composer .card-accent,.agent-card.composer .card-dot{background:var(--agent-composer)}
+.agent-card.transformer .card-accent,.agent-card.transformer .card-dot{background:var(--agent-transformer)}
+.agent-card.scheduler .card-accent,.agent-card.scheduler .card-dot{background:var(--agent-scheduler)}
+.agent-card.sentinel .card-accent,.agent-card.sentinel .card-dot{background:var(--agent-sentinel)}
+.agent-card.compliance .card-accent,.agent-card.compliance .card-dot{background:var(--agent-compliance)}
+
+.pipeline-area{
+position:relative;z-index:1;
+background:var(--bg-surface);
+border:1px solid var(--border);
+border-radius:var(--radius-md);
+padding:var(--sp-lg);
+min-height:10rem;
+}
+.pipeline-area-label{
+font-size:0.7rem;color:var(--text-muted);letter-spacing:0.2em;
+font-family:var(--font-mono);
+margin-bottom:var(--sp-sm);
+display:flex;align-items:center;gap:var(--sp-sm);
+}
+.pipeline-area-label .geo-diamond{width:5px;height:5px}
+.pipeline-drop-hint{
+font-size:0.75rem;color:var(--text-muted);
+border:1px dashed var(--border);
+padding:var(--sp-md);
+text-align:center;
+display:none;
+}
+.pipeline-flow{
+display:flex;align-items:stretch;gap:0;
+overflow-x:auto;
+padding-bottom:var(--sp-sm);
+}
+.pipeline-node{
+flex:0 0 auto;
+display:flex;flex-direction:column;align-items:center;
+position:relative;
+}
+.pipeline-card{
+background:var(--bg-elevated);
+border:2px solid var(--border);
+border-radius:var(--radius-md);
+padding:var(--sp-sm) var(--sp-md);
+min-width:9rem;
+max-width:12rem;
+position:relative;
+display:flex;flex-direction:column;gap:var(--sp-xs);
+}
+.pipeline-card::before,.pipeline-card::after{
+position:absolute;font-size:0.85rem;color:var(--border);line-height:1;pointer-events:none;
+}
+.pipeline-card::before{content:'[';top:var(--sp-xs);left:var(--sp-xs)}
+.pipeline-card::after{content:']';bottom:var(--sp-xs);right:var(--sp-xs)}
+.pipeline-card .p-accent{
+position:absolute;top:0;left:0;right:0;height:3px;
+}
+.pipeline-card .p-step{
+font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);
+letter-spacing:0.15em;
+}
+.pipeline-card .p-name{
+font-size:0.9rem;font-weight:500;color:var(--text-heading);
+}
+.pipeline-card .p-role{
+font-size:0.7rem;color:var(--text-sec);
+}
+.pipeline-card .p-io{
+margin-top:var(--sp-xs);
+display:flex;flex-direction:column;gap:0.15rem;
+}
+.pipeline-card .p-io span{
+font-size:0.6rem;color:var(--text-muted);font-family:var(--font-mono);
+}
+.pipeline-card.director{border-color:var(--agent-director)}
+.pipeline-card.director .p-accent{background:var(--agent-director)}
+.pipeline-card.analyst{border-color:var(--agent-analyst)}
+.pipeline-card.analyst .p-accent{background:var(--agent-analyst)}
+.pipeline-card.composer{border-color:var(--agent-composer)}
+.pipeline-card.composer .p-accent{background:var(--agent-composer)}
+.pipeline-card.transformer{border-color:var(--agent-transformer)}
+.pipeline-card.transformer .p-accent{background:var(--agent-transformer)}
+.pipeline-card.scheduler{border-color:var(--agent-scheduler)}
+.pipeline-card.scheduler .p-accent{background:var(--agent-scheduler)}
+.pipeline-card.sentinel{border-color:var(--agent-sentinel)}
+.pipeline-card.sentinel .p-accent{background:var(--agent-sentinel)}
+.pipeline-card.compliance{border-color:var(--agent-compliance)}
+.pipeline-card.compliance .p-accent{background:var(--agent-compliance)}
+
+.pipeline-arrow{
+display:flex;align-items:center;justify-content:center;
+padding:0 var(--sp-xs);
+flex-shrink:0;
+}
+.pipeline-arrow svg{
+width:2rem;height:1.5rem;
+}
+.pipeline-arrow svg line,.pipeline-arrow svg polyline{
+stroke:var(--border);stroke-width:1.5;fill:none;
+}
+.pipeline-controls{
+margin-top:var(--sp-md);
+display:flex;gap:var(--sp-sm);
+justify-content:flex-end;
+}
+.btn{
+font-family:var(--font-sans);
+font-size:0.75rem;
+letter-spacing:0.1em;
+padding:0.4rem 1.2rem;
+border:1px solid var(--border);
+border-radius:var(--radius-sm);
+background:var(--bg-elevated);
+color:var(--text-primary);
+cursor:pointer;
+transition:all var(--transition);
+}
+.btn:hover{
+background:var(--accent-gold-light);border-color:var(--accent-gold);
+}
+.btn.primary{
+background:var(--accent-gold);color:#fff;border-color:var(--accent-gold);
+}
+.btn.primary:hover{
+background:var(--accent-gold-hover);
+}
+
+.section-gap{height:var(--sp-xl)}
+
+.timeline-area{
+background:var(--bg-main);
+border:1px solid var(--border);
+border-radius:var(--radius-md);
+padding:var(--sp-lg);
+margin-top:0.3rem;
+position:relative;
+}
+.tl-header{
+display:flex;align-items:center;gap:var(--sp-md);
+margin-bottom:var(--sp-md);
+padding-bottom:var(--sp-sm);
+border-bottom:1px solid var(--border-lt);
+}
+.tl-header .tl-stat{
+font-size:0.7rem;color:var(--text-sec);
+font-family:var(--font-mono);
+display:flex;align-items:center;gap:var(--sp-xs);
+}
+.tl-header .tl-stat .val{
+font-weight:500;color:var(--text-heading);font-size:0.85rem;
+}
+.tl-chart{
+position:relative;
+padding-left:8rem;
+}
+.tl-axis{
+position:absolute;top:0;left:8rem;right:0;
+display:flex;justify-content:space-between;
+padding-bottom:var(--sp-sm);
+border-bottom:1px solid var(--border-lt);
+}
+.tl-axis span{
+font-family:var(--font-mono);font-size:0.6rem;color:var(--text-muted);
+}
+.tl-rows{
+margin-top:1.8rem;
+display:flex;flex-direction:column;gap:var(--sp-sm);
+}
+.tl-row{
+display:flex;align-items:center;
+min-height:2.2rem;
+position:relative;
+}
+.tl-row-label{
+position:absolute;left:-8rem;width:7.5rem;
+text-align:right;
+padding-right:var(--sp-sm);
+display:flex;flex-direction:column;
+}
+.tl-row-label .tl-name{
+font-size:0.8rem;font-weight:500;color:var(--text-heading);
+}
+.tl-row-label .tl-sub{
+font-size:0.6rem;color:var(--text-muted);font-family:var(--font-mono);
+}
+.tl-bar-track{
+flex:1;
+height:2.2rem;
+position:relative;
+background:repeating-linear-gradient(90deg,transparent,transparent calc(100% / 12 - 1px),var(--border-sub) calc(100% / 12 - 1px),var(--border-sub) calc(100% / 12));
+}
+.tl-bar{
+position:absolute;
+top:0.3rem;
+height:1.6rem;
+display:flex;
+align-items:center;
+padding:0 var(--sp-sm);
+font-size:0.6rem;
+font-family:var(--font-mono);
+color:#fff;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+border-radius:var(--radius-sm);
+}
+.tl-bar.director{background:var(--agent-director)}
+.tl-bar.analyst{background:var(--agent-analyst)}
+.tl-bar.composer{background:var(--agent-composer)}
+.tl-bar.transformer{background:var(--agent-transformer)}
+.tl-bar.scheduler{background:var(--agent-scheduler)}
+.tl-bar.sentinel{background:var(--agent-sentinel)}
+.tl-bar.compliance{background:var(--agent-compliance)}
+
+.tl-bar .bar-dur{
+margin-left:auto;
+opacity:0.85;
+padding-left:var(--sp-sm);
+}
+.tl-legend{
+margin-top:var(--sp-md);
+padding-top:var(--sp-sm);
+border-top:1px solid var(--border-lt);
+display:flex;flex-wrap:wrap;gap:var(--sp-md);
+}
+.tl-legend-item{
+display:flex;align-items:center;gap:var(--sp-xs);
+font-size:0.7rem;color:var(--text-sec);
+}
+.tl-legend-item .swatch{
+width:12px;height:12px;border:1px solid var(--border);
+}
+
+.tl-io-detail{
+margin-top:1.2rem;
+background:var(--bg-surface);
+border:1px solid var(--border-lt);
+border-radius:var(--radius-md);
+padding:var(--sp-md);
+}
+.tl-io-detail .io-title{
+font-size:0.7rem;color:var(--text-muted);letter-spacing:0.15em;
+font-family:var(--font-mono);
+margin-bottom:var(--sp-sm);
+}
+.io-table{
+width:100%;border-collapse:collapse;
+}
+.io-table th,.io-table td{
+text-align:left;
+padding:0.4rem 0.6rem;
+font-size:0.75rem;
+border-bottom:1px solid var(--border-sub);
+}
+.io-table th{
+font-weight:500;color:var(--text-heading);
+background:var(--bg-elevated);
+font-size:0.7rem;letter-spacing:0.08em;
+}
+.io-table td{color:var(--text-body)}
+.io-table .mono{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-sec)}
+
+.deco-scanline{
+position:fixed;top:0;left:0;right:0;bottom:0;
+background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(61,58,50,0.015) 2px,rgba(61,58,50,0.015) 4px);
+pointer-events:none;z-index:10;
+}
+.deco-corner-frame{
+position:fixed;pointer-events:none;z-index:9;
+}
+.deco-corner-frame.tl{top:var(--sp-md);left:var(--sp-md);width:var(--sp-xl);height:var(--sp-xl);border-top:1px solid var(--border);border-left:1px solid var(--border)}
+.deco-corner-frame.tr{top:var(--sp-md);right:var(--sp-md);width:var(--sp-xl);height:var(--sp-xl);border-top:1px solid var(--border);border-right:1px solid var(--border)}
+.deco-corner-frame.bl{bottom:var(--sp-md);left:var(--sp-md);width:var(--sp-xl);height:var(--sp-xl);border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
+.deco-corner-frame.br{bottom:var(--sp-md);right:var(--sp-md);width:var(--sp-xl);height:var(--sp-xl);border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+
+.pipeline-node.dragging{opacity:0.4}
+.pipeline-node.drag-over .pipeline-card{box-shadow:0 0 0 2px var(--accent-gold),var(--shadow-md)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+
+<div class="deco-scanline"></div>
+<div class="deco-corner-frame tl"></div>
+<div class="deco-corner-frame tr"></div>
+<div class="deco-corner-frame bl"></div>
+<div class="deco-corner-frame br"></div>
+
+<div class="page-frame">
+
+<div class="section-title">
+<span class="geo-diamond"></span>
+エージェント編成ボード
+<span class="sub">A1 __ PIPELINE BUILDER</span>
+</div>
+<div class="geo-line"></div>
+
+<div class="board">
+<div class="board-bg-pattern"></div>
+
+<div class="agent-pool-label">AGENT POOL <span class="geo-diamond" style="margin-left:0.3rem"></span> ドラッグしてパイプラインに配置</div>
+<div class="agent-pool" id="agentPool">
+<div class="agent-card director" draggable="true" data-agent="director">
+<div class="card-accent"></div>
+<span class="card-id">AG-01</span>
+<span class="card-name">Director</span>
+<span class="card-role">戦略立案</span>
+<div class="card-dot"></div>
+</div>
+<div class="agent-card analyst" draggable="true" data-agent="analyst">
+<div class="card-accent"></div>
+<span class="card-id">AG-02</span>
+<span class="card-name">Analyst</span>
+<span class="card-role">分析</span>
+<div class="card-dot"></div>
+</div>
+<div class="agent-card composer" draggable="true" data-agent="composer">
+<div class="card-accent"></div>
+<span class="card-id">AG-03</span>
+<span class="card-name">Composer</span>
+<span class="card-role">文章生成</span>
+<div class="card-dot"></div>
+</div>
+<div class="agent-card transformer" draggable="true" data-agent="transformer">
+<div class="card-accent"></div>
+<span class="card-id">AG-04</span>
+<span class="card-name">Transformer</span>
+<span class="card-role">変換</span>
+<div class="card-dot"></div>
+</div>
+<div class="agent-card scheduler" draggable="true" data-agent="scheduler">
+<div class="card-accent"></div>
+<span class="card-id">AG-05</span>
+<span class="card-name">Scheduler</span>
+<span class="card-role">スケジュール最適化</span>
+<div class="card-dot"></div>
+</div>
+<div class="agent-card sentinel" draggable="true" data-agent="sentinel">
+<div class="card-accent"></div>
+<span class="card-id">AG-06</span>
+<span class="card-name">Sentinel</span>
+<span class="card-role">危機監視</span>
+<div class="card-dot"></div>
+</div>
+<div class="agent-card compliance" draggable="true" data-agent="compliance">
+<div class="card-accent"></div>
+<span class="card-id">AG-07</span>
+<span class="card-name">Compliance</span>
+<span class="card-role">法令チェック</span>
+<div class="card-dot"></div>
+</div>
+</div>
+
+<div class="pipeline-area" id="pipelineArea">
+<div class="pipeline-area-label">
+<span class="geo-diamond"></span>
+EXECUTION PIPELINE
+<span style="margin-left:auto;font-size:0.6rem;color:var(--text-muted)">並び替え: ドラッグで順序変更</span>
+</div>
+<div class="pipeline-drop-hint" id="dropHint">エージェントをここにドロップして追加</div>
+<div class="pipeline-flow" id="pipelineFlow">
+
+<div class="pipeline-node" draggable="true" data-agent="director">
+<div class="pipeline-card director">
+<div class="p-accent"></div>
+<span class="p-step">STEP 01</span>
+<span class="p-name">Director</span>
+<span class="p-role">戦略立案</span>
+<div class="p-io">
+<span>IN: 要件定義</span>
+<span>OUT: 実行計画</span>
+</div>
+</div>
+</div>
+
+<div class="pipeline-arrow">
+<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>
+</div>
+
+<div class="pipeline-node" draggable="true" data-agent="analyst">
+<div class="pipeline-card analyst">
+<div class="p-accent"></div>
+<span class="p-step">STEP 02</span>
+<span class="p-name">Analyst</span>
+<span class="p-role">分析</span>
+<div class="p-io">
+<span>IN: 実行計画</span>
+<span>OUT: 分析結果</span>
+</div>
+</div>
+</div>
+
+<div class="pipeline-arrow">
+<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>
+</div>
+
+<div class="pipeline-node" draggable="true" data-agent="composer">
+<div class="pipeline-card composer">
+<div class="p-accent"></div>
+<span class="p-step">STEP 03</span>
+<span class="p-name">Composer</span>
+<span class="p-role">文章生成</span>
+<div class="p-io">
+<span>IN: 分析結果</span>
+<span>OUT: 文書ドラフト</span>
+</div>
+</div>
+</div>
+
+<div class="pipeline-arrow">
+<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>
+</div>
+
+<div class="pipeline-node" draggable="true" data-agent="sentinel">
+<div class="pipeline-card sentinel">
+<div class="p-accent"></div>
+<span class="p-step">STEP 04</span>
+<span class="p-name">Sentinel</span>
+<span class="p-role">危機監視</span>
+<div class="p-io">
+<span>IN: 文書ドラフト</span>
+<span>OUT: リスク評価</span>
+</div>
+</div>
+</div>
+
+<div class="pipeline-arrow">
+<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>
+</div>
+
+<div class="pipeline-node" draggable="true" data-agent="compliance">
+<div class="pipeline-card compliance">
+<div class="p-accent"></div>
+<span class="p-step">STEP 05</span>
+<span class="p-name">Compliance</span>
+<span class="p-role">法令チェック</span>
+<div class="p-io">
+<span>IN: リスク評価</span>
+<span>OUT: 最終承認</span>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="pipeline-controls">
+<button class="btn" id="btnReset">リセット</button>
+<button class="btn primary" id="btnExecute">パイプライン実行</button>
+</div>
+</div>
+</div>
+
+<div class="section-gap"></div>
+
+<div class="section-title">
+<span class="geo-diamond"></span>
+エージェント活動タイムライン
+<span class="sub">A5 __ ACTIVITY TIMELINE</span>
+</div>
+<div class="geo-line"></div>
+
+<div class="timeline-area">
+<div class="tl-header">
+<div class="tl-stat">
+パイプライン実行時間
+<span class="val">12.4s</span>
+</div>
+<div class="tl-stat" style="margin-left:1.5rem">
+稼働エージェント数
+<span class="val">5</span>
+</div>
+<div class="tl-stat" style="margin-left:1.5rem">
+ステータス
+<span class="val" style="color:var(--status-success)">完了</span>
+</div>
+<div class="tl-stat" style="margin-left:auto">
+<span style="font-size:0.6rem;color:var(--text-muted)">RUN-2026-0321-001</span>
+</div>
+</div>
+
+<div class="tl-chart">
+<div class="tl-axis">
+<span>0s</span><span>1s</span><span>2s</span><span>3s</span><span>4s</span><span>5s</span><span>6s</span><span>7s</span><span>8s</span><span>9s</span><span>10s</span><span>11s</span><span>12s</span>
+</div>
+<div class="tl-rows">
+<div class="tl-row">
+<div class="tl-row-label">
+<span class="tl-name">Director</span>
+<span class="tl-sub">戦略立案</span>
+</div>
+<div class="tl-bar-track">
+<div class="tl-bar director" style="left:0%;width:16.1%">
+戦略立案
+<span class="bar-dur">2.0s</span>
+</div>
+</div>
+</div>
+
+<div class="tl-row">
+<div class="tl-row-label">
+<span class="tl-name">Analyst</span>
+<span class="tl-sub">分析</span>
+</div>
+<div class="tl-bar-track">
+<div class="tl-bar analyst" style="left:16.1%;width:24.2%">
+データ分析
+<span class="bar-dur">3.0s</span>
+</div>
+</div>
+</div>
+
+<div class="tl-row">
+<div class="tl-row-label">
+<span class="tl-name">Composer</span>
+<span class="tl-sub">文章生成</span>
+</div>
+<div class="tl-bar-track">
+<div class="tl-bar composer" style="left:40.3%;width:28.2%">
+文書ドラフト生成
+<span class="bar-dur">3.5s</span>
+</div>
+</div>
+</div>
+
+<div class="tl-row">
+<div class="tl-row-label">
+<span class="tl-name">Sentinel</span>
+<span class="tl-sub">危機監視</span>
+</div>
+<div class="tl-bar-track">
+<div class="tl-bar sentinel" style="left:68.5%;width:16.1%">
+リスク検査
+<span class="bar-dur">2.0s</span>
+</div>
+</div>
+</div>
+
+<div class="tl-row">
+<div class="tl-row-label">
+<span class="tl-name">Compliance</span>
+<span class="tl-sub">法令チェック</span>
+</div>
+<div class="tl-bar-track">
+<div class="tl-bar compliance" style="left:84.7%;width:15.3%">
+法令照合
+<span class="bar-dur">1.9s</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="tl-legend">
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-director)"></div>Director</div>
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-analyst)"></div>Analyst</div>
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-composer)"></div>Composer</div>
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-transformer)"></div>Transformer</div>
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-scheduler)"></div>Scheduler</div>
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-sentinel)"></div>Sentinel</div>
+<div class="tl-legend-item"><div class="swatch" style="background:var(--agent-compliance)"></div>Compliance</div>
+</div>
+
+<div class="tl-io-detail">
+<div class="io-title">STEP DETAIL <span class="geo-diamond" style="margin-left:0.3rem"></span></div>
+<table class="io-table">
+<thead>
+<tr>
+<th style="width:6%">順序</th>
+<th style="width:14%">エージェント</th>
+<th style="width:22%">入力</th>
+<th style="width:22%">出力</th>
+<th style="width:10%">所要時間</th>
+<th style="width:10%">ステータス</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="mono">01</td>
+<td>Director</td>
+<td class="mono">要件定義書.json</td>
+<td class="mono">execution_plan.json</td>
+<td class="mono">2.0s</td>
+<td style="color:var(--status-success)">完了</td>
+</tr>
+<tr>
+<td class="mono">02</td>
+<td>Analyst</td>
+<td class="mono">execution_plan.json</td>
+<td class="mono">analysis_result.json</td>
+<td class="mono">3.0s</td>
+<td style="color:var(--status-success)">完了</td>
+</tr>
+<tr>
+<td class="mono">03</td>
+<td>Composer</td>
+<td class="mono">analysis_result.json</td>
+<td class="mono">document_draft.md</td>
+<td class="mono">3.5s</td>
+<td style="color:var(--status-success)">完了</td>
+</tr>
+<tr>
+<td class="mono">04</td>
+<td>Sentinel</td>
+<td class="mono">document_draft.md</td>
+<td class="mono">risk_report.json</td>
+<td class="mono">2.0s</td>
+<td style="color:var(--status-warning)">警告あり</td>
+</tr>
+<tr>
+<td class="mono">05</td>
+<td>Compliance</td>
+<td class="mono">risk_report.json</td>
+<td class="mono">approval_result.json</td>
+<td class="mono">1.9s</td>
+<td style="color:var(--status-success)">完了</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+(function(){
+var pipelineFlow=document.getElementById('pipelineFlow');
+var dragSrc=null;
+
+function getNodes(){return Array.from(pipelineFlow.querySelectorAll('.pipeline-node'))}
+
+pipelineFlow.addEventListener('dragstart',function(e){
+var node=e.target.closest('.pipeline-node');
+if(!node)return;
+dragSrc=node;
+node.classList.add('dragging');
+e.dataTransfer.effectAllowed='move';
+});
+
+pipelineFlow.addEventListener('dragend',function(e){
+var node=e.target.closest('.pipeline-node');
+if(node)node.classList.remove('dragging');
+getNodes().forEach(function(n){n.classList.remove('drag-over')});
+dragSrc=null;
+});
+
+pipelineFlow.addEventListener('dragover',function(e){
+e.preventDefault();
+e.dataTransfer.dropEffect='move';
+var node=e.target.closest('.pipeline-node');
+if(node&&node!==dragSrc){
+getNodes().forEach(function(n){n.classList.remove('drag-over')});
+node.classList.add('drag-over');
+}
+});
+
+pipelineFlow.addEventListener('dragleave',function(e){
+var node=e.target.closest('.pipeline-node');
+if(node)node.classList.remove('drag-over');
+});
+
+pipelineFlow.addEventListener('drop',function(e){
+e.preventDefault();
+var target=e.target.closest('.pipeline-node');
+if(!target||!dragSrc||target===dragSrc)return;
+target.classList.remove('drag-over');
+
+var nodes=getNodes();
+var arrows=Array.from(pipelineFlow.querySelectorAll('.pipeline-arrow'));
+var srcIdx=nodes.indexOf(dragSrc);
+var tgtIdx=nodes.indexOf(target);
+
+var items=[];
+nodes.forEach(function(n,i){
+items.push({node:n,arrow:arrows[i]||null});
+});
+
+var moved=items.splice(srcIdx,1)[0];
+items.splice(tgtIdx,0,moved);
+
+while(pipelineFlow.firstChild)pipelineFlow.removeChild(pipelineFlow.firstChild);
+
+var arrowSvg='<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>';
+
+items.forEach(function(item,i){
+var card=item.node.querySelector('.pipeline-card');
+var stepEl=card.querySelector('.p-step');
+var num=String(i+1).padStart(2,'0');
+stepEl.textContent='STEP '+num;
+pipelineFlow.appendChild(item.node);
+if(i<items.length-1){
+var a=document.createElement('div');
+a.className='pipeline-arrow';
+a.innerHTML=arrowSvg;
+pipelineFlow.appendChild(a);
+}
+});
+});
+
+document.getElementById('btnReset').addEventListener('click',function(){
+location.reload();
+});
+
+document.getElementById('btnExecute').addEventListener('click',function(){
+var nodes=getNodes();
+var idx=0;
+function flash(){
+if(idx>=nodes.length)return;
+var card=nodes[idx].querySelector('.pipeline-card');
+card.style.boxShadow='0 0 12px rgba(200,150,74,0.5)';
+card.style.transition='box-shadow 0.3s';
+setTimeout(function(){
+card.style.boxShadow='none';
+idx++;
+flash();
+},600);
+}
+flash();
+});
+})();
+</script>
+
+</body>
+</html>

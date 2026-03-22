@@ -11,7 +11,11 @@ public interface InteractionRepository {
 
     List<Interaction> findBySnsAccountId(UUID snsAccountId, int offset, int limit);
 
+    List<Interaction> findByUserIdAndTargetUserId(UUID userId, String targetUserId, int offset, int limit);
+
     Interaction save(Interaction interaction);
 
     long countByUserId(UUID userId);
+
+    long countByUserIdAndTargetUserId(UUID userId, String targetUserId);
 }

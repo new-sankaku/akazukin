@@ -4,6 +4,7 @@ import com.akazukin.domain.model.AuditLog;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface AuditLogRepository {
@@ -19,4 +20,8 @@ public interface AuditLogRepository {
     List<AuditLog> findByCategory(String category, int offset, int limit);
 
     long countAll();
+
+    List<AuditLog> findRecent(int limit);
+
+    Map<String, Long> countByResponseStatusRange();
 }

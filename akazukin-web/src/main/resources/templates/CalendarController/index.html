@@ -1,5 +1,5 @@
 {#include base}
-{#title}コンテンツカレンダー - Akazukin{/title}
+{#title}{msg:calendar_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,71 +7,596 @@
     {#sidebar active="calendar" /}
 
     <main class="ak-main">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">コンテンツカレンダー</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-lg);">
+            <h2 style="margin: 0; color: var(--text-heading); font-weight: 500; letter-spacing: 0.08em;">{msg:calendar_heading}</h2>
             <button onclick="openCreateModal()" style="
-                background-color: var(--accent-gold, #C8964A);
+                background-color: var(--accent-gold);
                 border: none;
                 color: #fff;
                 font-size: 0.85rem;
-                padding: 0.5rem 1.2rem;
-                border-radius: 2px;
+                padding: var(--sp-sm) var(--sp-md);
+                border-radius: var(--radius-sm);
                 cursor: pointer;
                 letter-spacing: 0.05em;
-            ">新規予定</button>
+            ">{msg:calendar_new_entry}</button>
         </div>
 
-        <div id="calendar" style="
-            background: var(--bg-surface, #EDE8D5);
-            border: 1px solid var(--border-lt, #CCC5AE);
-            border-radius: 2px;
-            padding: 1rem;
-            min-height: 600px;
-        "></div>
+        <div class="cal-tabs" role="tablist">
+            <button class="cal-tab active" data-tab="calendar" role="tab">{msg:calendar_tab_calendar}</button>
+            <button class="cal-tab" data-tab="timeline" role="tab">{msg:calendar_tab_timeline}</button>
+            <button class="cal-tab" data-tab="bridge" role="tab">{msg:calendar_tab_bridge}</button>
+            <button class="cal-tab" data-tab="matrix" role="tab">{msg:calendar_tab_matrix}</button>
+            <button class="cal-tab" data-tab="scenario" role="tab">{msg:calendar_tab_scenario}</button>
+        </div>
+
+        <div id="tab-calendar" class="cal-tab-content active">
+
+            <div class="cal-section">
+                <h3 class="cal-section-title">{msg:calendar_ai_plan_heading}</h3>
+                <div class="cal-form-row">
+                    <div class="cal-form-group">
+                        <label class="cal-label">{msg:calendar_ai_theme}</label>
+                        <input type="text" id="ai-theme" class="cal-input" />
+                    </div>
+                    <div class="cal-form-group">
+                        <label class="cal-label">{msg:calendar_ai_sns}</label>
+                        <select id="ai-sns" multiple class="cal-input" style="height: auto;">
+                            <option value="TWITTER">X (Twitter)</option>
+                            <option value="INSTAGRAM">Instagram</option>
+                            <option value="NOTE">note</option>
+                            <option value="TIKTOK">TikTok</option>
+                            <option value="NICONICO">niconico</option>
+                        </select>
+                    </div>
+                    <div class="cal-form-group" style="max-width: 8rem;">
+                        <label class="cal-label">{msg:calendar_ai_count}</label>
+                        <input type="number" id="ai-count" value="12" min="1" max="50" class="cal-input" />
+                    </div>
+                    <div class="cal-form-group" style="flex: 0 0 auto;">
+                        <button class="cal-btn" id="btn-ai-generate">{msg:calendar_ai_generate}</button>
+                    </div>
+                </div>
+                <div class="cal-ai-status" id="ai-status" style="display: none;">
+                    <div class="cal-ai-dot"></div>
+                    <span class="cal-ai-label"></span>
+                </div>
+            </div>
+
+            <div class="cal-section">
+                <div id="calendar" style="min-height: 600px;"></div>
+                <div class="cal-heatmap-legend" style="margin-top: var(--sp-sm);">
+                    <span>{msg:calendar_heatmap_low}</span>
+                    <div class="cal-heatmap-swatch cal-heatmap-level-0"></div>
+                    <div class="cal-heatmap-swatch cal-heatmap-level-1"></div>
+                    <div class="cal-heatmap-swatch cal-heatmap-level-2"></div>
+                    <div class="cal-heatmap-swatch cal-heatmap-level-3"></div>
+                    <div class="cal-heatmap-swatch cal-heatmap-level-4"></div>
+                    <div class="cal-heatmap-swatch cal-heatmap-level-5"></div>
+                    <span>{msg:calendar_heatmap_high}</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-timeline" class="cal-tab-content">
+            <div class="cal-section">
+                <h3 class="cal-section-title">{msg:calendar_timeline_heading}</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sec); margin-bottom: var(--sp-md);">{msg:calendar_timeline_desc}</p>
+                <div class="cal-timeline" id="timeline-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-bridge" class="cal-tab-content">
+            <div class="cal-section">
+                <h3 class="cal-section-title">{msg:calendar_bridge_heading}</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sec); margin-bottom: var(--sp-md);">{msg:calendar_bridge_desc}</p>
+                <div class="cal-bridge-highlight" id="bridge-tags"></div>
+                <div id="bridge-plans-container"></div>
+            </div>
+        </div>
+
+        <div id="tab-matrix" class="cal-tab-content">
+            <div class="cal-section">
+                <h3 class="cal-section-title">{msg:calendar_matrix_heading}</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sec); margin-bottom: var(--sp-md);">{msg:calendar_matrix_desc}</p>
+                <div class="cal-matrix-scroll">
+                    <table class="cal-matrix-table" id="matrix-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="cal-heatmap-legend">
+                    <span>{msg:calendar_matrix_low}</span>
+                    <div class="cal-heatmap-swatch cal-eng-0"></div>
+                    <div class="cal-heatmap-swatch cal-eng-1"></div>
+                    <div class="cal-heatmap-swatch cal-eng-2"></div>
+                    <div class="cal-heatmap-swatch cal-eng-3"></div>
+                    <div class="cal-heatmap-swatch cal-eng-4"></div>
+                    <div class="cal-heatmap-swatch cal-eng-5"></div>
+                    <span>{msg:calendar_matrix_high}</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-scenario" class="cal-tab-content">
+            <div class="cal-section">
+                <h3 class="cal-section-title">{msg:calendar_scenario_heading}</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sec); margin-bottom: var(--sp-md);">{msg:calendar_scenario_desc}</p>
+                <div class="cal-scenario-flow" id="scenario-container"></div>
+                <div style="margin-top: var(--sp-lg); text-align: right;">
+                    <button class="cal-btn" id="btn-scenario-apply">{msg:calendar_scenario_apply}</button>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
-<!-- Create/Edit Modal -->
-<div id="entry-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border, #B8B19C); border-radius: 2px; padding: 2rem; width: 90%; max-width: 500px;">
-        <h3 id="modal-title" style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">新規予定</h3>
+<div id="entry-modal" class="cal-modal-overlay">
+    <div class="cal-modal">
+        <h3 id="modal-title">{msg:calendar_new_entry}</h3>
         <form id="entry-form" onsubmit="saveEntry(event)">
             <input type="hidden" id="entry-id" />
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">タイトル</label>
-                <input type="text" id="entry-title" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            <div style="margin-bottom: var(--sp-md);">
+                <label class="cal-label">{msg:calendar_entry_title}</label>
+                <input type="text" id="entry-title" required class="cal-input" />
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">説明</label>
-                <textarea id="entry-description" rows="3" style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);"></textarea>
+            <div style="margin-bottom: var(--sp-md);">
+                <label class="cal-label">{msg:calendar_entry_description}</label>
+                <textarea id="entry-description" rows="3" class="cal-input"></textarea>
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">予定日時</label>
-                <input type="datetime-local" id="entry-scheduled" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
+            <div style="margin-bottom: var(--sp-md);">
+                <label class="cal-label">{msg:calendar_entry_scheduled}</label>
+                <input type="datetime-local" id="entry-scheduled" required class="cal-input" />
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">カラー</label>
-                <input type="color" id="entry-color" value="#C8A96E" style="width:50px; height:30px; border:1px solid var(--border-lt, #CCC5AE); cursor:pointer;" />
+            <div style="margin-bottom: var(--sp-md);">
+                <label class="cal-label">{msg:calendar_entry_color}</label>
+                <input type="color" id="entry-color" value="#C8A96E" style="width: 3.2rem; height: 2rem; border: 1px solid var(--border-lt); cursor: pointer;" />
             </div>
-            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-                <button type="button" onclick="closeModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
-                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">保存</button>
+            <div style="display: flex; gap: var(--sp-sm); justify-content: flex-end;">
+                <button type="button" onclick="closeModal()" class="cal-btn cal-btn-outline">{msg:calendar_entry_cancel}</button>
+                <button type="submit" class="cal-btn">{msg:calendar_entry_save}</button>
             </div>
         </form>
     </div>
 </div>
+
+<div id="event-detail-modal" class="cal-modal-overlay">
+    <div class="cal-modal">
+        <h3 id="event-modal-title">{msg:calendar_modal_event_title}</h3>
+        <div style="margin-bottom: var(--sp-md);">
+            <label class="cal-label">{msg:calendar_modal_datetime}</label>
+            <input type="datetime-local" id="event-modal-datetime" class="cal-input" />
+        </div>
+        <div style="margin-bottom: var(--sp-md);">
+            <label class="cal-label">{msg:calendar_modal_hint}</label>
+            <div id="event-modal-hint" style="background: var(--bg-field); padding: var(--sp-sm); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-body);"></div>
+        </div>
+        <div style="display: flex; gap: var(--sp-sm); justify-content: flex-end;">
+            <button class="cal-btn cal-btn-outline" id="btn-event-modal-close">{msg:calendar_modal_close}</button>
+            <button class="cal-btn" id="btn-event-modal-apply">{msg:calendar_modal_apply}</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.cal-tabs {
+    display: flex;
+    gap: 1px;
+    margin-bottom: var(--sp-md);
+    background: var(--border-lt);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.cal-tab {
+    flex: 1;
+    padding: var(--sp-sm) var(--sp-md);
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-sec);
+    background: var(--bg-subtle);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+    border: none;
+    font-family: var(--font-sans);
+}
+.cal-tab.active {
+    background: var(--bg-surface);
+    color: var(--accent-gold);
+}
+.cal-tab:hover:not(.active) {
+    background: var(--bg-main);
+}
+.cal-tab-content {
+    display: none;
+}
+.cal-tab-content.active {
+    display: block;
+}
+.cal-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+    position: relative;
+}
+.cal-section::before, .cal-section::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--border);
+    border-style: solid;
+    pointer-events: none;
+}
+.cal-section::before {
+    top: 4px;
+    left: 4px;
+    border-width: 1px 0 0 1px;
+}
+.cal-section::after {
+    bottom: 4px;
+    right: 4px;
+    border-width: 0 1px 1px 0;
+}
+.cal-section-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-heading);
+    letter-spacing: 0.08em;
+    margin-bottom: var(--sp-md);
+    padding-bottom: var(--sp-xs);
+    border-bottom: 1px solid var(--border);
+}
+.cal-form-row {
+    display: flex;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.cal-form-group {
+    flex: 1;
+    min-width: 120px;
+}
+.cal-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-sec);
+    margin-bottom: var(--sp-xs);
+    letter-spacing: 0.05em;
+}
+.cal-input {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    padding: var(--sp-xs) var(--sp-sm);
+    background: var(--bg-field);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-body);
+    width: 100%;
+}
+.cal-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+.cal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: var(--sp-xs) var(--sp-md);
+    background: var(--accent-gold);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.cal-btn:hover {
+    background: var(--accent-gold-hover);
+}
+.cal-btn-outline {
+    background: transparent;
+    color: var(--accent-gold);
+    border: 1px solid var(--accent-gold);
+}
+.cal-btn-outline:hover {
+    background: var(--accent-gold-light);
+}
+.cal-ai-status {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-sm) var(--sp-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-sm);
+    margin-top: var(--sp-md);
+}
+.cal-ai-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--status-success);
+    animation: cal-pulse 1.5s infinite;
+}
+@keyframes cal-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.cal-ai-label {
+    font-size: 0.8rem;
+    color: var(--text-sec);
+}
+.cal-heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    margin-top: var(--sp-sm);
+}
+.cal-heatmap-legend span {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin: 0 var(--sp-xs);
+}
+.cal-heatmap-swatch {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-lt);
+}
+.cal-heatmap-level-0 { background: var(--bg-elevated); }
+.cal-heatmap-level-1 { background: #E8E2CE; }
+.cal-heatmap-level-2 { background: #E0D4B4; }
+.cal-heatmap-level-3 { background: #D8C89A; }
+.cal-heatmap-level-4 { background: #D0BC80; }
+.cal-heatmap-level-5 { background: #C8B066; }
+.cal-eng-0 { background: var(--bg-elevated); }
+.cal-eng-1 { background: #E8E0C8; }
+.cal-eng-2 { background: #DECE9E; }
+.cal-eng-3 { background: #D4BE78; }
+.cal-eng-4 { background: #CAAE52; }
+.cal-eng-5 { background: var(--accent-gold); }
+.cal-timeline {
+    display: flex;
+    gap: var(--sp-sm);
+    overflow-x: auto;
+    padding: var(--sp-sm) 0;
+}
+.cal-timeline-item {
+    flex: 0 0 auto;
+    min-width: 140px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-sm);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.cal-timeline-item:hover {
+    border-color: var(--accent-gold);
+}
+.cal-timeline-item .cal-tl-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.cal-timeline-item .cal-tl-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-heading);
+    margin: var(--sp-xs) 0;
+}
+.cal-timeline-item .cal-tl-hint {
+    font-size: 0.7rem;
+    color: var(--status-info);
+    margin-top: var(--sp-xs);
+}
+.cal-badge {
+    display: inline-block;
+    padding: var(--sp-xs) var(--sp-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+}
+.cal-badge-holiday { background: var(--status-error); color: #fff; }
+.cal-badge-solar_term { background: var(--status-info); color: #fff; }
+.cal-badge-seasonal_event { background: var(--accent-gold); color: #fff; }
+.cal-bridge-highlight {
+    display: flex;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-md);
+}
+.cal-bridge-tag {
+    padding: var(--sp-xs) var(--sp-sm);
+    background: var(--status-warning);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.cal-bridge-phases {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-md);
+}
+.cal-phase-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-md);
+}
+.cal-phase-card .cal-phase-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--accent-gold);
+    letter-spacing: 0.1em;
+    margin-bottom: var(--sp-xs);
+}
+.cal-phase-card .cal-phase-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-heading);
+    margin-bottom: var(--sp-sm);
+}
+.cal-phase-card ul {
+    list-style: none;
+    padding: 0;
+}
+.cal-phase-card li {
+    font-size: 0.8rem;
+    color: var(--text-body);
+    padding: var(--sp-xs) 0;
+    border-bottom: 1px solid var(--border-sub);
+}
+.cal-phase-card li:last-child {
+    border-bottom: none;
+}
+.cal-matrix-scroll {
+    overflow-x: auto;
+}
+.cal-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+}
+.cal-matrix-table th, .cal-matrix-table td {
+    border: 1px solid var(--border-lt);
+    padding: var(--sp-xs);
+    text-align: center;
+}
+.cal-matrix-table th {
+    background: var(--bg-subtle);
+    color: var(--text-sec);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    position: sticky;
+}
+.cal-matrix-table th:first-child {
+    text-align: left;
+    min-width: 80px;
+}
+.cal-matrix-table td {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.cal-matrix-table td:hover {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: -2px;
+}
+.cal-scenario-flow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+}
+.cal-scenario-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+}
+.cal-scenario-step {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-sm) var(--sp-md);
+    flex: 1;
+    min-width: 160px;
+}
+.cal-scenario-step .cal-step-sns {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--accent-gold);
+    letter-spacing: 0.05em;
+}
+.cal-scenario-step .cal-step-action {
+    font-size: 0.85rem;
+    color: var(--text-heading);
+    margin-top: var(--sp-xs);
+}
+.cal-scenario-arrow {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.cal-scenario-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-heading);
+    margin-bottom: var(--sp-sm);
+    cursor: pointer;
+}
+.cal-scenario-name input[type="radio"] {
+    margin-right: var(--sp-xs);
+    accent-color: var(--accent-gold);
+}
+.cal-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(61, 58, 50, 0.3);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+.cal-modal-overlay.show {
+    display: flex;
+}
+.cal-modal {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-lg);
+    width: min(480px, 90vw);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.cal-modal h3 {
+    margin-bottom: var(--sp-md);
+    color: var(--text-heading);
+}
+@media (max-width: 768px) {
+    .cal-bridge-phases { grid-template-columns: 1fr; }
+    .cal-form-row { flex-direction: column; }
+    .cal-scenario-row { flex-direction: column; }
+    .cal-scenario-arrow { transform: rotate(90deg); }
+}
+</style>
 
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
 <script>
     var calendar;
+    var currentHeatmap = {};
+    var selectedScenarioName = null;
+    var calendarAccentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-gold').trim() || '#C8A96E';
+    var calendarDefaultTime = 'T09:00';
 
     document.addEventListener('DOMContentLoaded', function() {
+        initCalendar();
+        initTabs();
+        initAiPlan();
+        initEventDetailModal();
+    });
+
+    function getToken() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/';
+        }
+        return token;
+    }
+
+    function initCalendar() {
         var calendarEl = document.getElementById('calendar');
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
-            locale: 'ja',
+            locale: document.documentElement.lang || 'ja',
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -86,26 +611,37 @@
             dateClick: function(info) {
                 openCreateModal(info.dateStr);
             },
+            dayCellDidMount: function(info) {
+                var dateKey = info.date.toISOString().split('T')[0];
+                var level = currentHeatmap[dateKey];
+                if (level !== undefined && level > 0) {
+                    info.el.classList.add('cal-heatmap-level-' + level);
+                }
+            },
+            datesSet: function(info) {
+                var startDate = new Date(info.startStr);
+                var year = startDate.getFullYear();
+                var month = startDate.getMonth() + 1;
+                if (startDate.getDate() > 15) {
+                    month = month + 1;
+                    if (month > 12) { month = 1; year++; }
+                }
+                loadHeatmap(year, month);
+            },
             editable: false,
             selectable: true
         });
         calendar.render();
-    });
+    }
 
     async function loadEvents(from, to, successCallback, failureCallback) {
-        var token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
+        var token = getToken();
+        if (!token) return;
         try {
             var response = await fetch('/api/v1/calendar?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to), {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
-            }
+            if (response.status === 401) { window.location.href = '/'; return; }
             if (response.ok) {
                 var entries = await response.json();
                 var events = entries.map(function(e) {
@@ -113,54 +649,93 @@
                         id: e.id,
                         title: e.title,
                         start: e.scheduledAt,
-                        color: e.color || '#C8A96E',
+                        color: e.color || calendarAccentColor,
                         extendedProps: { description: e.description, platforms: e.platforms, postId: e.postId }
                     };
                 });
                 successCallback(events);
             } else {
-                await showApiError(response, 'カレンダーの読み込みに失敗しました');
+                await showApiError(response, '{msg:calendar_load_error}');
                 failureCallback();
             }
         } catch (err) {
-            showToast('error', 'カレンダーの読み込みに失敗しました');
+            showToast('error', '{msg:calendar_load_error}');
             failureCallback();
         }
     }
 
+    async function loadHeatmap(year, month) {
+        var token = getToken();
+        if (!token) return;
+        try {
+            var response = await fetch('/api/v1/calendar/heatmap?year=' + year + '&month=' + month, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                currentHeatmap = {};
+                if (data.levels) {
+                    for (var key in data.levels) {
+                        currentHeatmap[key] = data.levels[key];
+                    }
+                }
+                calendar.render();
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_load_error}');
+        }
+    }
+
+    function initTabs() {
+        document.querySelectorAll('.cal-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.cal-tab').forEach(function(t) { t.classList.remove('active'); });
+                document.querySelectorAll('.cal-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                this.classList.add('active');
+                var targetId = 'tab-' + this.dataset.tab;
+                document.getElementById(targetId).classList.add('active');
+
+                if (this.dataset.tab === 'timeline') loadTimeline();
+                if (this.dataset.tab === 'bridge') loadBridgePlans();
+                if (this.dataset.tab === 'matrix') loadMatrix();
+                if (this.dataset.tab === 'scenario') loadScenarios();
+            });
+        });
+    }
+
     function openCreateModal(dateStr) {
-        document.getElementById('modal-title').textContent = '新規予定';
+        document.getElementById('modal-title').textContent = '{msg:calendar_new_entry}';
         document.getElementById('entry-id').value = '';
         document.getElementById('entry-title').value = '';
         document.getElementById('entry-description').value = '';
-        document.getElementById('entry-color').value = '#C8A96E';
+        document.getElementById('entry-color').value = calendarAccentColor;
         if (dateStr) {
-            document.getElementById('entry-scheduled').value = dateStr + 'T09:00';
+            document.getElementById('entry-scheduled').value = dateStr + calendarDefaultTime;
         } else {
             document.getElementById('entry-scheduled').value = '';
         }
-        document.getElementById('entry-modal').style.display = 'flex';
+        document.getElementById('entry-modal').classList.add('show');
     }
 
     function openEditModal(event) {
-        document.getElementById('modal-title').textContent = '予定を編集';
+        document.getElementById('modal-title').textContent = '{msg:calendar_edit_title}';
         document.getElementById('entry-id').value = event.id;
         document.getElementById('entry-title').value = event.title;
         document.getElementById('entry-description').value = event.extendedProps.description || '';
-        document.getElementById('entry-color').value = event.backgroundColor || '#C8A96E';
+        document.getElementById('entry-color').value = event.backgroundColor || calendarAccentColor;
         var d = new Date(event.start);
         var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         document.getElementById('entry-scheduled').value = local;
-        document.getElementById('entry-modal').style.display = 'flex';
+        document.getElementById('entry-modal').classList.add('show');
     }
 
     function closeModal() {
-        document.getElementById('entry-modal').style.display = 'none';
+        document.getElementById('entry-modal').classList.remove('show');
     }
 
     async function saveEntry(e) {
         e.preventDefault();
-        var token = localStorage.getItem('accessToken');
+        var token = getToken();
         var entryId = document.getElementById('entry-id').value;
         var scheduledLocal = document.getElementById('entry-scheduled').value;
         var scheduledAt = new Date(scheduledLocal).toISOString();
@@ -187,26 +762,437 @@
                 body: JSON.stringify(body)
             });
             if (response.ok || response.status === 201) {
-                showToast('success', entryId ? '予定を更新しました' : '予定を作成しました');
+                showToast('success', '{msg:calendar_save_success}');
                 closeModal();
                 calendar.refetchEvents();
             } else {
-                await showApiError(response, '予定の保存に失敗しました');
+                await showApiError(response, '{msg:calendar_save_error}');
             }
         } catch (err) {
-            showToast('error', '予定の保存に失敗しました');
+            showToast('error', '{msg:calendar_save_error}');
         }
     }
+
+    function initAiPlan() {
+        document.getElementById('btn-ai-generate').addEventListener('click', async function() {
+            var theme = document.getElementById('ai-theme').value;
+            if (!theme) {
+                showToast('error', '{msg:calendar_ai_theme_required}');
+                return;
+            }
+
+            var snsSelect = document.getElementById('ai-sns');
+            var platforms = [];
+            for (var i = 0; i < snsSelect.options.length; i++) {
+                if (snsSelect.options[i].selected) {
+                    platforms.push(snsSelect.options[i].value);
+                }
+            }
+            if (platforms.length === 0) {
+                showToast('error', '{msg:calendar_ai_sns_required}');
+                return;
+            }
+
+            var count = parseInt(document.getElementById('ai-count').value, 10);
+            var status = document.getElementById('ai-status');
+            var label = status.querySelector('.cal-ai-label');
+            var dot = status.querySelector('.cal-ai-dot');
+
+            status.style.display = 'flex';
+            dot.style.animation = 'cal-pulse 1.5s infinite';
+            dot.style.background = 'var(--status-success)';
+            label.textContent = '{msg:calendar_ai_running} ... {msg:calendar_ai_analyzing}';
+
+            var token = getToken();
+            try {
+                label.textContent = '{msg:calendar_ai_running} ... {msg:calendar_ai_calculating}';
+
+                var response = await fetch('/api/v1/calendar/ai-plan', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme: theme, platforms: platforms, postCount: count })
+                });
+
+                if (response.ok || response.status === 201) {
+                    var entries = await response.json();
+                    label.textContent = '{msg:calendar_ai_complete}' + ' (' + entries.length + ')';
+                    dot.style.animation = 'none';
+                    calendar.refetchEvents();
+                } else {
+                    await showApiError(response, '{msg:calendar_ai_error}');
+                    status.style.display = 'none';
+                }
+            } catch (err) {
+                showToast('error', '{msg:calendar_ai_error}');
+                status.style.display = 'none';
+            }
+        });
+    }
+
+    async function loadTimeline() {
+        var token = getToken();
+        if (!token) return;
+        var year = new Date().getFullYear();
+        try {
+            var response = await fetch('/api/v1/calendar/timeline?year=' + year, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var events = await response.json();
+                renderTimeline(events);
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_load_error}');
+        }
+    }
+
+    function renderTimeline(events) {
+        var tl = document.getElementById('timeline-list');
+        tl.innerHTML = '';
+
+        var typeLabels = {
+            'holiday': '{msg:calendar_timeline_holiday}',
+            'solar_term': '{msg:calendar_timeline_solar_term}',
+            'seasonal_event': '{msg:calendar_timeline_event}'
+        };
+
+        events.forEach(function(item) {
+            var el = document.createElement('div');
+            el.className = 'cal-timeline-item';
+
+            var dateDiv = document.createElement('div');
+            dateDiv.className = 'cal-tl-date';
+            var dateParts = item.date.split('-');
+            var dateText = parseInt(dateParts[1], 10) + '/' + parseInt(dateParts[2], 10) + ' ';
+            dateDiv.appendChild(document.createTextNode(dateText));
+            var badge = document.createElement('span');
+            badge.className = 'cal-badge cal-badge-' + item.type;
+            badge.textContent = typeLabels[item.type] || item.type;
+            dateDiv.appendChild(badge);
+            el.appendChild(dateDiv);
+
+            var nameDiv = document.createElement('div');
+            nameDiv.className = 'cal-tl-name';
+            nameDiv.textContent = item.name;
+            el.appendChild(nameDiv);
+
+            var hintDiv = document.createElement('div');
+            hintDiv.className = 'cal-tl-hint';
+            hintDiv.textContent = item.hint ? item.hint.substring(0, 20) + '...' : '';
+            el.appendChild(hintDiv);
+
+            el.addEventListener('click', function() {
+                showEventDetailModal(item);
+            });
+
+            tl.appendChild(el);
+        });
+    }
+
+    function initEventDetailModal() {
+        document.getElementById('btn-event-modal-close').addEventListener('click', function() {
+            document.getElementById('event-detail-modal').classList.remove('show');
+        });
+        document.getElementById('btn-event-modal-apply').addEventListener('click', function() {
+            var datetime = document.getElementById('event-modal-datetime').value;
+            if (datetime) {
+                document.getElementById('event-detail-modal').classList.remove('show');
+                openCreateModal();
+                document.getElementById('entry-scheduled').value = datetime;
+                document.getElementById('entry-title').value = document.getElementById('event-modal-title').textContent;
+            }
+        });
+        document.getElementById('event-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('show');
+        });
+        document.getElementById('entry-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    }
+
+    function showEventDetailModal(item) {
+        document.getElementById('event-modal-title').textContent = item.name;
+        document.getElementById('event-modal-hint').textContent = item.hint || '';
+        var dateParts = item.date.split('-');
+        document.getElementById('event-modal-datetime').value = item.date + 'T10:00';
+        document.getElementById('event-detail-modal').classList.add('show');
+    }
+
+    async function loadBridgePlans() {
+        var token = getToken();
+        if (!token) return;
+        var year = new Date().getFullYear();
+        try {
+            var response = await fetch('/api/v1/calendar/bridge-plans?year=' + year, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var plans = await response.json();
+                renderBridgePlans(plans, year);
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_bridge_apply_error}');
+        }
+    }
+
+    function renderBridgePlans(plans, year) {
+        var tagsContainer = document.getElementById('bridge-tags');
+        tagsContainer.innerHTML = '';
+        plans.forEach(function(plan) {
+            var tag = document.createElement('span');
+            tag.className = 'cal-bridge-tag';
+            tag.textContent = plan.periodName + ': ' + plan.startDate + ' - ' + plan.endDate;
+            tagsContainer.appendChild(tag);
+        });
+
+        var container = document.getElementById('bridge-plans-container');
+        container.innerHTML = '';
+
+        plans.forEach(function(plan) {
+            var planSection = document.createElement('div');
+            planSection.style.marginBottom = 'var(--sp-lg)';
+
+            var planLabel = document.createElement('label');
+            planLabel.style.fontSize = '0.85rem';
+            planLabel.style.color = 'var(--text-heading)';
+            planLabel.style.marginBottom = 'var(--sp-sm)';
+            planLabel.style.display = 'block';
+            planLabel.textContent = plan.periodName + ' 投稿プラン';
+            planSection.appendChild(planLabel);
+
+            var phasesGrid = document.createElement('div');
+            phasesGrid.className = 'cal-bridge-phases';
+
+            plan.phases.forEach(function(phase) {
+                var card = document.createElement('div');
+                card.className = 'cal-phase-card';
+
+                var phaseLabel = document.createElement('div');
+                phaseLabel.className = 'cal-phase-label';
+                phaseLabel.textContent = phase.label;
+                card.appendChild(phaseLabel);
+
+                var phaseTitle = document.createElement('div');
+                phaseTitle.className = 'cal-phase-title';
+                phaseTitle.textContent = phase.title;
+                card.appendChild(phaseTitle);
+
+                var ul = document.createElement('ul');
+                phase.entries.forEach(function(entry) {
+                    var li = document.createElement('li');
+                    li.textContent = entry.date + ' ' + entry.title;
+                    ul.appendChild(li);
+                });
+                card.appendChild(ul);
+
+                phasesGrid.appendChild(card);
+            });
+
+            planSection.appendChild(phasesGrid);
+
+            var btnWrap = document.createElement('div');
+            btnWrap.style.marginTop = 'var(--sp-md)';
+            btnWrap.style.textAlign = 'right';
+            var applyBtn = document.createElement('button');
+            applyBtn.className = 'cal-btn';
+            applyBtn.textContent = '{msg:calendar_bridge_apply_all}';
+            applyBtn.addEventListener('click', function() {
+                applyBridgePlan(plan.periodName, year);
+            });
+            btnWrap.appendChild(applyBtn);
+            planSection.appendChild(btnWrap);
+
+            container.appendChild(planSection);
+        });
+    }
+
+    async function applyBridgePlan(periodName, year) {
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/calendar/bridge-plans/' + encodeURIComponent(periodName) + '/apply?year=' + year, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', '{msg:calendar_bridge_apply_success}');
+                calendar.refetchEvents();
+            } else {
+                await showApiError(response, '{msg:calendar_bridge_apply_error}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_bridge_apply_error}');
+        }
+    }
+
+    async function loadMatrix() {
+        var token = getToken();
+        if (!token) return;
+        try {
+            var response = await fetch('/api/v1/calendar/time-slot-matrix', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var matrix = await response.json();
+                renderMatrix(matrix);
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_load_error}');
+        }
+    }
+
+    function renderMatrix(matrix) {
+        var table = document.getElementById('matrix-table');
+        var thead = table.querySelector('thead');
+        var tbody = table.querySelector('tbody');
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+
+        var headerTr = document.createElement('tr');
+        var emptyTh = document.createElement('th');
+        headerTr.appendChild(emptyTh);
+        matrix.dayLabels.forEach(function(day) {
+            matrix.hourLabels.forEach(function(hour) {
+                var th = document.createElement('th');
+                th.appendChild(document.createTextNode(day));
+                th.appendChild(document.createElement('br'));
+                th.appendChild(document.createTextNode(hour));
+                headerTr.appendChild(th);
+            });
+        });
+        thead.appendChild(headerTr);
+
+        matrix.platforms.forEach(function(sns) {
+            var tr = document.createElement('tr');
+            var th = document.createElement('th');
+            th.textContent = sns;
+            tr.appendChild(th);
+            matrix.dayLabels.forEach(function(day) {
+                matrix.hourLabels.forEach(function(hour) {
+                    var key = day + '_' + hour;
+                    var level = matrix.engagementLevels[sns] ? matrix.engagementLevels[sns][key] : 0;
+                    var td = document.createElement('td');
+                    td.className = 'cal-eng-' + (level || 0);
+                    if (level > 0) td.textContent = level;
+                    td.addEventListener('click', function() {
+                        reserveSlot(sns, day, hour);
+                    });
+                    tr.appendChild(td);
+                });
+            });
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function reserveSlot(platform, day, hour) {
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/calendar/time-slot-reserve?platform=' + encodeURIComponent(platform) + '&day=' + encodeURIComponent(day) + '&hour=' + encodeURIComponent(hour), {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', '{msg:calendar_matrix_reserve_success}');
+                calendar.refetchEvents();
+            } else {
+                await showApiError(response, '{msg:calendar_matrix_reserve_error}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_matrix_reserve_error}');
+        }
+    }
+
+    async function loadScenarios() {
+        var token = getToken();
+        if (!token) return;
+        try {
+            var response = await fetch('/api/v1/calendar/linkage-scenarios', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var scenarios = await response.json();
+                renderScenarios(scenarios);
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_load_error}');
+        }
+    }
+
+    function renderScenarios(scenarios) {
+        var container = document.getElementById('scenario-container');
+        container.innerHTML = '';
+
+        scenarios.forEach(function(scenario, idx) {
+            var wrapper = document.createElement('div');
+
+            var nameLabel = document.createElement('label');
+            nameLabel.className = 'cal-scenario-name';
+            var radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'scenario';
+            radio.value = scenario.name;
+            if (idx === 0) {
+                radio.checked = true;
+                selectedScenarioName = scenario.name;
+            }
+            radio.addEventListener('change', function() {
+                selectedScenarioName = scenario.name;
+            });
+            nameLabel.appendChild(radio);
+            nameLabel.appendChild(document.createTextNode(scenario.name));
+            wrapper.appendChild(nameLabel);
+
+            var row = document.createElement('div');
+            row.className = 'cal-scenario-row';
+
+            scenario.steps.forEach(function(step, stepIdx) {
+                if (stepIdx > 0) {
+                    var arrow = document.createElement('div');
+                    arrow.className = 'cal-scenario-arrow';
+                    arrow.innerHTML = '&rarr;';
+                    row.appendChild(arrow);
+                }
+
+                var stepEl = document.createElement('div');
+                stepEl.className = 'cal-scenario-step';
+                var snsDiv = document.createElement('div');
+                snsDiv.className = 'cal-step-sns';
+                snsDiv.textContent = step.platform;
+                stepEl.appendChild(snsDiv);
+                var actionDiv = document.createElement('div');
+                actionDiv.className = 'cal-step-action';
+                actionDiv.textContent = step.action;
+                stepEl.appendChild(actionDiv);
+                row.appendChild(stepEl);
+            });
+
+            wrapper.appendChild(row);
+            container.appendChild(wrapper);
+        });
+    }
+
+    document.getElementById('btn-scenario-apply').addEventListener('click', async function() {
+        if (!selectedScenarioName) return;
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/calendar/linkage-scenarios/' + encodeURIComponent(selectedScenarioName) + '/apply', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok || response.status === 201) {
+                showToast('success', '{msg:calendar_scenario_apply_success}');
+                calendar.refetchEvents();
+            } else {
+                await showApiError(response, '{msg:calendar_scenario_apply_error}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:calendar_scenario_apply_error}');
+        }
+    });
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

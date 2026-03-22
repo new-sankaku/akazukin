@@ -7,9 +7,13 @@ public record RedditConfig(
     String userAgent
 ) {
     public RedditConfig {
-        clientId = clientId != null ? clientId : "";
+        if (clientId == null || clientId.isBlank()) {
+            throw new IllegalArgumentException("clientId must not be null or blank");
+        }
         clientSecret = clientSecret != null ? clientSecret : "";
         redirectUri = redirectUri != null ? redirectUri : "";
-        userAgent = (userAgent == null || userAgent.isBlank()) ? "akazukin/1.0" : userAgent;
+        if (userAgent == null || userAgent.isBlank()) {
+            throw new IllegalArgumentException("userAgent must not be null or blank");
+        }
     }
 }

@@ -15,4 +15,8 @@ public interface ABTestRepository {
     ABTest save(ABTest abTest);
 
     void deleteById(UUID id);
+
+    List<ABTest> findByUserIdAndStatus(UUID userId, com.akazukin.domain.model.ABTestStatus status);
+
+    List<ABTest> findCompletedByUserId(UUID userId);
 }

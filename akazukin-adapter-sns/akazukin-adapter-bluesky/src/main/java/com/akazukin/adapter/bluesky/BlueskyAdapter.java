@@ -1,15 +1,20 @@
 package com.akazukin.adapter.bluesky;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 import com.akazukin.sdk.bluesky.BlueskyClient;
 import com.akazukin.sdk.bluesky.BlueskyConfig;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.URI;
@@ -283,6 +288,195 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
         }
     }
 
+    @Override
+    public void reply(String accessToken, String postId, String content) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String did = extractDidFromToken(accessToken);
+
+            String postUri = "at://" + did + "/app.bsky.feed.post/" + postId;
+
+            ObjectNode parentRef = objectMapper.createObjectNode();
+            parentRef.put("uri", postUri);
+            parentRef.put("cid", postId);
+
+            ObjectNode replyRef = objectMapper.createObjectNode();
+            replyRef.set("root", parentRef);
+            replyRef.set("parent", parentRef);
+
+            ObjectNode record = objectMapper.createObjectNode();
+            record.put("$type", "app.bsky.feed.post");
+            record.put("text", content);
+            record.put("createdAt", Instant.now().toString());
+            record.set("reply", replyRef);
+
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("repo", did);
+            body.put("collection", "app.bsky.feed.post");
+            body.set("record", record);
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(serviceUrl + "/xrpc/com.atproto.repo.createRecord"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "reply");
+            recordApiCall();
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("reply", e);
+        } catch (RuntimeException e) {
+            throw wrapException("reply", e);
+        } finally {
+            perfLog("BlueskyAdapter.reply", perfStart);
+        }
+    }
+
+    @Override
+    public void mention(String accessToken, String userId, String content) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String did = extractDidFromToken(accessToken);
+            String mentionText = "@" + userId + " " + content;
+
+            ObjectNode facet = objectMapper.createObjectNode();
+            ObjectNode index = objectMapper.createObjectNode();
+            index.put("byteStart", 0);
+            index.put("byteEnd", ("@" + userId).getBytes(StandardCharsets.UTF_8).length);
+            facet.set("index", index);
+
+            ObjectNode feature = objectMapper.createObjectNode();
+            feature.put("$type", "app.bsky.richtext.facet#mention");
+            feature.put("did", userId);
+            facet.set("features", objectMapper.createArrayNode().add(feature));
+
+            ObjectNode record = objectMapper.createObjectNode();
+            record.put("$type", "app.bsky.feed.post");
+            record.put("text", mentionText);
+            record.put("createdAt", Instant.now().toString());
+            record.set("facets", objectMapper.createArrayNode().add(facet));
+
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("repo", did);
+            body.put("collection", "app.bsky.feed.post");
+            body.set("record", record);
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(serviceUrl + "/xrpc/com.atproto.repo.createRecord"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(body)))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "mention");
+            recordApiCall();
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("mention", e);
+        } catch (RuntimeException e) {
+            throw wrapException("mention", e);
+        } finally {
+            perfLog("BlueskyAdapter.mention", perfStart);
+        }
+    }
+
+    @Override
+    public List<SnsProfile> getFollowers(String accessToken, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String did = extractDidFromToken(accessToken);
+            int maxResults = Math.max(1, Math.min(limit, 100));
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(serviceUrl + "/xrpc/app.bsky.graph.getFollowers?actor="
+                    + URLEncoder.encode(did, StandardCharsets.UTF_8) + "&limit=" + maxResults))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getFollowers");
+            recordApiCall();
+            return parseGraphProfiles(response, "followers");
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getFollowers", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getFollowers", e);
+        } finally {
+            perfLog("BlueskyAdapter.getFollowers", perfStart);
+        }
+    }
+
+    @Override
+    public List<SnsProfile> getFollowing(String accessToken, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String did = extractDidFromToken(accessToken);
+            int maxResults = Math.max(1, Math.min(limit, 100));
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(serviceUrl + "/xrpc/app.bsky.graph.getFollows?actor="
+                    + URLEncoder.encode(did, StandardCharsets.UTF_8) + "&limit=" + maxResults))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getFollowing");
+            recordApiCall();
+            return parseGraphProfiles(response, "follows");
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getFollowing", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getFollowing", e);
+        } finally {
+            perfLog("BlueskyAdapter.getFollowing", perfStart);
+        }
+    }
+
+    private List<SnsProfile> parseGraphProfiles(HttpResponse<String> response, String arrayField)
+            throws IOException {
+        JsonNode root = objectMapper.readTree(response.body());
+        JsonNode data = root.get(arrayField);
+        if (data == null || !data.isArray()) {
+            return List.of();
+        }
+        List<SnsProfile> profiles = new ArrayList<>();
+        for (JsonNode node : data) {
+            profiles.add(new SnsProfile(
+                node.path("handle").asText(),
+                node.path("displayName").asText(""),
+                node.path("avatar").asText(null),
+                node.path("followersCount").asInt(0)
+            ));
+        }
+        return profiles;
+    }
+
     private String extractRkey(String atUri) {
         int lastSlash = atUri.lastIndexOf('/');
         if (lastSlash < 0) {
@@ -292,8 +486,91 @@ public class BlueskyAdapter extends AbstractSnsAdapter implements AutoCloseable 
     }
 
     @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String did = extractDidFromToken(accessToken);
+            String postUri = "at://" + did + "/app.bsky.feed.post/" + platformPostId;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(serviceUrl + "/xrpc/app.bsky.feed.getPostThread?uri="
+                    + URLEncoder.encode(postUri, StandardCharsets.UTF_8) + "&depth=0"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            JsonNode post = json.path("thread").path("post");
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.BLUESKY,
+                post.path("likeCount").asInt(0),
+                post.path("replyCount").asInt(0),
+                post.path("repostCount").asInt(0),
+                0,
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("BlueskyAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String did = extractDidFromToken(accessToken);
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(serviceUrl + "/xrpc/app.bsky.actor.getProfile?actor="
+                    + URLEncoder.encode(did, StandardCharsets.UTF_8)))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new AccountStats(
+                SnsPlatform.BLUESKY,
+                json.path("handle").asText(),
+                json.path("followersCount").asInt(0),
+                json.path("followsCount").asInt(0),
+                json.path("postsCount").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("BlueskyAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private String extractDidFromToken(String accessToken) {

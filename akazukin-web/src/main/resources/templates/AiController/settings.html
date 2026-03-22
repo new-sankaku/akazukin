@@ -1,0 +1,480 @@
+{#include base}
+{#title}{msg:settings_ai_page_title}{/title}
+{#body}
+{#appheader /}
+
+<div class="ak-layout">
+    {#sidebar active="ai-settings" /}
+
+    <main class="ak-main">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">
+                <i class="fas fa-microchip" style="color: var(--accent-gold, var(--ak-primary)); margin-right: 0.5rem;"></i>{msg:settings_ai_title}
+            </h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="/ai" role="button"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:persona_back_to_ai}</a>
+                <a href="/ai/personas" role="button"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:persona_heading}</a>
+            </div>
+        </div>
+
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <i class="fas fa-server" style="color: var(--accent-gold, var(--ak-primary));"></i>
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">{msg:settings_ai_ollama_heading}</h3>
+            </div>
+            <div id="ollama-status-card" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="status-dot" class="settings-ai-status-dot settings-ai-status-dot--loading"></span>
+                        <span id="status-label" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted, var(--ak-text-muted));">{msg:settings_ai_checking}</span>
+                    </div>
+                    <div id="model-tag" style="display: none; align-items: center; gap: 0.25rem; background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 4px; padding: 0.3rem 0.7rem; font-size: 0.8rem; color: var(--text-sec, var(--ak-text-muted));">
+                        <i class="fas fa-cube" style="color: var(--text-muted, var(--ak-text-muted)); font-size: 0.75rem;"></i>
+                        <span>{msg:settings_ai_model_label}:</span>
+                        <span id="model-name" style="font-weight: 600; color: var(--text-primary, var(--ak-text));"></span>
+                    </div>
+                    <div id="endpoint-display" style="font-size: 0.8rem; color: var(--text-muted, var(--ak-text-muted));">
+                        <i class="fas fa-link"></i>
+                        <span id="endpoint-url"></span>
+                    </div>
+                </div>
+                <button id="btn-reconnect" onclick="handleReconnect()"
+                    style="display: inline-flex; align-items: center; gap: 0.25rem; font-family: inherit; font-size: 0.8rem; font-weight: 500; padding: 0.4rem 0.9rem; border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; background: var(--bg-elevated, #F0EBD8); color: var(--text-primary, var(--ak-text)); cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+                    <i class="fas fa-sync-alt"></i>
+                    {msg:settings_ai_reconnect_btn}
+                </button>
+            </div>
+            <div id="model-list-area" style="display: none; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-sub, var(--ak-border));">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.04em;">{msg:settings_ai_available_models}</div>
+                <div id="model-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+            </div>
+        </div>
+
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <i class="fas fa-shield-alt" style="color: var(--accent-gold, var(--ak-primary));"></i>
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">{msg:settings_ai_confidentiality_heading}</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem;">
+                <div style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 4px; border-left: 3px solid var(--status-error, #B04040);">
+                    <i class="fas fa-lock" style="margin-top: 0.15rem; font-size: 0.9rem; flex-shrink: 0; color: var(--status-error, #B04040);"></i>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.15rem;">{msg:settings_ai_confidentiality_high}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-sec, var(--ak-text-muted)); line-height: 1.5;">{msg:settings_ai_confidentiality_high_desc}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 4px; border-left: 3px solid var(--status-warning, #C8A96E);">
+                    <i class="fas fa-shield-alt" style="margin-top: 0.15rem; font-size: 0.9rem; flex-shrink: 0; color: var(--status-warning, #C8A96E);"></i>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.15rem;">{msg:settings_ai_confidentiality_normal}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-sec, var(--ak-text-muted)); line-height: 1.5;">{msg:settings_ai_confidentiality_normal_desc}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 4px; border-left: 3px solid var(--status-success, #6B8B4A);">
+                    <i class="fas fa-globe" style="margin-top: 0.15rem; font-size: 0.9rem; flex-shrink: 0; color: var(--status-success, #6B8B4A);"></i>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.15rem;">{msg:settings_ai_confidentiality_low}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-sec, var(--ak-text-muted)); line-height: 1.5;">{msg:settings_ai_confidentiality_low_desc}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <i class="fas fa-tasks" style="color: var(--accent-gold, var(--ak-primary));"></i>
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">{msg:settings_ai_task_heading}</h3>
+            </div>
+
+            <div style="display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; background: var(--status-info-bg, #D8E8F0); border: 1px solid rgba(90, 139, 160, 0.3); border-radius: 4px; font-size: 0.82rem; color: var(--text-body, var(--ak-text)); line-height: 1.6; margin-bottom: 1rem;">
+                <i class="fas fa-info-circle" style="color: var(--status-info, #5A8BA0); margin-top: 0.15rem; flex-shrink: 0;"></i>
+                <span>{msg:settings_ai_task_note}</span>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; padding: 0.5rem 0.75rem; background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 4px;">
+                <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-sec, var(--ak-text-muted));">{msg:settings_ai_bulk_label}:</span>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="ak-btn-detail" onclick="setAllProvider('OLLAMA')" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;">
+                        <i class="fas fa-server"></i> {msg:settings_ai_bulk_local}
+                    </button>
+                    <button class="ak-btn-detail" onclick="setAllProvider('OPENAI')" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;">
+                        <i class="fas fa-cloud"></i> {msg:settings_ai_bulk_openai}
+                    </button>
+                    <button class="ak-btn-detail" onclick="setAllProvider('ANTHROPIC')" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;">
+                        <i class="fas fa-cloud"></i> {msg:settings_ai_bulk_anthropic}
+                    </button>
+                    <button class="ak-btn-detail" onclick="resetToRecommended()" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;">
+                        <i class="fas fa-undo"></i> {msg:settings_ai_bulk_recommended}
+                    </button>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table id="task-table" style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th style="background: var(--bg-elevated, #F0EBD8); color: var(--text-heading, var(--ak-text)); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.7rem 1rem; border-bottom: 2px solid var(--border, var(--ak-border)); text-align: left; white-space: nowrap; border-radius: 4px 0 0 0;">{msg:settings_ai_col_task}</th>
+                            <th style="background: var(--bg-elevated, #F0EBD8); color: var(--text-heading, var(--ak-text)); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.7rem 1rem; border-bottom: 2px solid var(--border, var(--ak-border)); text-align: left; white-space: nowrap;">{msg:settings_ai_col_confidentiality}</th>
+                            <th style="background: var(--bg-elevated, #F0EBD8); color: var(--text-heading, var(--ak-text)); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.7rem 1rem; border-bottom: 2px solid var(--border, var(--ak-border)); text-align: left; white-space: nowrap; border-radius: 0 4px 0 0;">{msg:settings_ai_col_provider}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <i class="fas fa-chart-bar" style="color: var(--accent-gold, var(--ak-primary));"></i>
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">{msg:settings_ai_cost_heading}</h3>
+            </div>
+            <div id="cost-monitor" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted, var(--ak-text-muted)); letter-spacing: 0.04em; margin-bottom: 0.25rem;">{msg:settings_ai_cost_total}</div>
+                    <div id="cost-total" style="font-size: 1.5rem; font-weight: 600; color: var(--text-heading, var(--ak-text));">0</div>
+                </div>
+                <div id="cost-by-provider" style="display: flex; gap: 1.5rem; flex-wrap: wrap;"></div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-lt, var(--ak-border)); margin-top: 1rem;">
+            <a href="/ai" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; font-family: inherit; font-size: 0.9rem; font-weight: 500; padding: 0.55rem 1.2rem; border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; background: var(--bg-elevated, #F0EBD8); color: var(--text-primary, var(--ak-text)); text-decoration: none;">
+                <i class="fas fa-times"></i> {msg:settings_ai_cancel_btn}
+            </a>
+            <button onclick="saveSettings()"
+                style="display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; font-family: inherit; font-size: 0.9rem; font-weight: 500; padding: 0.55rem 1.2rem; border: 1px solid var(--accent-gold, var(--ak-primary)); border-radius: 4px; background: var(--accent-gold, var(--ak-primary)); color: white; cursor: pointer;">
+                <i class="fas fa-save"></i> {msg:settings_ai_save_btn}
+            </button>
+        </div>
+    </main>
+</div>
+
+<style>
+    .settings-ai-status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: inline-block;
+    }
+    .settings-ai-status-dot--connected {
+        background: var(--status-success, #6B8B4A);
+        box-shadow: 0 0 6px rgba(107, 139, 74, 0.5);
+        animation: settings-ai-pulse 2s ease-in-out infinite;
+    }
+    .settings-ai-status-dot--disconnected {
+        background: var(--status-error, #B04040);
+        box-shadow: 0 0 6px rgba(176, 64, 64, 0.4);
+    }
+    .settings-ai-status-dot--loading {
+        background: var(--status-warning, #C8A96E);
+    }
+    @keyframes settings-ai-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .ai-select-group {
+        display: flex;
+        gap: 0;
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 4px;
+        overflow: hidden;
+        background: var(--bg-field, var(--ak-bg));
+    }
+    .ai-select-group input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .ai-select-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.4rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--text-sec, var(--ak-text-muted));
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-right: 1px solid var(--border-lt, var(--ak-border));
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+    .ai-select-group label:last-of-type { border-right: none; }
+    .ai-select-group label:hover {
+        background: var(--bg-subtle, #E4DECC);
+        color: var(--text-primary, var(--ak-text));
+    }
+    .ai-select-group input[type="radio"]:checked + label {
+        background: var(--accent-gold, var(--ak-primary));
+        color: #FFFFFF;
+        font-weight: 600;
+    }
+    .ai-select-group label i { font-size: 0.72rem; }
+    @media (max-width: 768px) {
+        .ai-select-group {
+            flex-direction: column;
+        }
+        .ai-select-group label {
+            border-right: none;
+            border-bottom: 1px solid var(--border-lt, var(--ak-border));
+        }
+        .ai-select-group label:last-of-type { border-bottom: none; }
+    }
+</style>
+
+<script>
+    var taskDefinitions = [
+        { type: 'COMPOSER', nameKey: '{msg:settings_ai_task_compose}', agentKey: 'Composer', confidentiality: 'normal', defaultProvider: 'OPENAI' },
+        { type: 'TRANSLATE', nameKey: '{msg:settings_ai_task_translate}', confidentiality: 'normal', defaultProvider: 'OPENAI' },
+        { type: 'SENTINEL', nameKey: '{msg:settings_ai_task_sentinel}', agentKey: 'Sentinel', confidentiality: 'high', defaultProvider: 'OLLAMA' },
+        { type: 'COMPLIANCE', nameKey: '{msg:settings_ai_task_compliance}', agentKey: 'Compliance', confidentiality: 'high', defaultProvider: 'OLLAMA' },
+        { type: 'ANALYST', nameKey: '{msg:settings_ai_task_analyst}', agentKey: 'Analyst', confidentiality: 'low', defaultProvider: 'OPENAI' },
+        { type: 'DIRECTOR', nameKey: '{msg:settings_ai_task_director}', agentKey: 'Director', confidentiality: 'normal', defaultProvider: 'ANTHROPIC' },
+        { type: 'TRANSFORMER', nameKey: '{msg:settings_ai_task_transformer}', agentKey: 'Transformer', confidentiality: 'low', defaultProvider: 'OPENAI' },
+        { type: 'SCHEDULER', nameKey: '{msg:settings_ai_task_scheduler}', agentKey: 'Scheduler', confidentiality: 'low', defaultProvider: 'OPENAI' }
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderTaskTable();
+        loadOllamaStatus();
+        loadTaskProviderSettings();
+        loadCostMonitor();
+    });
+
+    function renderTaskTable() {
+        var tbody = document.getElementById('task-table-body');
+        var confidentialityLabels = {
+            high: { label: '{msg:settings_ai_confidentiality_high}', icon: 'fa-lock', cls: 'status-error' },
+            normal: { label: '{msg:settings_ai_confidentiality_normal}', icon: 'fa-shield-alt', cls: 'status-warning' },
+            low: { label: '{msg:settings_ai_confidentiality_low}', icon: 'fa-globe', cls: 'status-success' }
+        };
+
+        tbody.innerHTML = taskDefinitions.map(function(task) {
+            var conf = confidentialityLabels[task.confidentiality];
+            var agentHtml = task.agentKey ? '<span style="font-size: 0.75rem; color: var(--text-muted, var(--ak-text-muted));">' + escapeHtmlGlobal(task.agentKey) + '</span>' : '';
+            return '<tr style="transition: background 0.2s ease;">' +
+                '<td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); vertical-align: middle;">' +
+                    '<div style="display: flex; flex-direction: column; gap: 0.15rem;">' +
+                        '<span style="font-weight: 500; color: var(--text-heading, var(--ak-text));">' + escapeHtmlGlobal(task.nameKey) + '</span>' +
+                        agentHtml +
+                    '</div>' +
+                '</td>' +
+                '<td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); vertical-align: middle;">' +
+                    '<span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.55rem; border-radius: 2px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; background: var(--' + conf.cls + '-bg); color: var(--' + conf.cls + ');">' +
+                        '<i class="fas ' + conf.icon + '"></i> ' + escapeHtmlGlobal(conf.label) +
+                    '</span>' +
+                '</td>' +
+                '<td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); vertical-align: middle;">' +
+                    '<div class="ai-select-group">' +
+                        '<input type="radio" name="task-' + task.type + '" id="' + task.type + '-OLLAMA" value="OLLAMA"' + (task.defaultProvider === 'OLLAMA' ? ' checked' : '') + '>' +
+                        '<label for="' + task.type + '-OLLAMA"><i class="fas fa-server"></i> {msg:settings_ai_provider_local}</label>' +
+                        '<input type="radio" name="task-' + task.type + '" id="' + task.type + '-OPENAI" value="OPENAI"' + (task.defaultProvider === 'OPENAI' ? ' checked' : '') + '>' +
+                        '<label for="' + task.type + '-OPENAI"><i class="fas fa-cloud"></i> OpenAI</label>' +
+                        '<input type="radio" name="task-' + task.type + '" id="' + task.type + '-ANTHROPIC" value="ANTHROPIC"' + (task.defaultProvider === 'ANTHROPIC' ? ' checked' : '') + '>' +
+                        '<label for="' + task.type + '-ANTHROPIC"><i class="fas fa-cloud"></i> Anthropic</label>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    async function loadOllamaStatus() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        try {
+            var response = await fetch('/api/v1/ai/settings/ollama/status', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                updateOllamaStatusUI(false, '', '', []);
+                return;
+            }
+            var status = await response.json();
+            updateOllamaStatusUI(status.connected, status.endpoint, status.currentModel, status.availableModels);
+        } catch (err) {
+            updateOllamaStatusUI(false, '', '', []);
+        }
+    }
+
+    function updateOllamaStatusUI(connected, endpoint, currentModel, availableModels) {
+        var dot = document.getElementById('status-dot');
+        var label = document.getElementById('status-label');
+        var modelTag = document.getElementById('model-tag');
+        var modelName = document.getElementById('model-name');
+        var endpointUrl = document.getElementById('endpoint-url');
+        var modelListArea = document.getElementById('model-list-area');
+        var modelList = document.getElementById('model-list');
+
+        if (connected) {
+            dot.className = 'settings-ai-status-dot settings-ai-status-dot--connected';
+            label.textContent = '{msg:settings_ai_connected}';
+            label.style.color = 'var(--status-success, #6B8B4A)';
+            modelTag.style.display = 'inline-flex';
+            modelName.textContent = currentModel || '-';
+        } else {
+            dot.className = 'settings-ai-status-dot settings-ai-status-dot--disconnected';
+            label.textContent = '{msg:settings_ai_disconnected}';
+            label.style.color = 'var(--status-error, #B04040)';
+            modelTag.style.display = 'none';
+        }
+
+        endpointUrl.textContent = endpoint || '-';
+
+        if (availableModels && availableModels.length > 0) {
+            modelListArea.style.display = '';
+            modelList.innerHTML = availableModels.map(function(m) {
+                return '<span style="display: inline-flex; align-items: center; gap: 0.25rem; background: var(--bg-elevated, #F0EBD8); border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.75rem; color: var(--text-sec, var(--ak-text-muted));">' +
+                    '<i class="fas fa-cube" style="font-size: 0.65rem;"></i>' +
+                    escapeHtmlGlobal(m) +
+                '</span>';
+            }).join('');
+        } else {
+            modelListArea.style.display = 'none';
+        }
+    }
+
+    async function handleReconnect() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var btn = document.getElementById('btn-reconnect');
+        btn.disabled = true;
+        var dot = document.getElementById('status-dot');
+        dot.className = 'settings-ai-status-dot settings-ai-status-dot--loading';
+        var label = document.getElementById('status-label');
+        label.textContent = '{msg:settings_ai_reconnecting}';
+        label.style.color = 'var(--text-muted, var(--ak-text-muted))';
+
+        try {
+            var response = await fetch('/api/v1/ai/settings/ollama/reconnect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            if (!response.ok) {
+                updateOllamaStatusUI(false, '', '', []);
+                showToast('error', '{msg:settings_ai_reconnect_error}');
+                return;
+            }
+            var status = await response.json();
+            updateOllamaStatusUI(status.connected, status.endpoint, status.currentModel, status.availableModels);
+            if (status.connected) {
+                showToast('success', '{msg:settings_ai_reconnect_success}');
+            } else {
+                showToast('warning', '{msg:settings_ai_reconnect_failed}');
+            }
+        } catch (err) {
+            updateOllamaStatusUI(false, '', '', []);
+            showToast('error', '{msg:error_network}');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function loadTaskProviderSettings() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/ai/settings/task-providers', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var settings = await response.json();
+            settings.forEach(function(s) {
+                var radio = document.getElementById(s.taskType + '-' + s.provider);
+                if (radio) radio.checked = true;
+            });
+        } catch (err) {
+            showToast('error', '{msg:error_load_failed}');
+        }
+    }
+
+    async function loadCostMonitor() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/ai/settings/cost-monitor', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var data = await response.json();
+            document.getElementById('cost-total').textContent = data.totalCalls || 0;
+            var container = document.getElementById('cost-by-provider');
+            if (data.callsByProvider) {
+                container.innerHTML = Object.keys(data.callsByProvider).map(function(key) {
+                    return '<div>' +
+                        '<div style="font-size: 0.8rem; color: var(--text-muted, var(--ak-text-muted)); letter-spacing: 0.04em; margin-bottom: 0.25rem;">' + escapeHtmlGlobal(key) + '</div>' +
+                        '<div style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading, var(--ak-text));">' + data.callsByProvider[key] + '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        } catch (err) {
+            showToast('error', '{msg:error_load_failed}');
+        }
+    }
+
+    function setAllProvider(provider) {
+        taskDefinitions.forEach(function(task) {
+            var radio = document.getElementById(task.type + '-' + provider);
+            if (radio) radio.checked = true;
+        });
+    }
+
+    function resetToRecommended() {
+        taskDefinitions.forEach(function(task) {
+            var radio = document.getElementById(task.type + '-' + task.defaultProvider);
+            if (radio) radio.checked = true;
+        });
+    }
+
+    async function saveSettings() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var settings = [];
+        taskDefinitions.forEach(function(task) {
+            var selected = document.querySelector('input[name="task-' + task.type + '"]:checked');
+            if (selected) {
+                settings.push({ taskType: task.type, provider: selected.value });
+            }
+        });
+
+        try {
+            var response = await fetch('/api/v1/ai/settings/task-providers', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ settings: settings })
+            });
+
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                await showApiError(response, '{msg:settings_ai_save_error}');
+                return;
+            }
+            showToast('success', '{msg:settings_ai_saved}');
+        } catch (err) {
+            showToast('error', '{msg:error_network}');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/';
+    }
+</script>
+{/body}
+{/include}

@@ -19,11 +19,12 @@ interface LoginResponse {
     expiresIn: number;
 }
 
-interface ToastOptions {
-    message: string;
-    type: "success" | "error" | "info" | "warning";
-    duration?: number;
-}
+declare function showToast(
+    type: "success" | "error" | "info" | "warning",
+    title: string,
+    detail?: string,
+    durationMs?: number
+): void;
 
 // ---------------------------------------------------------------------------
 // Token Management
@@ -155,91 +156,10 @@ function initHtmxInterceptors(): void {
                 }
             });
         } else if (status >= 500) {
-            showToast({
-                message: "Server error occurred. Please try again later.",
-                type: "error",
-            });
+            showToast("error", "Server error occurred. Please try again later.");
         }
     }) as EventListener);
 }
-
-// ---------------------------------------------------------------------------
-// Toast Notification System
-// ---------------------------------------------------------------------------
-
-let toastContainer: HTMLElement | null = null;
-
-function getToastContainer(): HTMLElement {
-    if (toastContainer && document.body.contains(toastContainer)) {
-        return toastContainer;
-    }
-
-    toastContainer = document.createElement("div");
-    toastContainer.id = "ak-toast-container";
-    toastContainer.setAttribute("role", "status");
-    toastContainer.setAttribute("aria-live", "polite");
-    Object.assign(toastContainer.style, {
-        position: "fixed",
-        top: "calc(var(--ak-header-height, 60px) + 1rem)",
-        right: "1rem",
-        zIndex: "9999",
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-        maxWidth: "400px",
-        width: "100%",
-        pointerEvents: "none",
-    });
-    document.body.appendChild(toastContainer);
-    return toastContainer;
-}
-
-const TOAST_COLORS: Record<ToastOptions["type"], { bg: string; border: string }> = {
-    success: { bg: "#d4edda", border: "#28a745" },
-    error: { bg: "#f8d7da", border: "#dc3545" },
-    info: { bg: "#d1ecf1", border: "#17a2b8" },
-    warning: { bg: "#fff3cd", border: "#ffc107" },
-};
-
-function showToast(options: ToastOptions): void {
-    const container = getToastContainer();
-    const toast = document.createElement("div");
-    const colors = TOAST_COLORS[options.type];
-    const duration = options.duration ?? 5000;
-
-    Object.assign(toast.style, {
-        background: colors.bg,
-        border: "1px solid " + colors.border,
-        borderLeft: "4px solid " + colors.border,
-        borderRadius: "6px",
-        padding: "0.8rem 1.2rem",
-        color: "#212529",
-        fontSize: "0.9rem",
-        pointerEvents: "auto",
-        opacity: "0",
-        transform: "translateX(100%)",
-        transition: "opacity 0.3s ease, transform 0.3s ease",
-    });
-    toast.textContent = options.message;
-
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.style.opacity = "1";
-        toast.style.transform = "translateX(0)";
-    });
-
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        toast.style.transform = "translateX(100%)";
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, duration);
-}
-
-// Do not export showToast globally — base.html defines the canonical version
-// that all HTML templates use (with signature: showToast(type, title, detail, durationMs)).
 
 // ---------------------------------------------------------------------------
 // Form Submission Helpers
@@ -300,10 +220,7 @@ async function submitForm(options: SubmitOptions): Promise<void> {
             if (onError) {
                 onError(errorData);
             } else {
-                showToast({
-                    message: errorData.message || "Request failed",
-                    type: "error",
-                });
+                showToast("error", errorData.message || "Request failed");
             }
             return;
         }
@@ -316,16 +233,13 @@ async function submitForm(options: SubmitOptions): Promise<void> {
         if (onSuccess) {
             onSuccess(data);
         } else {
-            showToast({ message: "Success!", type: "success" });
+            showToast("success", "Success!");
         }
     } catch {
         if (onError) {
             onError({ message: "Network error. Please check your connection and try again." });
         } else {
-            showToast({
-                message: "Network error. Please check your connection and try again.",
-                type: "error",
-            });
+            showToast("error", "Network error. Please check your connection and try again.");
         }
     } finally {
         if (submitButton) {

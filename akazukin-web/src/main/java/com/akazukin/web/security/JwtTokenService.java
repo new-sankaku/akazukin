@@ -5,11 +5,13 @@ import io.smallrye.jwt.build.Jwt;
 import io.smallrye.jwt.util.KeyUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jose4j.jwe.JsonWebEncryption;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.time.Instant;
@@ -30,6 +32,9 @@ public class JwtTokenService {
 
     @ConfigProperty(name = "mp.jwt.verify.publickey.location", defaultValue = "/publicKey.pem")
     String publicKeyLocation;
+
+    @ConfigProperty(name = "smallrye.jwt.sign.key.location", defaultValue = "/privateKey.pem")
+    String privateKeyLocation;
 
     public String generateAccessToken(User user) {
         return Jwt.issuer(issuer)
@@ -65,15 +70,25 @@ public class JwtTokenService {
 
         JwtClaims claims;
         try {
+            String innerToken = token;
+            if (token.split("\\.").length == 5) {
+                PrivateKey privateKey = KeyUtils.readPrivateKey(privateKeyLocation);
+                JsonWebEncryption jwe = new JsonWebEncryption();
+                jwe.setCompactSerialization(token);
+                jwe.setKey(privateKey);
+                innerToken = jwe.getPayload();
+            }
             PublicKey publicKey = KeyUtils.readPublicKey(publicKeyLocation);
             JwtConsumer jwtConsumer = new JwtConsumerBuilder()
                     .setRequireSubject()
                     .setExpectedIssuer(issuer)
                     .setVerificationKey(publicKey)
                     .build();
-            claims = jwtConsumer.processToClaims(token);
+            claims = jwtConsumer.processToClaims(innerToken);
         } catch (InvalidJwtException e) {
             throw new InvalidRefreshTokenException("Failed to parse refresh token: " + e.getMessage(), e);
+        } catch (InvalidRefreshTokenException e) {
+            throw e;
         } catch (Exception e) {
             throw new InvalidRefreshTokenException("Failed to verify refresh token: " + e.getMessage(), e);
         }

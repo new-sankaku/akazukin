@@ -62,4 +62,3 @@ include("akazukin-adapter-sns:akazukin-adapter-devkit")
 include("akazukin-worker")
 
 include("akazukin-web")
-include("akazukin-worker")

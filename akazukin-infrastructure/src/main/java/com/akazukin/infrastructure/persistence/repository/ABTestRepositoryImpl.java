@@ -1,6 +1,7 @@
 package com.akazukin.infrastructure.persistence.repository;
 
 import com.akazukin.domain.model.ABTest;
+import com.akazukin.domain.model.ABTestStatus;
 import com.akazukin.domain.port.ABTestRepository;
 import com.akazukin.infrastructure.persistence.entity.ABTestEntity;
 import com.akazukin.infrastructure.persistence.mapper.ABTestMapper;
@@ -48,5 +49,19 @@ public class ABTestRepositoryImpl implements ABTestRepository, PanacheRepository
     @Transactional
     public void deleteById(UUID id) {
         delete("id", id);
+    }
+
+    @Override
+    public List<ABTest> findByUserIdAndStatus(UUID userId, ABTestStatus status) {
+        return find("userId = ?1 AND status = ?2 ORDER BY createdAt DESC", userId, status.name())
+                .list()
+                .stream()
+                .map(ABTestMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<ABTest> findCompletedByUserId(UUID userId) {
+        return findByUserIdAndStatus(userId, ABTestStatus.COMPLETED);
     }
 }

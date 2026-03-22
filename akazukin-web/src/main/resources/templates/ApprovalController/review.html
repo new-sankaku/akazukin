@@ -1,5 +1,5 @@
 {#include base}
-{#title}承認レビュー - Akazukin{/title}
+{#title}{msg:approval_review_page_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -8,47 +8,118 @@
 
     <main class="ak-main">
         <div style="margin-bottom: 1.5rem;">
-            <a href="/approvals" style="color: var(--accent-gold, var(--ak-primary)); text-decoration: none; font-size: 0.9rem; letter-spacing: 0.05em;">← 承認一覧に戻る</a>
+            <a href="/approvals" style="color: var(--accent-gold, var(--ak-primary)); text-decoration: none; font-size: 0.9rem; letter-spacing: 0.05em;">{msg:approval_review_back}</a>
         </div>
 
-        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">承認レビュー</h2>
+        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">{msg:approval_review_heading}</h2>
 
-        <!-- 投稿内容 -->
         <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem;">
-            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">投稿内容</h3>
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">{msg:approval_review_post_content}</h3>
             <div id="approval-content" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;" aria-busy="true">
-                読み込み中...
+                {msg:approval_loading}
             </div>
             <div id="approval-meta" style="margin-top: 1rem; color: var(--text-muted, var(--ak-text-muted)); font-size: 0.8rem;"></div>
         </div>
 
-        <!-- 承認・却下フォーム -->
+        <div id="ai-review-section" style="margin-bottom: 1.5rem;"></div>
+
         <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">判定</h3>
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">{msg:approval_review_verdict}</h3>
             <div style="margin-bottom: 1rem;">
-                <label for="comment" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">コメント（任意）</label>
-                <textarea id="comment" rows="3" placeholder="承認・却下の理由やコメントを入力..."
+                <label for="comment" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:approval_review_comment_label}</label>
+                <textarea id="comment" rows="3" placeholder="{msg:approval_review_comment_placeholder}"
                     style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
             </div>
-            <div style="display: flex; gap: 0.75rem;">
-                <button type="button" id="approve-btn" onclick="submitDecision('APPROVED')"
-                    style="background: rgba(106, 168, 106, 0.15); color: #4A7A4A; border: 1px solid #8AB88A; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em;">
-                    承認する
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button type="button" id="approve-btn" onclick="submitDecision('APPROVE')"
+                    style="background: var(--approve-bg); color: var(--approve-text); border: 1px solid var(--approve-border); padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em;">
+                    {msg:approval_action_approve}
                 </button>
-                <button type="button" id="reject-btn" onclick="submitDecision('REJECTED')"
+                <button type="button" id="return-btn" onclick="submitDecision('REQUEST_CHANGES')"
+                    style="background: transparent; color: var(--status-warning, #C8A96E); border: 1px solid var(--status-warning, #C8A96E); padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em;">
+                    {msg:approval_action_return}
+                </button>
+                <button type="button" id="reject-btn" onclick="submitDecision('REJECT')"
                     style="background: transparent; color: var(--status-error, #B04040); border: 1px solid var(--status-error, #B04040); padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em;">
-                    却下する
+                    {msg:approval_action_reject}
+                </button>
+                <div style="flex: 1;"></div>
+                <button type="button" id="recheck-btn" onclick="recheckAi()"
+                    style="background: transparent; color: var(--text-sec, var(--ak-text-muted)); border: 1px solid var(--border, var(--ak-border)); padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em;">
+                    {msg:approval_ai_recheck}
                 </button>
             </div>
         </div>
     </main>
 </div>
 
+<style>
+    .ak-ai-report {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border, var(--ak-border));
+        border-radius: 8px;
+        padding: 1.2rem;
+    }
+    .ak-finding {
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 6px;
+        margin-bottom: 0.6rem;
+        overflow: hidden;
+        background: var(--bg-elevated, var(--ak-bg));
+    }
+    .ak-finding-header {
+        display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; cursor: pointer;
+        transition: background 0.2s;
+    }
+    .ak-finding-header:hover { background: var(--bg-subtle, #E4DECC); }
+    .ak-finding-detail {
+        display: none; padding: 0.8rem 1rem; border-top: 1px solid var(--border-lt, var(--ak-border));
+        font-size: 0.85rem; color: var(--text-body, var(--ak-text)); background: var(--bg-surface, var(--ak-bg-secondary));
+    }
+    .ak-finding.open .ak-finding-detail { display: block; }
+
+    .ak-severity-icon {
+        width: 1.4rem; height: 1.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 700; color: var(--color-white, #fff); flex-shrink: 0;
+    }
+    .ak-severity-icon.critical { background: var(--status-error, #B04040); }
+    .ak-severity-icon.warning { background: var(--status-warning, #C8A96E); }
+    .ak-severity-icon.info { background: var(--status-info, #5A8BA0); }
+
+    .ak-finding-law {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        background: var(--accent-gold-light, #F2E6D0); color: var(--finding-law-text, #8B6A2A);
+        font-size: 0.78rem; padding: 0.2rem 0.5rem; border-radius: 2px; margin-right: 0.5rem; margin-bottom: 0.3rem;
+    }
+</style>
+
 <script>
+    var MSG_LOAD_FAILED = '{msg:approval_review_load_error}';
+    var MSG_LOAD_ERROR_TOAST = '{msg:approval_review_load_error_toast}';
+    var MSG_REQUESTER = '{msg:approval_review_requester}';
+    var MSG_REQUESTED_DATE = '{msg:approval_review_requested_date}';
+    var MSG_AI_REPORT_TITLE = '{msg:approval_ai_report_title}';
+    var MSG_SCORE_PASS = '{msg:approval_ai_score_pass}';
+    var MSG_SCORE_WARN = '{msg:approval_ai_score_warn}';
+    var MSG_SCORE_FAIL = '{msg:approval_ai_score_fail}';
+    var MSG_SCORE_SUFFIX = '{msg:approval_score_suffix}';
+    var MSG_PAST_CASE = '{msg:approval_ai_past_case}';
+    var MSG_RECHECK_RUNNING = '{msg:approval_review_recheck_running}';
+    var MSG_RECHECK_ERROR = '{msg:approval_ai_recheck_error}';
+    var MSG_RECHECK_SUCCESS = '{msg:approval_ai_recheck_success}';
+    var MSG_RECHECK_LABEL = '{msg:approval_ai_recheck}';
+    var MSG_DECISION_APPROVE = '{msg:approval_decision_approve}';
+    var MSG_DECISION_RETURN = '{msg:approval_decision_return}';
+    var MSG_DECISION_REJECT = '{msg:approval_decision_reject}';
+    var MSG_DECISION_ERROR = '{msg:approval_decision_error}';
+    var MSG_NETWORK_ERROR = '{msg:approval_network_error}';
+    var MSG_NETWORK_ERROR_DETAIL = '{msg:approval_review_network_error_detail}';
+
     var approvalId = '{approvalId}';
 
     document.addEventListener('DOMContentLoaded', function() {
         loadApprovalDetail();
+        loadAiReview();
     });
 
     async function loadApprovalDetail() {
@@ -56,49 +127,128 @@
         if (!token) { window.location.href = '/'; return; }
 
         try {
-            var response = await fetch('/api/v1/approvals/pending?page=0&size=100', {
+            var response = await fetch('/api/v1/approvals/' + approvalId, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.status === 401) { window.location.href = '/'; return; }
             if (!response.ok) {
-                document.getElementById('approval-content').textContent = '読み込みに失敗しました';
+                document.getElementById('approval-content').textContent = MSG_LOAD_FAILED;
+                showToast('error', MSG_LOAD_ERROR_TOAST);
                 return;
             }
-            var data = await response.json();
-            var approvals = Array.isArray(data) ? data : (data.data || []);
-            var approval = approvals.find(function(a) { return a.id === approvalId; });
-
-            if (!approval) {
-                document.getElementById('approval-content').textContent = '承認リクエストが見つかりませんでした';
-                return;
-            }
+            var approval = await response.json();
 
             document.getElementById('approval-content').textContent = approval.postContent || approval.content || '';
             var meta = '';
             if (approval.requesterName || approval.requesterId) {
-                meta += '申請者: ' + escapeHtmlGlobal(approval.requesterName || approval.requesterId);
+                meta += MSG_REQUESTER + ': ' + escapeHtmlGlobal(approval.requesterName || approval.requesterId);
             }
             if (approval.requestedAt) {
                 var date = new Date(approval.requestedAt).toLocaleDateString('ja-JP', {
                     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
-                meta += (meta ? ' | ' : '') + '申請日: ' + escapeHtmlGlobal(date);
+                meta += (meta ? ' | ' : '') + MSG_REQUESTED_DATE + ': ' + escapeHtmlGlobal(date);
             }
             document.getElementById('approval-meta').innerHTML = meta;
         } catch (err) {
-            document.getElementById('approval-content').textContent = '読み込みに失敗しました';
-            showToast('error', '承認リクエストの読み込みに失敗しました');
+            document.getElementById('approval-content').textContent = MSG_LOAD_FAILED;
+            showToast('error', MSG_LOAD_ERROR_TOAST);
         }
     }
 
-    async function submitDecision(decision) {
+    async function loadAiReview() {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/approvals/' + approvalId + '/ai-review', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var data = await response.json();
+            renderAiReport(data);
+        } catch (err) {
+        }
+    }
+
+    function renderAiReport(data) {
+        var rootStyle = getComputedStyle(document.documentElement);
+        var scoreBgMap = {
+            pass: (rootStyle.getPropertyValue('--verdict-pass-bg').trim() || '#C8DEB8') + '; color: ' + (rootStyle.getPropertyValue('--verdict-pass').trim() || '#3B5228'),
+            warn: (rootStyle.getPropertyValue('--verdict-warn-bg').trim() || '#E8DCC0') + '; color: ' + (rootStyle.getPropertyValue('--verdict-warn').trim() || '#6B5828'),
+            fail: (rootStyle.getPropertyValue('--verdict-fail-bg').trim() || '#E8C4C4') + '; color: ' + (rootStyle.getPropertyValue('--verdict-fail').trim() || '#6B2020')
+        };
+        var scoreLabel = data.verdict === 'pass' ? MSG_SCORE_PASS : (data.verdict === 'warn' ? MSG_SCORE_WARN : MSG_SCORE_FAIL);
+        var scoreClass = data.verdict;
+
+        var html = '<div class="ak-ai-report">' +
+            '<div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">' +
+            '<div style="width: 1.8rem; height: 1.8rem; background: var(--accent-gold-light, #F2E6D0); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;">AI</div>' +
+            '<span style="font-weight: 500; color: var(--text-heading, var(--ak-text)); font-size: 1rem;">' + MSG_AI_REPORT_TITLE + '</span>' +
+            '<span style="margin-left: auto; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-weight: 500; background: ' + scoreBgMap[scoreClass] + ';">' + scoreLabel + ' (' + MSG_SCORE_SUFFIX + ': ' + data.score + '/100)</span></div>';
+
+        if (data.findings && data.findings.length > 0) {
+            data.findings.forEach(function(finding, idx) {
+                var severityIcon = finding.severity === 'critical' ? '!' : (finding.severity === 'info' ? 'i' : '!');
+                var severityClass = finding.severity === 'critical' ? 'critical' : (finding.severity === 'info' ? 'info' : 'warning');
+                html += '<div class="ak-finding" id="finding-' + idx + '">' +
+                    '<div class="ak-finding-header" onclick="toggleFinding(\'finding-' + idx + '\')">' +
+                    '<div class="ak-severity-icon ' + severityClass + '">' + severityIcon + '</div>' +
+                    '<span style="font-size: 0.88rem; color: var(--text-body, var(--ak-text)); flex: 1;">' + escapeHtmlGlobal(finding.title) + '</span>' +
+                    '<span style="font-size: 0.7rem; color: var(--text-muted, var(--ak-text-muted));">&#9654;</span></div>' +
+                    '<div class="ak-finding-detail"><p>' + escapeHtmlGlobal(finding.description) + '</p>';
+                if (finding.relatedLaws && finding.relatedLaws.length > 0) {
+                    html += '<div style="margin-top: 0.6rem;">';
+                    finding.relatedLaws.forEach(function(law) { html += '<span class="ak-finding-law">' + escapeHtmlGlobal(law) + '</span>'; });
+                    html += '</div>';
+                }
+                if (finding.pastCase) {
+                    html += '<div style="margin-top: 0.5rem; padding: 0.6rem; background: var(--bg-elevated, var(--ak-bg)); border-radius: 6px; border-left: 3px solid var(--border, var(--ak-border)); font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted));"><strong>' + MSG_PAST_CASE + ':</strong> ' + escapeHtmlGlobal(finding.pastCase) + '</div>';
+                }
+                html += '</div></div>';
+            });
+        }
+        html += '</div>';
+        document.getElementById('ai-review-section').innerHTML = html;
+    }
+
+    function toggleFinding(id) {
+        document.getElementById(id).classList.toggle('open');
+    }
+
+    async function recheckAi() {
+        var token = localStorage.getItem('accessToken');
+        var btn = document.getElementById('recheck-btn');
+        btn.disabled = true;
+        btn.textContent = MSG_RECHECK_RUNNING;
+        try {
+            var response = await fetch('/api/v1/approvals/' + approvalId + '/ai-recheck', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) {
+                await showApiError(response, MSG_RECHECK_ERROR);
+                return;
+            }
+            var data = await response.json();
+            renderAiReport(data);
+            showToast('success', MSG_RECHECK_SUCCESS);
+        } catch (err) {
+            showToast('error', MSG_RECHECK_ERROR);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = MSG_RECHECK_LABEL;
+        }
+    }
+
+    async function submitDecision(action) {
         var token = localStorage.getItem('accessToken');
         if (!token) { window.location.href = '/'; return; }
 
         var comment = document.getElementById('comment').value;
         var approveBtn = document.getElementById('approve-btn');
+        var returnBtn = document.getElementById('return-btn');
         var rejectBtn = document.getElementById('reject-btn');
         approveBtn.disabled = true;
+        returnBtn.disabled = true;
         rejectBtn.disabled = true;
 
         try {
@@ -108,20 +258,26 @@
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
                 },
-                body: JSON.stringify({ decision: decision, comment: comment })
+                body: JSON.stringify({ action: action, comment: comment })
             });
 
             if (!response.ok) {
-                await showApiError(response, '処理に失敗しました');
+                await showApiError(response, MSG_DECISION_ERROR);
                 return;
             }
 
-            showToast('success', decision === 'APPROVED' ? '承認しました' : '却下しました');
+            var messages = {
+                'APPROVE': MSG_DECISION_APPROVE,
+                'REQUEST_CHANGES': MSG_DECISION_RETURN,
+                'REJECT': MSG_DECISION_REJECT
+            };
+            showToast('success', messages[action]);
             setTimeout(function() { window.location.href = '/approvals'; }, 1000);
         } catch (err) {
-            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。');
+            showToast('error', MSG_NETWORK_ERROR, MSG_NETWORK_ERROR_DETAIL);
         } finally {
             approveBtn.disabled = false;
+            returnBtn.disabled = false;
             rejectBtn.disabled = false;
         }
     }
@@ -130,11 +286,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

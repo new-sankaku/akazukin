@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ニュース - Akazukin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg-deep:#C4BDA6;--bg-main:#DAD4BE;--bg-surface:#EDE8D5;--bg-elevated:#F0EBD8;--bg-subtle:#E4DECC;--bg-field:#DDD6BB;
+--border:#B8B19C;--border-lt:#CCC5AE;--border-sub:#DDD6BB;
+--text-heading:#3D3A32;--text-primary:#4D493E;--text-body:#5A5548;--text-sec:#7A7464;--text-muted:#7A7464;--text-faint:#8A8470;
+--accent-gold:#C8964A;--accent-gold-light:#F2E6D0;--accent-gold-hover:#B5853E;
+--status-success:#6B8B4A;--status-warning:#C8A96E;--status-error:#B04040;--status-info:#5A8BA0;--status-info-bg:rgba(90,139,160,.1);--status-error-bg:rgba(176,64,64,.1);
+--font-sans:'Noto Sans JP','Segoe UI','Meiryo','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+--font-mono:'Courier New',monospace;
+--sp-xs:0.25rem;--sp-sm:0.5rem;--sp-md:1rem;--sp-lg:1.5rem;--sp-xl:2rem;--sp-2xl:3rem;
+--radius-sm:0.2rem;--radius-md:0.4rem;--radius-lg:0.6rem;
+--shadow-sm:0 1px 4px rgba(75,65,50,0.10);--shadow-md:0 2px 8px rgba(75,65,50,0.15);--shadow-lg:0 4px 16px rgba(75,65,50,0.18);
+--transition:0.2s ease;
+}
+html{font-size:16px}
+body{font-family:var(--font-sans);background:var(--bg-main);color:var(--text-body);line-height:1.7;min-height:100vh}
+h1,h2,h3,h4{color:var(--text-heading);font-weight:500;letter-spacing:.04em}
+h1{font-size:1.6rem;padding:1.2rem 0;border-bottom:2px solid var(--border);margin-bottom:var(--sp-lg)}
+h2{font-size:1.2rem;margin-bottom:var(--sp-sm)}
+h3{font-size:1.05rem;margin-bottom:var(--sp-sm)}
+.page{max-width:1200px;margin:0 auto;padding:var(--sp-xl) var(--sp-lg)}
+.section{margin-bottom:var(--sp-2xl)}
+.section-title{display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem;padding-bottom:var(--sp-sm);border-bottom:1px solid var(--border-lt)}
+.section-title::before{content:'';display:block;width:4px;height:1.2rem;background:var(--accent-gold);border-radius:1px}
+.news-list{display:flex;flex-direction:column;gap:1.2rem}
+.news-card{position:relative;background:var(--bg-surface);border:1px solid var(--border-lt);padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:var(--sp-sm);border-radius:var(--radius-md);transition:border-color var(--transition)}
+.news-card::before,.news-card::after{content:'';position:absolute;width:12px;height:12px;border:1.5px solid var(--border-lt);pointer-events:none;transition:border-color var(--transition)}
+.news-card::before{top:-1px;left:-1px;border-right:none;border-bottom:none;border-radius:var(--radius-sm) 0 0 0}
+.news-card::after{bottom:-1px;right:-1px;border-left:none;border-top:none;border-radius:0 0 var(--radius-sm) 0}
+.news-card:hover{border-color:var(--accent-gold)}
+.news-card:hover::before,.news-card:hover::after{border-color:var(--accent-gold)}
+.news-meta{display:flex;align-items:center;gap:var(--sp-sm);font-size:.8rem;color:var(--text-muted)}
+.news-meta .tag{background:var(--bg-field);border:1px solid var(--border-sub);padding:.1rem var(--sp-sm);font-size:.75rem;color:var(--text-sec);border-radius:var(--radius-sm)}
+.news-title{font-size:1.05rem;font-weight:500;color:var(--text-heading)}
+.news-summary{font-size:.88rem;color:var(--text-sec);line-height:1.6}
+.news-actions{display:flex;flex-wrap:wrap;gap:var(--sp-sm);margin-top:var(--sp-xs)}
+.btn{display:inline-flex;align-items:center;gap:var(--sp-xs);padding:.45rem var(--sp-md);font-size:.82rem;font-family:inherit;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);cursor:pointer;transition:all var(--transition);letter-spacing:.03em;border-radius:var(--radius-sm)}
+.btn:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+.btn-primary{background:var(--accent-gold);color:#FFFFFF;border-color:var(--accent-gold)}
+.btn-primary:hover{background:var(--accent-gold-hover);border-color:var(--accent-gold-hover);color:#FFFFFF}
+.btn-sm{padding:var(--sp-xs) .7rem;font-size:.78rem}
+.modal-overlay{position:fixed;inset:0;background:rgba(60,57,50,.35);display:none;align-items:center;justify-content:center;z-index:100;padding:var(--sp-md)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--bg-surface);border:1px solid var(--border);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:1.8rem var(--sp-xl);border-radius:var(--radius-md)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;padding-bottom:.6rem;border-bottom:1px solid var(--border-lt)}
+.modal-close{background:none;border:none;font-size:1.2rem;color:var(--text-muted);cursor:pointer;padding:var(--sp-xs) var(--sp-xs)}
+.modal-close:hover{color:var(--text-heading)}
+.persona-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--sp-sm);margin-bottom:1.2rem}
+.persona-card{position:relative;background:var(--bg-elevated);border:1px solid var(--border-lt);padding:var(--sp-sm);cursor:pointer;transition:all var(--transition);text-align:center;border-radius:var(--radius-md)}
+.persona-card::before,.persona-card::after{content:'';position:absolute;width:10px;height:10px;border:1.5px solid var(--border-lt);pointer-events:none;transition:border-color var(--transition)}
+.persona-card::before{top:-1px;left:-1px;border-right:none;border-bottom:none;border-radius:var(--radius-sm) 0 0 0}
+.persona-card::after{bottom:-1px;right:-1px;border-left:none;border-top:none;border-radius:0 0 var(--radius-sm) 0}
+.persona-card:hover,.persona-card.selected{border-color:var(--accent-gold);background:var(--accent-gold-light)}
+.persona-card:hover::before,.persona-card:hover::after,.persona-card.selected::before,.persona-card.selected::after{border-color:var(--accent-gold)}
+.persona-avatar{width:48px;height:48px;border-radius:50%;background:var(--bg-field);border:1px solid var(--border-sub);margin:0 auto var(--sp-sm);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--text-sec)}
+.persona-name{font-size:.85rem;font-weight:500;color:var(--text-heading)}
+.persona-desc{font-size:.75rem;color:var(--text-muted);margin-top:var(--sp-xs)}
+.angle-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--sp-md);margin-top:var(--sp-md)}
+.angle-card{position:relative;background:var(--bg-elevated);border:1px solid var(--border-lt);padding:1.2rem;display:flex;flex-direction:column;gap:.6rem;border-radius:var(--radius-md)}
+.angle-card::before,.angle-card::after{content:'';position:absolute;width:12px;height:12px;border:1.5px solid var(--border-lt);pointer-events:none;transition:border-color var(--transition)}
+.angle-card::before{top:-1px;left:-1px;border-right:none;border-bottom:none;border-radius:var(--radius-sm) 0 0 0}
+.angle-card::after{bottom:-1px;right:-1px;border-left:none;border-top:none;border-radius:0 0 var(--radius-sm) 0}
+.angle-card:hover{border-color:var(--accent-gold)}
+.angle-card:hover::before,.angle-card:hover::after{border-color:var(--accent-gold)}
+.angle-type{font-size:.78rem;font-weight:500;color:var(--accent-gold);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:var(--sp-xs)}
+.angle-type::before{content:'';display:block;width:8px;height:8px;border:1.5px solid var(--accent-gold);transform:rotate(45deg)}
+.angle-body{font-size:.88rem;color:var(--text-body);line-height:1.65}
+.platform-labels{display:flex;flex-wrap:wrap;gap:var(--sp-xs);margin-top:var(--sp-xs)}
+.platform-label{font-size:.72rem;padding:.15rem var(--sp-sm);border:1px solid var(--border-sub);background:var(--bg-field);color:var(--text-sec);border-radius:var(--radius-sm)}
+.platform-label.high{border-color:var(--status-success);color:var(--status-success);background:rgba(107,139,74,.08)}
+.platform-label.mid{border-color:var(--status-warning);color:var(--status-warning);background:rgba(200,169,110,.08)}
+.template-list{display:flex;flex-direction:column;gap:.7rem;margin-top:var(--sp-sm)}
+.template-item{display:flex;align-items:center;gap:var(--sp-md);background:var(--bg-elevated);border:1px solid var(--border-lt);padding:var(--sp-sm) var(--sp-md);border-radius:var(--radius-md);transition:border-color var(--transition)}
+.template-item:hover{border-color:var(--accent-gold)}
+.template-rank{font-size:1.4rem;font-weight:300;color:var(--text-muted);min-width:2rem;text-align:center}
+.template-info{flex:1}
+.template-name{font-size:.9rem;font-weight:500;color:var(--text-heading)}
+.template-reason{font-size:.78rem;color:var(--text-muted);margin-top:.15rem}
+.score-bar{display:flex;align-items:center;gap:var(--sp-sm);min-width:120px}
+.score-track{flex:1;height:6px;background:var(--bg-field);border:1px solid var(--border-sub);overflow:hidden;border-radius:var(--radius-sm)}
+.score-fill{height:100%;background:var(--accent-gold);transition:width .4s}
+.score-num{font-size:.78rem;font-weight:500;color:var(--accent-gold);min-width:2.5rem;text-align:right}
+.ab-container{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:var(--sp-md)}
+.ab-panel{position:relative;background:var(--bg-elevated);border:1px solid var(--border-lt);padding:1.2rem;display:flex;flex-direction:column;gap:.6rem;border-radius:var(--radius-md)}
+.ab-panel::before,.ab-panel::after{content:'';position:absolute;width:12px;height:12px;border:1.5px solid var(--border-lt);pointer-events:none;transition:border-color var(--transition)}
+.ab-panel::before{top:-1px;left:-1px;border-right:none;border-bottom:none;border-radius:var(--radius-sm) 0 0 0}
+.ab-panel::after{bottom:-1px;right:-1px;border-left:none;border-top:none;border-radius:0 0 var(--radius-sm) 0}
+.ab-panel:hover{border-color:var(--accent-gold)}
+.ab-panel:hover::before,.ab-panel:hover::after{border-color:var(--accent-gold)}
+.ab-label{font-size:.78rem;font-weight:500;letter-spacing:.06em;display:flex;align-items:center;gap:var(--sp-xs)}
+.ab-label-a{color:var(--status-info)}
+.ab-label-b{color:var(--accent-gold)}
+.ab-persona{display:flex;align-items:center;gap:var(--sp-sm);font-size:.82rem;color:var(--text-sec)}
+.ab-persona-icon{width:28px;height:28px;border-radius:50%;background:var(--bg-field);border:1px solid var(--border-sub);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--text-muted)}
+.ab-body{font-size:.88rem;color:var(--text-body);line-height:1.65}
+.ab-metrics{display:flex;gap:var(--sp-sm);font-size:.75rem;color:var(--text-muted);border-top:1px solid var(--border-sub);padding-top:var(--sp-sm);margin-top:var(--sp-xs)}
+.ab-select-personas{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md);margin-bottom:var(--sp-md)}
+.ab-select-side{display:flex;flex-direction:column;gap:var(--sp-sm)}
+.ab-select-label{font-size:.82rem;font-weight:500;color:var(--text-sec)}
+select{font-family:inherit;font-size:.85rem;padding:var(--sp-xs) .6rem;border:1px solid var(--border);background:var(--bg-field);color:var(--text-primary);cursor:pointer;width:100%;border-radius:var(--radius-sm)}
+select:focus{outline:none;border-color:var(--accent-gold)}
+.generated-text{background:var(--bg-field);border:1px solid var(--border-sub);padding:var(--sp-sm) var(--sp-md);font-size:.88rem;color:var(--text-body);line-height:1.65;margin-top:var(--sp-sm);border-radius:var(--radius-md)}
+.divider{width:100%;height:1px;background:var(--border-lt);margin:var(--sp-md) 0}
+.badge{display:inline-block;font-size:.7rem;padding:.1rem var(--sp-xs);border:1px solid;vertical-align:middle;margin-left:var(--sp-xs);border-radius:var(--radius-sm)}
+.badge-info{border-color:var(--status-info);color:var(--status-info)}
+.badge-success{border-color:var(--status-success);color:var(--status-success)}
+.inline-note{font-size:.78rem;color:var(--text-muted);font-style:italic}
+.step-indicator{display:flex;align-items:center;gap:var(--sp-sm);margin-bottom:var(--sp-md)}
+.step{display:flex;align-items:center;gap:var(--sp-xs);font-size:.78rem;color:var(--text-muted)}
+.step.active{color:var(--accent-gold);font-weight:500}
+.step-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem}
+.step.active .step-dot{border-color:var(--accent-gold);background:var(--accent-gold);color:var(--bg-elevated)}
+.step-line{width:24px;height:1px;background:var(--border-lt)}
+.template-apply-btn{margin-left:auto}
+@media(max-width:768px){
+.angle-cards{grid-template-columns:1fr}
+.ab-container{grid-template-columns:1fr}
+.ab-select-personas{grid-template-columns:1fr}
+.persona-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+}
+.inline-msg{display:none;padding:var(--sp-sm) var(--sp-md);font-size:.82rem;border:1px solid;border-radius:var(--radius-sm);margin-top:var(--sp-sm)}
+.inline-msg.visible{display:block}
+.inline-msg-info{color:var(--status-info);border-color:var(--status-info);background:var(--status-info-bg)}
+.inline-msg-error{color:var(--status-error);border-color:var(--status-error);background:var(--status-error-bg)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+<div class="page">
+<h1>ニュース</h1>
+
+<div class="news-list" id="newsList">
+
+<div class="news-card" data-news="0">
+<div class="news-meta">
+<span class="tag">AI</span>
+<span>2026年3月20日</span>
+<span>TechCrunch Japan</span>
+</div>
+<div class="news-title">OpenAI、次世代モデル「GPT-5」を正式発表 マルチモーダル性能が大幅向上</div>
+<div class="news-summary">OpenAIは次世代の大規模言語モデル「GPT-5」を発表した。画像・音声・動画の統合処理能力が前世代比で3倍に向上し、エンタープライズ向けAPIの提供も同時に開始される。</div>
+<div class="news-actions">
+<button class="btn" onclick="openPostIdea(0)">投稿ネタにする</button>
+<button class="btn" onclick="openMultiAngle(0)">マルチアングル生成</button>
+<button class="btn" onclick="openTemplateMatch(0)">テンプレート推薦</button>
+<button class="btn" onclick="openABTest(0)">A/Bテスト生成</button>
+</div>
+</div>
+
+<div class="news-card" data-news="1">
+<div class="news-meta">
+<span class="tag">半導体</span>
+<span>2026年3月19日</span>
+<span>日経クロステック</span>
+</div>
+<div class="news-title">TSMC、日本第2工場の建設を前倒し 2027年量産開始へ</div>
+<div class="news-summary">TSMCは熊本県に建設中の第2工場について、当初予定から半年前倒しで2027年前半の量産開始を目指すと発表。最先端の6nmプロセスを採用し、自動車・産業機器向け半導体を製造する。</div>
+<div class="news-actions">
+<button class="btn" onclick="openPostIdea(1)">投稿ネタにする</button>
+<button class="btn" onclick="openMultiAngle(1)">マルチアングル生成</button>
+<button class="btn" onclick="openTemplateMatch(1)">テンプレート推薦</button>
+<button class="btn" onclick="openABTest(1)">A/Bテスト生成</button>
+</div>
+</div>
+
+<div class="news-card" data-news="2">
+<div class="news-meta">
+<span class="tag">SaaS</span>
+<span>2026年3月18日</span>
+<span>ITmedia</span>
+</div>
+<div class="news-title">国内SaaS市場が2兆円突破、生成AI統合が成長を牽引</div>
+<div class="news-summary">IDC Japanの最新調査によると、2025年の国内SaaS市場規模が初めて2兆円を超えた。生成AIを組み込んだプロダクトの急増が市場拡大の主因とされ、特にマーケティング領域での導入が加速している。</div>
+<div class="news-actions">
+<button class="btn" onclick="openPostIdea(2)">投稿ネタにする</button>
+<button class="btn" onclick="openMultiAngle(2)">マルチアングル生成</button>
+<button class="btn" onclick="openTemplateMatch(2)">テンプレート推薦</button>
+<button class="btn" onclick="openABTest(2)">A/Bテスト生成</button>
+</div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="modalPostIdea">
+<div class="modal">
+<div class="modal-header">
+<h2>投稿ネタにする</h2>
+<button class="modal-close" onclick="closeAllModals()">&times;</button>
+</div>
+
+<div class="step-indicator">
+<div class="step active" id="stepPersona"><span class="step-dot">1</span>ペルソナ選択</div>
+<span class="step-line"></span>
+<div class="step" id="stepGenerate"><span class="step-dot">2</span>投稿文生成</div>
+<span class="step-line"></span>
+<div class="step" id="stepConfirm"><span class="step-dot">3</span>投稿作成へ</div>
+</div>
+
+<div id="postIdeaStep1">
+<p class="inline-note">この記事をもとに投稿を作成するペルソナを選んでください</p>
+<div class="divider"></div>
+<div class="persona-grid">
+<div class="persona-card" onclick="selectPersona(this, 'postIdea')">
+<div class="persona-avatar">T</div>
+<div class="persona-name">テック太郎</div>
+<div class="persona-desc">技術トレンド解説</div>
+</div>
+<div class="persona-card" onclick="selectPersona(this, 'postIdea')">
+<div class="persona-avatar">B</div>
+<div class="persona-name">ビジネス花子</div>
+<div class="persona-desc">ビジネス視点分析</div>
+</div>
+<div class="persona-card" onclick="selectPersona(this, 'postIdea')">
+<div class="persona-avatar">C</div>
+<div class="persona-name">カジュアル次郎</div>
+<div class="persona-desc">親しみやすい発信</div>
+</div>
+<div class="persona-card" onclick="selectPersona(this, 'postIdea')">
+<div class="persona-avatar">E</div>
+<div class="persona-name">エンジニア恵</div>
+<div class="persona-desc">実装者目線の発信</div>
+</div>
+</div>
+<div style="display:flex;justify-content:flex-end">
+<button class="btn btn-primary" onclick="goToPostIdeaStep2()" id="btnPostIdeaNext" disabled>投稿文を生成</button>
+</div>
+</div>
+
+<div id="postIdeaStep2" style="display:none">
+<p class="inline-note">選択したペルソナで投稿文を生成しました</p>
+<div class="divider"></div>
+<div id="postIdeaPersonaInfo" style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem;font-size:.85rem;color:var(--text-sec)"></div>
+<div class="generated-text" id="postIdeaGenerated"></div>
+<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem">
+<button class="btn" onclick="goToPostIdeaStep1()">やり直す</button>
+<button class="btn btn-primary" onclick="goToPostCreate()">投稿作成画面へ</button>
+</div>
+<div class="inline-msg inline-msg-info" id="msgPostCreate"></div>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalMultiAngle">
+<div class="modal" style="max-width:960px">
+<div class="modal-header">
+<h2>マルチアングル投稿案</h2>
+<button class="modal-close" onclick="closeAllModals()">&times;</button>
+</div>
+<p class="inline-note" id="multiAngleNewsTitle"></p>
+<div class="angle-cards" id="angleCards">
+<div class="angle-card">
+<div class="angle-type">速報型</div>
+<div class="angle-body" id="angleBreaking"></div>
+<div class="platform-labels">
+<span class="platform-label high">X (Twitter) : 適性 高</span>
+<span class="platform-label mid">Facebook : 適性 中</span>
+</div>
+<div style="margin-top:.6rem;display:flex;justify-content:flex-end">
+<button class="btn btn-sm">この案を採用</button>
+</div>
+</div>
+<div class="angle-card">
+<div class="angle-type">考察型</div>
+<div class="angle-body" id="angleAnalysis"></div>
+<div class="platform-labels">
+<span class="platform-label high">note : 適性 高</span>
+<span class="platform-label high">LinkedIn : 適性 高</span>
+<span class="platform-label mid">X (Twitter) : 適性 中</span>
+</div>
+<div style="margin-top:.6rem;display:flex;justify-content:flex-end">
+<button class="btn btn-sm">この案を採用</button>
+</div>
+</div>
+<div class="angle-card">
+<div class="angle-type">対話型</div>
+<div class="angle-body" id="angleDialogue"></div>
+<div class="platform-labels">
+<span class="platform-label high">Instagram : 適性 高</span>
+<span class="platform-label mid">X (Twitter) : 適性 中</span>
+</div>
+<div style="margin-top:.6rem;display:flex;justify-content:flex-end">
+<button class="btn btn-sm">この案を採用</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalTemplateMatch">
+<div class="modal">
+<div class="modal-header">
+<h2>テンプレート推薦</h2>
+<button class="modal-close" onclick="closeAllModals()">&times;</button>
+</div>
+<p class="inline-note" id="templateMatchNewsTitle"></p>
+<div class="divider"></div>
+<div class="template-list" id="templateList">
+<div class="template-item">
+<div class="template-rank">1</div>
+<div class="template-info">
+<div class="template-name" id="tpl1Name"></div>
+<div class="template-reason" id="tpl1Reason"></div>
+</div>
+<div class="score-bar">
+<div class="score-track"><div class="score-fill" id="tpl1Score" style="width:0"></div></div>
+<div class="score-num" id="tpl1Num"></div>
+</div>
+<button class="btn btn-sm template-apply-btn">適用</button>
+</div>
+<div class="template-item">
+<div class="template-rank">2</div>
+<div class="template-info">
+<div class="template-name" id="tpl2Name"></div>
+<div class="template-reason" id="tpl2Reason"></div>
+</div>
+<div class="score-bar">
+<div class="score-track"><div class="score-fill" id="tpl2Score" style="width:0"></div></div>
+<div class="score-num" id="tpl2Num"></div>
+</div>
+<button class="btn btn-sm template-apply-btn">適用</button>
+</div>
+<div class="template-item">
+<div class="template-rank">3</div>
+<div class="template-info">
+<div class="template-name" id="tpl3Name"></div>
+<div class="template-reason" id="tpl3Reason"></div>
+</div>
+<div class="score-bar">
+<div class="score-track"><div class="score-fill" id="tpl3Score" style="width:0"></div></div>
+<div class="score-num" id="tpl3Num"></div>
+</div>
+<button class="btn btn-sm template-apply-btn">適用</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalABTest">
+<div class="modal" style="max-width:800px">
+<div class="modal-header">
+<h2>A/Bテスト生成</h2>
+<button class="modal-close" onclick="closeAllModals()">&times;</button>
+</div>
+<p class="inline-note" id="abTestNewsTitle"></p>
+<div class="divider"></div>
+
+<div id="abStep1">
+<p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.8rem">比較する2つのペルソナを選択してください</p>
+<div class="ab-select-personas">
+<div class="ab-select-side">
+<div class="ab-select-label ab-label-a">A案 ペルソナ</div>
+<select id="abPersonaA">
+<option value="">選択してください</option>
+<option value="tech">テック太郎</option>
+<option value="biz">ビジネス花子</option>
+<option value="casual">カジュアル次郎</option>
+<option value="eng">エンジニア恵</option>
+</select>
+</div>
+<div class="ab-select-side">
+<div class="ab-select-label ab-label-b">B案 ペルソナ</div>
+<select id="abPersonaB">
+<option value="">選択してください</option>
+<option value="tech">テック太郎</option>
+<option value="biz">ビジネス花子</option>
+<option value="casual">カジュアル次郎</option>
+<option value="eng">エンジニア恵</option>
+</select>
+</div>
+</div>
+<div class="inline-msg inline-msg-error" id="msgABError"></div>
+<div style="display:flex;justify-content:flex-end">
+<button class="btn btn-primary" onclick="generateABTest()" id="btnABGenerate">2案を同時生成</button>
+</div>
+</div>
+
+<div id="abStep2" style="display:none">
+<div class="ab-container">
+<div class="ab-panel">
+<div class="ab-label ab-label-a">A案</div>
+<div class="ab-persona" id="abPanelPersonaA"></div>
+<div class="ab-body" id="abBodyA"></div>
+<div class="ab-metrics">
+<span>想定リーチ: 12,400</span>
+<span>想定エンゲージメント率: 4.2%</span>
+</div>
+</div>
+<div class="ab-panel">
+<div class="ab-label ab-label-b">B案</div>
+<div class="ab-persona" id="abPanelPersonaB"></div>
+<div class="ab-body" id="abBodyB"></div>
+<div class="ab-metrics">
+<span>想定リーチ: 9,800</span>
+<span>想定エンゲージメント率: 5.7%</span>
+</div>
+</div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem">
+<button class="btn" onclick="resetABTest()">やり直す</button>
+<button class="btn btn-primary">A/Bテスト連携</button>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<script>
+var newsData = [
+{
+title: 'OpenAI、次世代モデル「GPT-5」を正式発表 マルチモーダル性能が大幅向上',
+angles: {
+breaking: '【速報】OpenAIがGPT-5を正式発表！マルチモーダル性能が前世代比3倍に。エンタープライズAPIも同時提供開始。AI業界の勢力図がまた大きく動きそうです。',
+analysis: 'GPT-5の発表で注目すべきは「マルチモーダル統合」の進化です。画像・音声・動画を横断的に処理できることで、これまで別々のモデルが必要だったワークフローが一本化されます。エンタープライズ向けの即時提供は、BtoB市場での本格的な収益化フェーズに入ったことを示唆しています。',
+dialogue: 'GPT-5が出ましたね。みなさんはどう使ってみたいですか？個人的には動画の要約機能がすごく気になっています。「長い会議の録画を5分で把握」みたいなことが当たり前になりそう。皆さんの活用アイデア、ぜひ教えてください！'
+},
+templates: [
+{ name: '速報ニュース解説', reason: 'AI業界の最新発表に最適', score: 94 },
+{ name: '技術トレンド分析', reason: 'マルチモーダルAIの技術的意義を解説', score: 87 },
+{ name: '業界インパクト考察', reason: 'エンタープライズ市場への影響を深掘り', score: 78 }
+],
+postIdea: {
+tech: 'GPT-5のマルチモーダル統合は技術的に非常に興味深い。特にクロスモーダル推論の精度向上は、RAGパイプラインの設計思想を根本から変える可能性があります。エンジニアとして追いかけるべき技術変化です。',
+biz: 'GPT-5発表のビジネスインパクトは計り知れません。マルチモーダルAPIの提供開始により、企業のAI導入障壁がさらに下がります。2026年のDX投資計画を見直す好機かもしれません。',
+casual: 'GPT-5きた！動画も音声もまとめて理解してくれるとか、もう秘書レベルじゃん。個人的には旅行の動画を渡して「ハイライト作って」ってお願いしてみたい。',
+eng: 'GPT-5のAPI仕様が気になる。マルチモーダル入力のトークン換算とレート制限、既存のGPT-4o統合からのマイグレーションパスを早めに検証したい。本番環境への影響評価も必須。'
+}
+},
+{
+title: 'TSMC、日本第2工場の建設を前倒し 2027年量産開始へ',
+angles: {
+breaking: '【速報】TSMCが熊本第2工場の量産を半年前倒し、2027年前半開始へ。6nmプロセス採用で自動車・産業機器向け半導体を製造。日本の半導体復権が加速します。',
+analysis: 'TSMCの前倒し判断の背景には、地政学リスクを踏まえた供給網分散と、日本政府の積極的な補助金政策があります。6nmという選択は最先端ではないものの、自動車産業が求める信頼性と量産性のバランスが取れたノード。日本の製造業エコシステムとの相性は抜群です。',
+dialogue: '半導体工場って「作る」だけじゃなく「人を育てる」のが大変なんですよね。熊本では今、関連人材の争奪戦が起きているとか。みなさんの地域でも半導体関連の動き、感じていますか？'
+},
+templates: [
+{ name: '産業ニュース速報', reason: '半導体業界の動向に適したフォーマット', score: 91 },
+{ name: '地方経済インパクト', reason: '熊本の経済効果を解説', score: 83 },
+{ name: 'サプライチェーン分析', reason: '地政学リスクと供給網の文脈', score: 76 }
+],
+postIdea: {
+tech: 'TSMCの6nmプロセスが熊本で量産されることの技術的意義は大きい。車載半導体の微細化が進み、ADAS・自動運転のエッジ処理性能が次のステージに上がる。製造歩留まりの安定も注目ポイント。',
+biz: 'TSMC熊本第2工場の前倒しは、日本の半導体戦略にとって追い風。関連サプライヤーの投資判断にも影響大。半導体関連銘柄と地方不動産市場、両方チェックしておきたいですね。',
+casual: '熊本がアツい！TSMCの第2工場が予定より早く動き出すらしい。地元の雇用もすごいことになりそう。半導体って難しそうだけど、スマホにも車にも入ってる超大事な部品なんだよね。',
+eng: 'TSMCの6nmプロセスが国内で利用可能になると、組み込み開発者にとってはチップ調達の選択肢が広がる。開発ボードの入手性改善にも期待。評価環境の準備を進めたい。'
+}
+},
+{
+title: '国内SaaS市場が2兆円突破、生成AI統合が成長を牽引',
+angles: {
+breaking: '【速報】国内SaaS市場が2兆円の大台を突破。生成AI統合プロダクトの急増が牽引役に。特にマーケティング領域でのAI-SaaS導入が加速しています。',
+analysis: 'SaaS市場2兆円突破の本質は「AI統合」がバズワードから実需に転換したこと。注目すべきはマーケティング領域での牽引力。コンテンツ生成・パーソナライゼーション・分析の3領域でAI-SaaSの投資対効果が明確になり、導入判断が容易になっています。',
+dialogue: 'SaaS市場が2兆円超えとのこと。みなさんの会社でもAI搭載のSaaSツール、増えていませんか？「便利になった」と「ツール多すぎ問題」の両方を感じている方も多いはず。皆さんのリアルな声を聞きたいです！'
+},
+templates: [
+{ name: '市場レポート要約', reason: '市場規模データの解説に最適', score: 96 },
+{ name: 'トレンド分析', reason: '生成AI×SaaSのトレンドを深掘り', score: 85 },
+{ name: '導入事例紹介', reason: 'マーケ領域の具体的活用例を紹介', score: 72 }
+],
+postIdea: {
+tech: '国内SaaS市場2兆円突破。技術的に面白いのは、生成AIのSaaS統合パターンが標準化されつつある点。RAG・ファインチューニング・プロンプトエンジニアリングの使い分けが、プロダクト設計の新しい基準になっています。',
+biz: 'SaaS市場2兆円突破は象徴的ですが、重要なのはその中身。AI統合SaaSのARPU（顧客単価）は非AI製品の1.5〜2倍というデータも。投資家目線では、AI統合度が企業評価の新指標になりつつあります。',
+casual: 'SaaS市場が2兆円超え！最近、仕事で使うツールにもAI機能がどんどん追加されてる気がする。自分は文章作成ツールのAI機能にかなり助けられてます。みんなのお気に入りAI機能は何？',
+eng: 'SaaS市場2兆円のうちAI統合製品の比率が急上昇。開発者としては、AIモジュールのプラグイン設計・API設計パターンの標準化動向を注視したい。マイクロサービス×AI推論のアーキテクチャ選定が重要になる。'
+}
+}
+];
+
+var currentNewsIdx = 0;
+var selectedPersonaKey = '';
+
+function closeAllModals() {
+document.querySelectorAll('.modal-overlay').forEach(function(m) { m.classList.remove('active'); });
+}
+
+function openPostIdea(idx) {
+currentNewsIdx = idx;
+selectedPersonaKey = '';
+document.getElementById('postIdeaStep1').style.display = '';
+document.getElementById('postIdeaStep2').style.display = 'none';
+document.getElementById('btnPostIdeaNext').disabled = true;
+document.querySelectorAll('#modalPostIdea .persona-card').forEach(function(c) { c.classList.remove('selected'); });
+document.getElementById('stepPersona').classList.add('active');
+document.getElementById('stepGenerate').classList.remove('active');
+document.getElementById('stepConfirm').classList.remove('active');
+hideInlineMsg('msgPostCreate');
+document.getElementById('modalPostIdea').classList.add('active');
+}
+
+function selectPersona(el, ctx) {
+var grid = el.parentElement;
+grid.querySelectorAll('.persona-card').forEach(function(c) { c.classList.remove('selected'); });
+el.classList.add('selected');
+var name = el.querySelector('.persona-name').textContent;
+if (name.indexOf('テック') !== -1) selectedPersonaKey = 'tech';
+else if (name.indexOf('ビジネス') !== -1) selectedPersonaKey = 'biz';
+else if (name.indexOf('カジュアル') !== -1) selectedPersonaKey = 'casual';
+else selectedPersonaKey = 'eng';
+document.getElementById('btnPostIdeaNext').disabled = false;
+}
+
+function goToPostIdeaStep2() {
+if (!selectedPersonaKey) return;
+var data = newsData[currentNewsIdx];
+var names = { tech: 'テック太郎', biz: 'ビジネス花子', casual: 'カジュアル次郎', eng: 'エンジニア恵' };
+var avatars = { tech: 'T', biz: 'B', casual: 'C', eng: 'E' };
+var personaInfoEl = document.getElementById('postIdeaPersonaInfo');
+personaInfoEl.textContent = '';
+var avatarSpan = document.createElement('span');
+avatarSpan.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--bg-field);border:1px solid var(--border-sub);font-size:.7rem';
+avatarSpan.textContent = avatars[selectedPersonaKey];
+personaInfoEl.appendChild(avatarSpan);
+personaInfoEl.appendChild(document.createTextNode(' ' + names[selectedPersonaKey] + ' の投稿案'));
+document.getElementById('postIdeaGenerated').textContent = data.postIdea[selectedPersonaKey];
+document.getElementById('postIdeaStep1').style.display = 'none';
+document.getElementById('postIdeaStep2').style.display = '';
+document.getElementById('stepPersona').classList.remove('active');
+document.getElementById('stepGenerate').classList.add('active');
+}
+
+function goToPostIdeaStep1() {
+document.getElementById('postIdeaStep1').style.display = '';
+document.getElementById('postIdeaStep2').style.display = 'none';
+document.getElementById('stepGenerate').classList.remove('active');
+document.getElementById('stepPersona').classList.add('active');
+}
+
+function showInlineMsg(id, text) {
+var el = document.getElementById(id);
+el.textContent = text;
+el.classList.add('visible');
+}
+
+function hideInlineMsg(id) {
+var el = document.getElementById(id);
+el.classList.remove('visible');
+el.textContent = '';
+}
+
+function goToPostCreate() {
+document.getElementById('stepGenerate').classList.remove('active');
+document.getElementById('stepConfirm').classList.add('active');
+showInlineMsg('msgPostCreate', '投稿作成画面へ遷移します');
+}
+
+function openMultiAngle(idx) {
+currentNewsIdx = idx;
+var data = newsData[idx];
+document.getElementById('multiAngleNewsTitle').textContent = data.title;
+document.getElementById('angleBreaking').textContent = data.angles.breaking;
+document.getElementById('angleAnalysis').textContent = data.angles.analysis;
+document.getElementById('angleDialogue').textContent = data.angles.dialogue;
+document.getElementById('modalMultiAngle').classList.add('active');
+}
+
+function openTemplateMatch(idx) {
+currentNewsIdx = idx;
+var data = newsData[idx];
+document.getElementById('templateMatchNewsTitle').textContent = data.title;
+data.templates.forEach(function(t, i) {
+var n = i + 1;
+document.getElementById('tpl' + n + 'Name').textContent = t.name;
+document.getElementById('tpl' + n + 'Reason').textContent = t.reason;
+document.getElementById('tpl' + n + 'Score').style.width = t.score + '%';
+document.getElementById('tpl' + n + 'Num').textContent = t.score + '%';
+});
+document.getElementById('modalTemplateMatch').classList.add('active');
+}
+
+function openABTest(idx) {
+currentNewsIdx = idx;
+var data = newsData[idx];
+document.getElementById('abTestNewsTitle').textContent = data.title;
+document.getElementById('abStep1').style.display = '';
+document.getElementById('abStep2').style.display = 'none';
+document.getElementById('abPersonaA').value = '';
+document.getElementById('abPersonaB').value = '';
+hideInlineMsg('msgABError');
+document.getElementById('modalABTest').classList.add('active');
+}
+
+function generateABTest() {
+var a = document.getElementById('abPersonaA').value;
+var b = document.getElementById('abPersonaB').value;
+if (!a || !b) { showInlineMsg('msgABError', '両方のペルソナを選択してください'); return; }
+if (a === b) { showInlineMsg('msgABError', '異なるペルソナを選択してください'); return; }
+hideInlineMsg('msgABError');
+var data = newsData[currentNewsIdx];
+var names = { tech: 'テック太郎', biz: 'ビジネス花子', casual: 'カジュアル次郎', eng: 'エンジニア恵' };
+var avatars = { tech: 'T', biz: 'B', casual: 'C', eng: 'E' };
+var panelA = document.getElementById('abPanelPersonaA');
+panelA.textContent = '';
+var iconA = document.createElement('span');
+iconA.className = 'ab-persona-icon';
+iconA.textContent = avatars[a];
+panelA.appendChild(iconA);
+panelA.appendChild(document.createTextNode(names[a]));
+var panelB = document.getElementById('abPanelPersonaB');
+panelB.textContent = '';
+var iconB = document.createElement('span');
+iconB.className = 'ab-persona-icon';
+iconB.textContent = avatars[b];
+panelB.appendChild(iconB);
+panelB.appendChild(document.createTextNode(names[b]));
+document.getElementById('abBodyA').textContent = data.postIdea[a];
+document.getElementById('abBodyB').textContent = data.postIdea[b];
+document.getElementById('abStep1').style.display = 'none';
+document.getElementById('abStep2').style.display = '';
+}
+
+function resetABTest() {
+document.getElementById('abStep1').style.display = '';
+document.getElementById('abStep2').style.display = 'none';
+hideInlineMsg('msgABError');
+}
+
+document.addEventListener('keydown', function(e) {
+if (e.key === 'Escape') closeAllModals();
+});
+
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+overlay.addEventListener('click', function(e) {
+if (e.target === overlay) closeAllModals();
+});
+});
+</script>
+</body>
+</html>

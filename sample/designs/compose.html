@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投稿作成 — Akazukin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-deep:      #C4BDA6;
+    --bg-main:      #DAD4BE;
+    --bg-surface:   #EDE8D5;
+    --bg-elevated:  #F0EBD8;
+    --bg-subtle:    #E4DECC;
+    --bg-field:     #DDD6BB;
+    --border:       #B8B19C;
+    --border-lt:    #CCC5AE;
+    --border-sub:   #DDD6BB;
+    --text-heading: #3D3A32;
+    --text-primary: #4D493E;
+    --text-body:    #5A5548;
+    --text-sec:     #7A7464;
+    --text-muted:   #7A7464;
+    --text-faint:   #8A8470;
+    --accent-gold:       #C8964A;
+    --accent-gold-hover: #B5853E;
+    --accent-gold-light: #F2E6D0;
+    --status-success:    #6B8B4A;
+    --status-success-bg: #D5DDCA;
+    --status-warning:    #C8A96E;
+    --status-warning-bg: #F0E6D0;
+    --status-error:      #B04040;
+    --status-error-bg:   #EEDCDC;
+    --status-info:       #5A8BA0;
+    --status-info-bg:    #D8E8F0;
+    --sp-xs:  0.25rem;
+    --sp-sm:  0.5rem;
+    --sp-md:  1rem;
+    --sp-lg:  1.5rem;
+    --sp-xl:  2rem;
+    --sp-2xl: 3rem;
+    --radius-sm: 0.2rem;
+    --radius-md: 0.4rem;
+    --radius-lg: 0.6rem;
+    --shadow-sm:  0 1px 4px rgba(75, 65, 50, 0.10);
+    --shadow-md:  0 2px 8px rgba(75, 65, 50, 0.15);
+    --shadow-lg:  0 4px 16px rgba(75, 65, 50, 0.18);
+    --transition: 0.2s ease;
+    --font-sans: 'Noto Sans JP', 'Segoe UI', 'Meiryo', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    --font-mono: 'Courier New', monospace;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-main);
+    color: var(--text-body);
+    line-height: 1.7;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+    color: var(--text-heading);
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: var(--sp-sm);
+}
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.4rem; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1rem; }
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--sp-xs);
+}
+
+input[type="text"],
+input[type="datetime-local"],
+select,
+textarea {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+    background: var(--bg-field);
+    color: var(--text-body);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 2px var(--accent-gold-light);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: auto;
+    accent-color: var(--accent-gold);
+    margin-right: var(--sp-xs);
+}
+
+button, .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-xs);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.55rem 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition);
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+button:hover, .btn:hover {
+    background: var(--bg-subtle);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+button:active, .btn:active { transform: translateY(1px); }
+
+.btn-primary {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: #FFFFFF;
+}
+.btn-primary:hover {
+    background: var(--accent-gold-hover);
+    border-color: var(--accent-gold-hover);
+    color: #FFFFFF;
+}
+
+.btn-secondary {
+    background: var(--bg-elevated);
+    border-color: var(--border-lt);
+    color: var(--text-primary);
+}
+.btn-secondary:hover {
+    background: var(--bg-subtle);
+    border-color: var(--border);
+}
+
+.btn-sm {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.8rem;
+}
+
+.form-group { margin-bottom: var(--sp-lg); }
+.form-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--sp-xs);
+}
+
+.ak-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    transition: box-shadow var(--transition);
+}
+.ak-card:hover { box-shadow: var(--shadow-md); }
+
+.ak-card::before,
+.ak-card::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--border);
+    border-style: solid;
+    pointer-events: none;
+}
+.ak-card::before {
+    top: 4px; left: 4px;
+    border-width: 1px 0 0 1px;
+}
+.ak-card::after {
+    bottom: 4px; right: 4px;
+    border-width: 0 1px 1px 0;
+}
+
+.ak-card--plain { position: relative; }
+.ak-card--plain::before,
+.ak-card--plain::after { display: none; }
+
+.ak-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-md);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 1px solid var(--border-sub);
+}
+.ak-card-header h2,
+.ak-card-header h3 { margin-bottom: 0; }
+
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: 1px solid;
+}
+.platform-badge.twitter   { background: #E8F4FD; color: #1a8cd8; border-color: #B8DDF5; }
+.platform-badge.bluesky   { background: #E5F0FF; color: #0070E0; border-color: #B0D4FF; }
+.platform-badge.mastodon  { background: #EDEDFF; color: #595AFF; border-color: #C8C8FF; }
+.platform-badge.threads   { background: #F0F0F0; color: #333333; border-color: #D0D0D0; }
+.platform-badge.instagram { background: #FDE8ED; color: #C13584; border-color: #F5C0D0; }
+
+.platform-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
+}
+.platform-check:hover {
+    border-color: var(--accent-gold);
+    box-shadow: var(--shadow-sm);
+}
+.platform-check:has(input:checked) {
+    border-color: var(--accent-gold);
+    background: var(--accent-gold-light);
+}
+.platform-check .platform-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: 1px solid;
+}
+.status-badge.draft     { background: var(--bg-subtle);         color: var(--text-muted);     border-color: var(--border-lt); }
+.status-badge.scheduled { background: var(--status-warning-bg); color: #8A7030;               border-color: #D4C090; }
+.status-badge.published { background: var(--status-success-bg); color: var(--status-success);  border-color: #B0C89A; }
+
+.d-flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: var(--sp-sm); }
+.gap-md { gap: var(--sp-md); }
+
+.compose-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-xl);
+    padding: var(--sp-xl);
+    min-height: 100vh;
+}
+
+.compose-top-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-md);
+    padding: var(--sp-md) var(--sp-lg);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-lg);
+}
+
+.compose-left { display: flex; flex-direction: column; gap: var(--sp-lg); }
+.compose-right { display: flex; flex-direction: column; gap: var(--sp-md); }
+
+.persona-toggle-area {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.toggle-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.toggle-track {
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    transition: background var(--transition);
+}
+.toggle-switch input:checked + .toggle-track {
+    background: var(--accent-gold);
+}
+.toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+.toggle-switch input:checked + .toggle-track::after {
+    transform: translateX(18px);
+}
+
+.persona-dropdown-list {
+    display: flex;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+    align-items: center;
+}
+.persona-dropdown-list select {
+    width: auto;
+    min-width: 120px;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+}
+
+.tone-area {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+}
+.tone-area label { margin-bottom: 0; font-size: 0.8rem; }
+.tone-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+}
+.tone-slider-wrap input[type="range"] {
+    width: 100%; max-width: 120px;
+    accent-color: var(--accent-gold);
+}
+.tone-label {
+    font-size: 0.75rem;
+    color: var(--text-sec);
+    min-width: 60px;
+}
+
+.sns-check-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-sm);
+}
+
+.risk-gauge {
+    padding: var(--sp-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+}
+.risk-gauge-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-sm);
+}
+.risk-gauge-header h4 { margin-bottom: 0; font-size: 0.85rem; }
+
+.risk-bar-track {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-field);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: var(--sp-sm);
+}
+.risk-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease, background 0.4s ease;
+}
+
+.risk-items {
+    display: flex;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+}
+.risk-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: 0.78rem;
+}
+.risk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.action-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-md);
+    flex-wrap: wrap;
+}
+
+.schedule-area {
+    padding: var(--sp-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+}
+
+.timezone-section {
+    margin-top: var(--sp-md);
+    padding-top: var(--sp-md);
+    border-top: 1px solid var(--border-sub);
+}
+
+.timeline-bar {
+    position: relative;
+    height: 40px;
+    background: var(--bg-field);
+    border-radius: var(--radius-md);
+    margin-top: var(--sp-sm);
+    overflow: hidden;
+    border: 1px solid var(--border-lt);
+}
+.timeline-hours {
+    display: flex;
+    height: 100%;
+}
+.timeline-hour {
+    flex: 1;
+    border-right: 1px solid var(--border-lt);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 2px;
+}
+.timeline-hour:last-child { border-right: none; }
+.timeline-hour span {
+    font-size: 0.7rem;
+    color: var(--text-faint);
+}
+.timeline-marker {
+    position: absolute;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: #fff;
+    z-index: 2;
+    box-shadow: var(--shadow-sm);
+}
+
+.preview-card {
+    position: relative;
+}
+.preview-card-body textarea {
+    min-height: 80px;
+    font-size: 0.85rem;
+    resize: vertical;
+}
+.preview-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--sp-sm);
+    flex-wrap: wrap;
+    gap: var(--sp-sm);
+}
+.char-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.char-count.over { color: var(--status-error); font-weight: 600; }
+
+.culture-score {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xs);
+}
+.culture-score-label {
+    font-size: 0.75rem;
+    color: var(--text-sec);
+}
+.culture-dots {
+    display: flex;
+    gap: 2px;
+}
+.culture-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--border-lt);
+    transition: background var(--transition);
+}
+.culture-dot.filled { background: var(--accent-gold); }
+
+.hashtag-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-xs);
+    margin-top: var(--sp-sm);
+}
+.hashtag-chip {
+    font-size: 0.72rem;
+    padding: 0.1rem 0.4rem;
+    background: var(--accent-gold-light);
+    color: var(--accent-gold-hover);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--accent-gold);
+}
+
+.tone-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: 0.72rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--status-info-bg);
+    color: var(--status-info);
+    border: 1px solid #B0D0DD;
+}
+
+.approval-pipeline {
+    padding: var(--sp-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+}
+.pipeline-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: var(--sp-sm);
+}
+.pipeline-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    padding: var(--sp-sm) var(--sp-xs);
+}
+.pipeline-step::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: calc(100% - 30px);
+    height: 2px;
+    background: var(--border-lt);
+    transform: translateX(50%);
+}
+.pipeline-step:last-child::after { display: none; }
+.pipeline-step.done::after { background: var(--status-success); }
+.pipeline-step.active::after { background: var(--accent-gold); }
+
+.step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-field);
+    border: 2px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--sp-xs);
+    position: relative;
+    z-index: 1;
+}
+.pipeline-step.done .step-circle {
+    background: var(--status-success-bg);
+    border-color: var(--status-success);
+    color: var(--status-success);
+}
+.pipeline-step.active .step-circle {
+    background: var(--accent-gold-light);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+.step-label {
+    font-size: 0.7rem;
+    color: var(--text-sec);
+    display: block;
+}
+.pipeline-step.done .step-label { color: var(--status-success); }
+.pipeline-step.active .step-label { color: var(--accent-gold); font-weight: 600; }
+
+.offline-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    font-size: 0.78rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--status-info-bg);
+    color: var(--status-info);
+    border: 1px solid #B0D0DD;
+    border-radius: var(--radius-sm);
+}
+.offline-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--status-info);
+    animation: offline-pulse 2s infinite;
+}
+@keyframes offline-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.review-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(420px, 90vw);
+    height: 100vh;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.review-panel.open {
+    transform: translateX(0);
+}
+.review-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-md) var(--sp-lg);
+    border-bottom: 1px solid var(--border-lt);
+    flex-shrink: 0;
+}
+.review-panel-header h3 { margin-bottom: 0; }
+.review-panel-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-sec);
+    cursor: pointer;
+    padding: var(--sp-xs);
+}
+.review-panel-close:hover {
+    color: var(--text-heading);
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+.review-chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-md) var(--sp-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-md);
+}
+.chat-msg {
+    display: flex;
+    gap: var(--sp-sm);
+    align-items: flex-start;
+}
+.chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+.chat-bubble {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-lt);
+    border-radius: var(--radius-md);
+    padding: var(--sp-sm) var(--sp-md);
+    font-size: 0.83rem;
+    line-height: 1.6;
+    flex: 1;
+}
+.chat-bubble .agent-name {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--text-sec);
+    margin-bottom: var(--sp-xs);
+    display: block;
+}
+.chat-bubble .score-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-xs);
+    padding: 0.1rem 0.4rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+.score-good { background: var(--status-success-bg); color: var(--status-success); }
+.score-warn { background: var(--status-warning-bg); color: #8A7030; }
+.score-bad  { background: var(--status-error-bg);   color: var(--status-error); }
+
+.review-panel-footer {
+    padding: var(--sp-md) var(--sp-lg);
+    border-top: 1px solid var(--border-lt);
+    flex-shrink: 0;
+}
+.review-input-row {
+    display: flex;
+    gap: var(--sp-sm);
+}
+.review-input-row input {
+    flex: 1;
+}
+
+.panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(75, 65, 50, 0.25);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.panel-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+    .compose-layout {
+        grid-template-columns: 1fr;
+    }
+    .compose-top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+
+<div class="compose-layout">
+
+    <div class="compose-top-bar">
+        <div class="persona-toggle-area">
+            <label class="toggle-switch">
+                <input type="checkbox" id="personaToggle" onchange="togglePersona()">
+                <span class="toggle-track"></span>
+                <span>ペルソナで書き分け</span>
+            </label>
+            <div id="personaDropdowns" class="persona-dropdown-list" style="display:none;">
+                <span class="platform-badge twitter">X</span>
+                <select><option>公式アカウント</option><option>親しみやすい担当者</option><option>専門家</option></select>
+                <span class="platform-badge bluesky">Bluesky</span>
+                <select><option>テック好きの個人</option><option>公式アカウント</option><option>親しみやすい担当者</option></select>
+                <span class="platform-badge threads">Threads</span>
+                <select><option>カジュアルな語り手</option><option>公式アカウント</option><option>専門家</option></select>
+            </div>
+        </div>
+
+        <div class="tone-area">
+            <label>トーンレベル</label>
+            <div class="tone-slider-wrap">
+                <span class="tone-label">フォーマル</span>
+                <input type="range" min="1" max="5" value="3" id="toneSlider" oninput="updateTone()">
+                <span class="tone-label">カジュアル</span>
+            </div>
+            <span id="toneValue" class="tone-badge">Lv.3 標準</span>
+        </div>
+
+        <div class="d-flex align-center gap-sm">
+            <span class="offline-indicator">
+                <span class="offline-dot"></span>
+                Ollama接続中 — オフライン下書きモード
+            </span>
+            <span class="status-badge draft">下書き</span>
+        </div>
+    </div>
+
+    <div class="compose-left">
+
+        <div class="ak-card">
+            <div class="ak-card-header">
+                <h3>投稿本文</h3>
+                <span class="char-count" id="mainCharCount">0 / 280</span>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <textarea id="mainText" rows="8" placeholder="投稿内容を入力してください..." oninput="updateCharCount()">新しいAI機能をリリースしました。自然言語だけでワークフローを自動化できるようになります。ぜひお試しください。</textarea>
+            </div>
+        </div>
+
+        <div class="ak-card ak-card--plain">
+            <div class="ak-card-header">
+                <h3>投稿先SNS</h3>
+            </div>
+            <div class="sns-check-grid">
+                <label class="platform-check">
+                    <input type="checkbox" checked onchange="updatePreview()">
+                    <span class="platform-label">X (Twitter)</span>
+                </label>
+                <label class="platform-check">
+                    <input type="checkbox" checked onchange="updatePreview()">
+                    <span class="platform-label">Bluesky</span>
+                </label>
+                <label class="platform-check">
+                    <input type="checkbox" checked onchange="updatePreview()">
+                    <span class="platform-label">Threads</span>
+                </label>
+                <label class="platform-check">
+                    <input type="checkbox" onchange="updatePreview()">
+                    <span class="platform-label">Instagram</span>
+                </label>
+                <label class="platform-check">
+                    <input type="checkbox" onchange="updatePreview()">
+                    <span class="platform-label">Mastodon</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="schedule-area">
+            <div class="form-group" style="margin-bottom: var(--sp-sm);">
+                <label>予約日時</label>
+                <input type="datetime-local" value="2026-03-22T10:00">
+            </div>
+
+            <div class="timezone-section" id="timezoneSection">
+                <label class="toggle-switch" style="margin-bottom: var(--sp-sm);">
+                    <input type="checkbox" id="tzToggle" onchange="toggleTimezone()" checked>
+                    <span class="toggle-track"></span>
+                    <span>時差投稿する</span>
+                </label>
+                <div id="tzContent">
+                    <div class="form-hint" style="margin-bottom: var(--sp-sm);">各SNSのアクティブ時間帯に合わせて分散投稿します</div>
+                    <div class="d-flex gap-sm flex-wrap" style="margin-bottom: var(--sp-sm);">
+                        <span class="platform-badge twitter">X — 12:00 JST</span>
+                        <span class="platform-badge bluesky">Bluesky — 10:00 JST</span>
+                        <span class="platform-badge threads">Threads — 18:00 JST</span>
+                    </div>
+                    <div class="timeline-bar">
+                        <div class="timeline-hours">
+                            <div class="timeline-hour"><span>0</span></div>
+                            <div class="timeline-hour"><span>2</span></div>
+                            <div class="timeline-hour"><span>4</span></div>
+                            <div class="timeline-hour"><span>6</span></div>
+                            <div class="timeline-hour"><span>8</span></div>
+                            <div class="timeline-hour">
+                                <span>10</span>
+                                <div class="timeline-marker" style="left:50%; background:#0070E0;">Bs</div>
+                            </div>
+                            <div class="timeline-hour">
+                                <span>12</span>
+                                <div class="timeline-marker" style="left:50%; background:#1a8cd8;">X</div>
+                            </div>
+                            <div class="timeline-hour"><span>14</span></div>
+                            <div class="timeline-hour"><span>16</span></div>
+                            <div class="timeline-hour">
+                                <span>18</span>
+                                <div class="timeline-marker" style="left:50%; background:#333333;">Th</div>
+                            </div>
+                            <div class="timeline-hour"><span>20</span></div>
+                            <div class="timeline-hour"><span>22</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="risk-gauge" id="riskGauge">
+            <div class="risk-gauge-header">
+                <h4>リアルタイムリスクゲージ</h4>
+                <span class="status-badge" style="background:var(--status-success-bg); color:var(--status-success); border-color:#B0C89A;">低リスク</span>
+            </div>
+            <div class="risk-bar-track">
+                <div class="risk-bar-fill" style="width:18%; background: var(--status-success);"></div>
+            </div>
+            <div class="risk-items">
+                <div class="risk-item">
+                    <span class="risk-dot" style="background:var(--status-success);"></span>
+                    <span>炎上リスク: 低</span>
+                </div>
+                <div class="risk-item">
+                    <span class="risk-dot" style="background:var(--status-success);"></span>
+                    <span>法令違反: なし</span>
+                </div>
+                <div class="risk-item">
+                    <span class="risk-dot" style="background:var(--status-warning);"></span>
+                    <span>SNSポリシー: 注意1件</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="approval-pipeline">
+            <div class="d-flex align-center justify-between">
+                <h4 style="margin-bottom:0;">承認パイプライン</h4>
+                <button class="btn-primary btn-sm" onclick="advancePipeline()">AIチェック＆承認申請</button>
+            </div>
+            <div class="pipeline-steps" id="pipelineSteps">
+                <div class="pipeline-step done">
+                    <span class="step-circle">&#10003;</span>
+                    <span class="step-label">下書き作成</span>
+                </div>
+                <div class="pipeline-step done">
+                    <span class="step-circle">&#10003;</span>
+                    <span class="step-label">AIリスクチェック</span>
+                </div>
+                <div class="pipeline-step active">
+                    <span class="step-circle">3</span>
+                    <span class="step-label">コンプライアンス確認</span>
+                </div>
+                <div class="pipeline-step">
+                    <span class="step-circle">4</span>
+                    <span class="step-label">上長承認</span>
+                </div>
+                <div class="pipeline-step">
+                    <span class="step-circle">5</span>
+                    <span class="step-label">投稿予約</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn-primary" style="flex:1;">投稿する</button>
+            <button class="btn-secondary" onclick="openReview()">AIレビュー</button>
+            <button class="btn-secondary">下書き保存</button>
+        </div>
+    </div>
+
+    <div class="compose-right">
+        <h3>SNS文化マッチ変換プレビュー</h3>
+
+        <div class="ak-card preview-card">
+            <div class="ak-card-header">
+                <div class="d-flex align-center gap-sm">
+                    <span class="platform-badge twitter">X (Twitter)</span>
+                    <div class="culture-score">
+                        <span class="culture-score-label">文化適合度</span>
+                        <div class="culture-dots">
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot"></span>
+                        </div>
+                    </div>
+                </div>
+                <span class="tone-badge">Lv.4 ややカジュアル</span>
+            </div>
+            <div class="preview-card-body">
+                <textarea rows="4">AI新機能リリース！自然言語だけでワークフロー自動化が可能に。使ってみてください</textarea>
+            </div>
+            <div class="hashtag-area">
+                <span class="hashtag-chip">#AI自動化</span>
+                <span class="hashtag-chip">#ワークフロー</span>
+                <span class="hashtag-chip">#新機能</span>
+                <span class="hashtag-chip">#DX</span>
+            </div>
+            <div class="preview-card-meta">
+                <span class="char-count">72 / 280</span>
+                <button class="btn-sm btn-secondary">原文に戻す</button>
+            </div>
+        </div>
+
+        <div class="ak-card preview-card">
+            <div class="ak-card-header">
+                <div class="d-flex align-center gap-sm">
+                    <span class="platform-badge bluesky">Bluesky</span>
+                    <div class="culture-score">
+                        <span class="culture-score-label">文化適合度</span>
+                        <div class="culture-dots">
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                        </div>
+                    </div>
+                </div>
+                <span class="tone-badge">Lv.3 標準</span>
+            </div>
+            <div class="preview-card-body">
+                <textarea rows="4">新しいAI機能をリリースしました。自然言語でワークフローを自動化できるようになります。分散型SNSの皆さんもぜひお試しください。フィードバックお待ちしています。</textarea>
+            </div>
+            <div class="hashtag-area">
+                <span class="hashtag-chip">#AI</span>
+                <span class="hashtag-chip">#自動化</span>
+                <span class="hashtag-chip">#テック</span>
+            </div>
+            <div class="preview-card-meta">
+                <span class="char-count">108 / 300</span>
+                <button class="btn-sm btn-secondary">原文に戻す</button>
+            </div>
+        </div>
+
+        <div class="ak-card preview-card">
+            <div class="ak-card-header">
+                <div class="d-flex align-center gap-sm">
+                    <span class="platform-badge threads">Threads</span>
+                    <div class="culture-score">
+                        <span class="culture-score-label">文化適合度</span>
+                        <div class="culture-dots">
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot filled"></span>
+                            <span class="culture-dot"></span>
+                            <span class="culture-dot"></span>
+                        </div>
+                    </div>
+                </div>
+                <span class="tone-badge">Lv.4 ややカジュアル</span>
+            </div>
+            <div class="preview-card-body">
+                <textarea rows="4">AI新機能きた！自然言語で話しかけるだけでワークフローが自動で動くように。これ結構便利なので試してみて</textarea>
+            </div>
+            <div class="hashtag-area">
+                <span class="hashtag-chip">#AI</span>
+                <span class="hashtag-chip">#新機能リリース</span>
+            </div>
+            <div class="preview-card-meta">
+                <span class="char-count">65 / 500</span>
+                <button class="btn-sm btn-secondary">原文に戻す</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="panel-overlay" id="panelOverlay" onclick="closeReview()"></div>
+<div class="review-panel" id="reviewPanel">
+    <div class="review-panel-header">
+        <h3>AIレビュー</h3>
+        <button class="review-panel-close" onclick="closeReview()">&times;</button>
+    </div>
+    <div class="review-chat">
+        <div class="chat-msg">
+            <div class="chat-avatar" style="background:var(--accent-gold);">S</div>
+            <div class="chat-bubble">
+                <span class="agent-name">Sentinel（安全性）</span>
+                投稿内容に問題は検出されませんでした。<span class="score-inline score-good">安全</span> ただしThreads向けの口語表現「きた」は企業アカウントとして適切か再確認を推奨します。
+            </div>
+        </div>
+        <div class="chat-msg">
+            <div class="chat-avatar" style="background:var(--status-info);">C</div>
+            <div class="chat-bubble">
+                <span class="agent-name">Compliance（法令）</span>
+                景品表示法・薬機法の観点で問題ありません。「自動化できる」という表現は機能制限の注釈があると<span class="score-inline score-warn">より安全</span>です。
+            </div>
+        </div>
+        <div class="chat-msg">
+            <div class="chat-avatar" style="background:#595AFF;">T</div>
+            <div class="chat-bubble">
+                <span class="agent-name">Transformer（文化適合）</span>
+                X向けは簡潔で高適合。Bluesky向けはコミュニティ意識を反映済み。Threads向けは <span class="score-inline score-warn">文化適合度 3/5</span> — もう少しストーリー性を加えるとエンゲージメントが向上します。
+            </div>
+        </div>
+        <div class="chat-msg">
+            <div class="chat-avatar" style="background:var(--status-success);">E</div>
+            <div class="chat-bubble">
+                <span class="agent-name">Engagement（効果予測）</span>
+                X: 推定リーチ 1,200〜1,800、Bluesky: 300〜500、Threads: 400〜700。ハッシュタグ選定は適切です。投稿時間の分散予約で各SNSの最大効果を狙えます。<span class="score-inline score-good">良好</span>
+            </div>
+        </div>
+    </div>
+    <div class="review-panel-footer">
+        <div class="review-input-row">
+            <input type="text" placeholder="エージェントに質問...">
+            <button class="btn-primary btn-sm">送信</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePersona() {
+    var el = document.getElementById('personaDropdowns');
+    el.style.display = document.getElementById('personaToggle').checked ? 'flex' : 'none';
+}
+
+function toggleTimezone() {
+    var el = document.getElementById('tzContent');
+    el.style.display = document.getElementById('tzToggle').checked ? 'block' : 'none';
+}
+
+function updateTone() {
+    var v = document.getElementById('toneSlider').value;
+    var labels = ['', 'Lv.1 フォーマル', 'Lv.2 ややフォーマル', 'Lv.3 標準', 'Lv.4 ややカジュアル', 'Lv.5 カジュアル'];
+    document.getElementById('toneValue').textContent = labels[v];
+}
+
+function updateCharCount() {
+    var len = document.getElementById('mainText').value.length;
+    document.getElementById('mainCharCount').textContent = len + ' / 280';
+    if (len > 280) {
+        document.getElementById('mainCharCount').classList.add('over');
+    } else {
+        document.getElementById('mainCharCount').classList.remove('over');
+    }
+}
+
+function updatePreview() {}
+
+function openReview() {
+    document.getElementById('reviewPanel').classList.add('open');
+    document.getElementById('panelOverlay').classList.add('visible');
+}
+
+function closeReview() {
+    document.getElementById('reviewPanel').classList.remove('open');
+    document.getElementById('panelOverlay').classList.remove('visible');
+}
+
+function advancePipeline() {
+    var steps = document.querySelectorAll('#pipelineSteps .pipeline-step');
+    var advanced = false;
+    for (var i = 0; i < steps.length; i++) {
+        if (steps[i].classList.contains('active') && !advanced) {
+            steps[i].classList.remove('active');
+            steps[i].classList.add('done');
+            steps[i].querySelector('.step-circle').innerHTML = '&#10003;';
+            if (i + 1 < steps.length) {
+                steps[i + 1].classList.add('active');
+            }
+            advanced = true;
+        }
+    }
+}
+
+updateCharCount();
+</script>
+
+</body>
+</html>

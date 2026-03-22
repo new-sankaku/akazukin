@@ -1,5 +1,5 @@
 {#include base}
-{#title}投稿詳細 - Akazukin{/title}
+{#title}{msg:post_detail_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,19 +7,28 @@
     {#sidebar active="posts" /}
 
     <main class="ak-main">
-        <!-- ページヘッダー -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">投稿詳細</h2>
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">{msg:post_detail_heading}</h2>
             <a href="/posts" role="button"
                 style="background: transparent; color: var(--text-sec, var(--ak-text-muted)); border: 1px solid var(--border, var(--ak-border)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; transition: border-color 0.2s, color 0.2s;"
                 onmouseover="this.style.borderColor='var(--accent-gold, var(--ak-primary))'; this.style.color='var(--accent-gold, var(--ak-primary))'"
-                onmouseout="this.style.borderColor='var(--border, var(--ak-border))'; this.style.color='var(--text-sec, var(--ak-text-muted))'">投稿一覧に戻る</a>
+                onmouseout="this.style.borderColor='var(--border, var(--ak-border))'; this.style.color='var(--text-sec, var(--ak-text-muted))'">{msg:post_detail_back_to_list}</a>
         </div>
 
-        <!-- 投稿詳細コンテンツ -->
         <div id="post-detail">
-            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">投稿を読み込み中...</p>
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">{msg:post_detail_loading}</p>
         </div>
+
+        <div id="post-engagement" style="display: none;"></div>
+
+        <div id="post-sections" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div id="cross-post-recommendations"></div>
+                <div id="compliance-check"></div>
+            </div>
+        </div>
+
+        <div id="post-replies" style="display: none;"></div>
 
         <div id="post-error" style="display: none;"></div>
     </main>
@@ -124,14 +133,8 @@
         transition: opacity 0.2s;
     }
 
-    .ak-btn-danger:hover {
-        opacity: 0.85;
-    }
-
-    .ak-btn-danger:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .ak-btn-danger:hover { opacity: 0.85; }
+    .ak-btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .ak-btn-edit {
         background: transparent;
@@ -166,15 +169,8 @@
         transition: background 0.2s, color 0.2s;
     }
 
-    .ak-btn-cancel:hover {
-        background: var(--status-error, #B04040);
-        color: white;
-    }
-
-    .ak-btn-cancel:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .ak-btn-cancel:hover { background: var(--status-error, #B04040); color: white; }
+    .ak-btn-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .ak-btn-reschedule {
         background: var(--status-warning, #C8A96E);
@@ -189,14 +185,8 @@
         transition: opacity 0.2s;
     }
 
-    .ak-btn-reschedule:hover {
-        opacity: 0.85;
-    }
-
-    .ak-btn-reschedule:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .ak-btn-reschedule:hover { opacity: 0.85; }
+    .ak-btn-reschedule:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .ak-actions-zone {
         margin-top: 1.5rem;
@@ -226,17 +216,289 @@
         margin-bottom: 0.75rem;
         font-size: 1rem;
     }
+
+    .ak-engagement-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .ak-engagement-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.85rem;
+        color: var(--text-sec, var(--ak-text-muted));
+    }
+
+    .ak-engagement-item .num {
+        font-weight: 600;
+        color: var(--text-heading, var(--ak-text));
+    }
+
+    .ak-recommend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .ak-recommend-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 1rem;
+        background: var(--bg-elevated, var(--ak-bg));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .ak-recommend-item:hover {
+        background: var(--accent-gold-light, #F2E6D0);
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+
+    .ak-score-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 7rem;
+    }
+
+    .ak-score-bar {
+        flex: 1;
+        height: 0.4rem;
+        background: var(--bg-field, var(--ak-bg));
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .ak-score-bar-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.2s;
+    }
+
+    .ak-score-bar-fill--high { background: var(--status-success, #6B8B4A); }
+    .ak-score-bar-fill--mid { background: var(--status-warning, #C8A96E); }
+    .ak-score-bar-fill--low { background: var(--status-error, #B04040); }
+
+    .ak-compliance-card { transition: border-color 0.2s, box-shadow 0.2s; }
+    .ak-compliance-card.all-passed {
+        border-color: var(--status-success, #6B8B4A);
+        box-shadow: 0 0 0 1px var(--status-success, #6B8B4A);
+    }
+
+    .ak-compliance-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .ak-compliance-table th {
+        text-align: left;
+        padding: 0.5rem;
+        font-weight: 600;
+        font-size: 0.78rem;
+        color: var(--text-sec, var(--ak-text-muted));
+        background: var(--bg-subtle, #E4DECC);
+        border-bottom: 1px solid var(--border, var(--ak-border));
+    }
+    .ak-compliance-table td {
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border-lt, var(--ak-border));
+        vertical-align: middle;
+    }
+    .ak-compliance-table tr:last-child td { border-bottom: none; }
+    .ak-compliance-table tr:hover td { background: var(--bg-elevated, var(--ak-bg)); }
+
+    .ak-check-pass { color: #3A5A2A; }
+    .ak-check-fail { color: #7A2020; }
+    .ak-check-warn { color: #7A6545; }
+
+    .ak-reply-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .ak-reply-item {
+        padding: 0.75rem 1rem;
+        background: var(--bg-elevated, var(--ak-bg));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 6px;
+    }
+
+    .ak-reply-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.25rem;
+    }
+
+    .ak-reply-user {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ak-reply-avatar {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 50%;
+        background: var(--bg-field, var(--ak-bg));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-sec, var(--ak-text-muted));
+    }
+
+    .ak-persona-selector {
+        display: none;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: var(--bg-subtle, #E4DECC);
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 6px;
+    }
+
+    .ak-persona-selector.is-open { display: block; }
+
+    .ak-persona-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        background: var(--bg-elevated, var(--ak-bg));
+        border: 1px solid var(--border, var(--ak-border));
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .ak-persona-chip:hover {
+        background: var(--accent-gold-light, #F2E6D0);
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+
+    .ak-persona-chip.is-selected {
+        background: var(--accent-gold, var(--ak-primary));
+        color: #F0EBD8;
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+
+    .ak-generated-reply {
+        display: none;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: var(--accent-gold-light, #F2E6D0);
+        border: 1px solid var(--accent-gold, var(--ak-primary));
+        border-radius: 6px;
+    }
+
+    .ak-generated-reply.is-visible { display: block; }
+
+
+
+    .ak-tag-converted {
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 0.1rem 0.4rem;
+        background: var(--status-info-bg, #D8E8F0);
+        color: #2A5A6A;
+        border-radius: 2px;
+        border: 1px solid var(--status-info, #5A8BA0);
+    }
+
+    @media (max-width: 64rem) {
+        #post-sections > div {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <script>
     var postId = null;
+    var currentPost = null;
+
+    var MSG_STATUS_DRAFT = '{msg:post_detail_status_draft}';
+    var MSG_STATUS_SCHEDULED = '{msg:post_detail_status_scheduled}';
+    var MSG_STATUS_PUBLISHED = '{msg:post_detail_status_published}';
+    var MSG_STATUS_FAILED = '{msg:post_detail_status_failed}';
+    var MSG_STATUS_PENDING = '{msg:post_detail_status_pending}';
+    var MSG_NOT_FOUND_TITLE = '{msg:post_detail_not_found_title}';
+    var MSG_NOT_FOUND_DESC = '{msg:post_detail_not_found_desc}';
+    var MSG_NOT_FOUND_ERROR = '{msg:post_detail_not_found_error}';
+    var MSG_LOAD_ERROR = '{msg:post_detail_load_error}';
+    var MSG_NETWORK_ERROR = '{msg:post_detail_network_error}';
+    var MSG_SCHEDULED_DATE = '{msg:post_detail_scheduled_date}';
+    var MSG_CREATED_DATE = '{msg:post_detail_created_date}';
+    var MSG_TARGET_PLATFORMS = '{msg:post_detail_target_platforms}';
+    var MSG_EDIT = '{msg:post_detail_edit}';
+    var MSG_CANCEL_SCHEDULE = '{msg:post_detail_cancel_schedule}';
+    var MSG_RESCHEDULE_HEADING = '{msg:post_detail_reschedule_heading}';
+    var MSG_RESCHEDULE_BTN = '{msg:post_detail_reschedule_btn}';
+    var MSG_DANGER_HEADING = '{msg:post_detail_danger_heading}';
+    var MSG_DANGER_DESC = '{msg:post_detail_danger_desc}';
+    var MSG_DELETE_BTN = '{msg:post_detail_delete_btn}';
+    var MSG_ENGAGEMENT_LIKES = '{msg:post_detail_engagement_likes}';
+    var MSG_ENGAGEMENT_REPOSTS = '{msg:post_detail_engagement_reposts}';
+    var MSG_ENGAGEMENT_REPLIES = '{msg:post_detail_engagement_replies}';
+    var MSG_ENGAGEMENT_IMPRESSIONS = '{msg:post_detail_engagement_impressions}';
+    var MSG_CROSS_POST_TITLE = '{msg:post_detail_cross_post_title}';
+    var MSG_CROSS_POST_UNPOSTED = '{msg:post_detail_cross_post_unposted}';
+    var MSG_CROSS_POST_CONVERTED = '{msg:post_detail_cross_post_converted}';
+    var MSG_COMPLIANCE_TITLE = '{msg:post_detail_compliance_title}';
+    var MSG_COMPLIANCE_ALL_PASSED = '{msg:post_detail_compliance_all_passed}';
+    var MSG_COMPLIANCE_HAS_ISSUES = '{msg:post_detail_compliance_has_issues}';
+    var MSG_COMPLIANCE_COL_LAW = '{msg:post_detail_compliance_col_law}';
+    var MSG_COMPLIANCE_COL_CHECK = '{msg:post_detail_compliance_col_check}';
+    var MSG_COMPLIANCE_COL_RESULT = '{msg:post_detail_compliance_col_result}';
+    var MSG_COMPLIANCE_PASS = '{msg:post_detail_compliance_pass}';
+    var MSG_COMPLIANCE_WARN = '{msg:post_detail_compliance_warn}';
+    var MSG_COMPLIANCE_FAIL = '{msg:post_detail_compliance_fail}';
+    var MSG_COMPLIANCE_SCORE = '{msg:post_detail_compliance_score}';
+    var MSG_REPLIES_TITLE = '{msg:post_detail_replies_title}';
+    var MSG_REPLIES_COUNT_SUFFIX = '{msg:post_detail_replies_count_suffix}';
+    var MSG_SUGGEST_REPLY = '{msg:post_detail_suggest_reply}';
+    var MSG_SELECT_PERSONA = '{msg:post_detail_select_persona}';
+    var MSG_SUGGESTED_REPLY = '{msg:post_detail_suggested_reply}';
+    var MSG_USE_REPLY = '{msg:post_detail_use_reply}';
+    var MSG_REGENERATE = '{msg:post_detail_regenerate}';
+    var MSG_SUGGEST_ERROR = '{msg:post_detail_suggest_error}';
+    var MSG_PERSONA_LOAD_ERROR = '{msg:post_detail_persona_load_error}';
+    var MSG_UNIT_TEN_THOUSAND = '{msg:post_detail_unit_ten_thousand}';
+    var MSG_TIME_MINUTES_AGO = '{msg:post_detail_time_minutes_ago}';
+    var MSG_TIME_HOURS_AGO = '{msg:post_detail_time_hours_ago}';
+    var MSG_TIME_DAYS_AGO = '{msg:post_detail_time_days_ago}';
+    var MSG_DELETE_CONFIRM = '{msg:post_detail_delete_confirm}';
+    var MSG_DELETING = '{msg:post_detail_deleting}';
+    var MSG_DELETE_SUCCESS = '{msg:post_detail_delete_success}';
+    var MSG_DELETE_ERROR = '{msg:post_detail_delete_error}';
+    var MSG_DELETE_NETWORK_ERROR = '{msg:post_detail_delete_network_error}';
+    var MSG_CANCEL_CONFIRM = '{msg:post_detail_cancel_confirm}';
+    var MSG_CANCELLING = '{msg:post_detail_cancelling}';
+    var MSG_CANCEL_SUCCESS = '{msg:post_detail_cancel_success}';
+    var MSG_CANCEL_ERROR = '{msg:post_detail_cancel_error}';
+    var MSG_CANCEL_NETWORK_ERROR = '{msg:post_detail_cancel_network_error}';
+    var MSG_DATETIME_REQUIRED = '{msg:post_detail_datetime_required}';
+    var MSG_RESCHEDULING = '{msg:post_detail_rescheduling}';
+    var MSG_RESCHEDULE_SUCCESS = '{msg:post_detail_reschedule_success}';
+    var MSG_RESCHEDULE_ERROR = '{msg:post_detail_reschedule_error}';
+    var MSG_RESCHEDULE_NETWORK_ERROR = '{msg:post_detail_reschedule_network_error}';
+    var MSG_POST_GET_ERROR = '{msg:post_detail_post_get_error}';
+    var MSG_SUGGEST_API_ERROR = '{msg:post_detail_suggest_api_error}';
+    var MSG_ENGAGEMENT_LOAD_ERROR = '{msg:post_detail_engagement_load_error}';
+    var MSG_CROSS_POST_LOAD_ERROR = '{msg:post_detail_cross_post_load_error}';
+    var MSG_COMPLIANCE_LOAD_ERROR = '{msg:post_detail_compliance_load_error}';
+    var MSG_REPLIES_LOAD_ERROR = '{msg:post_detail_replies_load_error}';
 
     var STATUS_LABELS = {
-        'DRAFT': '下書き',
-        'SCHEDULED': '予約済み',
-        'PUBLISHED': '公開済み',
-        'FAILED': '失敗',
-        'PENDING': '保留中'
+        'DRAFT': MSG_STATUS_DRAFT,
+        'SCHEDULED': MSG_STATUS_SCHEDULED,
+        'PUBLISHED': MSG_STATUS_PUBLISHED,
+        'FAILED': MSG_STATUS_FAILED,
+        'PENDING': MSG_STATUS_PENDING
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -265,20 +527,28 @@
             }
 
             if (response.status === 404) {
-                showToast('error', '投稿が見つかりません', '削除された可能性があります。');
-                showError('投稿が見つかりません。削除された可能性があります。');
+                showToast('error', MSG_NOT_FOUND_TITLE, MSG_NOT_FOUND_DESC);
+                showError(MSG_NOT_FOUND_ERROR);
                 return;
             }
 
             if (!response.ok) {
-                await showApiError(response, '投稿の読み込みに失敗しました');
+                await showApiError(response, MSG_LOAD_ERROR);
                 return;
             }
 
             var post = await response.json();
+            currentPost = post;
             renderPostDetail(post);
+
+            if (post.status === 'PUBLISHED') {
+                loadEngagement(id);
+                loadCrossPostRecommendations(id);
+                loadComplianceCheck(id);
+                loadReplies(id);
+            }
         } catch (err) {
-            showError('ネットワークエラーが発生しました。再度お試しください。');
+            showError(MSG_NETWORK_ERROR);
         }
     }
 
@@ -298,17 +568,13 @@
                 year: 'numeric', month: 'long', day: 'numeric',
                 hour: '2-digit', minute: '2-digit'
             });
-            scheduledLine = '<span>予約日: ' + scheduledAt + '</span>';
+            scheduledLine = '<span>' + MSG_SCHEDULED_DATE + ': ' + scheduledAt + '</span>';
         }
 
-        // Target platforms section
         var targetsHtml = '';
-        var hasTargets = false;
-
         if (post.targets && post.targets.length > 0) {
-            hasTargets = true;
             targetsHtml = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 1.5rem;">' +
-                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">投稿先プラットフォーム</h3>' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">' + MSG_TARGET_PLATFORMS + '</h3>' +
                 '<ul class="ak-target-list">';
             post.targets.forEach(function(target) {
                 var targetStatus = target.status || 'PENDING';
@@ -322,9 +588,8 @@
             });
             targetsHtml += '</ul></div>';
         } else if (post.targetPlatforms && post.targetPlatforms.length > 0) {
-            hasTargets = true;
             targetsHtml = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 1.5rem;">' +
-                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">投稿先プラットフォーム</h3>' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">' + MSG_TARGET_PLATFORMS + '</h3>' +
                 '<ul class="ak-target-list">';
             post.targetPlatforms.forEach(function(platform) {
                 var platformCls = platform ? platform.toLowerCase() : '';
@@ -342,9 +607,9 @@
         var actionsHtml = '';
         if (isEditable) {
             actionsHtml = '<div class="ak-actions-zone">' +
-                '<a href="/posts/compose?edit=' + encodeURIComponent(post.id) + '" class="ak-btn-edit">編集</a>';
+                '<a href="/posts/compose?edit=' + encodeURIComponent(post.id) + '" class="ak-btn-edit">' + MSG_EDIT + '</a>';
             if (post.status === 'SCHEDULED') {
-                actionsHtml += '<button class="ak-btn-cancel" id="cancel-btn" onclick="handleCancelSchedule(\'' + escapeHtmlGlobal(post.id) + '\')">予約をキャンセル</button>';
+                actionsHtml += '<button class="ak-btn-cancel" id="cancel-btn" onclick="handleCancelSchedule(\'' + escapeHtmlGlobal(post.id) + '\')">' + MSG_CANCEL_SCHEDULE + '</button>';
             }
             actionsHtml += '</div>';
         }
@@ -352,12 +617,12 @@
         var rescheduleHtml = '';
         if (post.status === 'SCHEDULED') {
             rescheduleHtml = '<div class="ak-reschedule-zone">' +
-                '<h3>予約日時の変更</h3>' +
+                '<h3>' + MSG_RESCHEDULE_HEADING + '</h3>' +
                 '<div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">' +
                     '<input type="datetime-local" id="reschedule-datetime" ' +
                         'onclick="this.showPicker && this.showPicker()" ' +
                         'style="background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text)); cursor: pointer;">' +
-                    '<button class="ak-btn-reschedule" id="reschedule-btn" onclick="handleReschedule(\'' + escapeHtmlGlobal(post.id) + '\')">予約日時を変更</button>' +
+                    '<button class="ak-btn-reschedule" id="reschedule-btn" onclick="handleReschedule(\'' + escapeHtmlGlobal(post.id) + '\')">' + MSG_RESCHEDULE_BTN + '</button>' +
                 '</div>' +
             '</div>';
         }
@@ -370,199 +635,364 @@
                 '</div>' +
                 '<div class="ak-post-content">' + escapeHtmlGlobal(post.content) + '</div>' +
                 '<div class="ak-post-meta">' +
-                    '<span>作成日: ' + createdAt + '</span>' +
+                    '<span>' + MSG_CREATED_DATE + ': ' + createdAt + '</span>' +
                     scheduledLine +
                 '</div>' +
+                '<div id="engagement-row" class="ak-engagement-row" style="display: none;"></div>' +
             '</div>' +
             targetsHtml +
             actionsHtml +
             rescheduleHtml +
             '<div class="ak-danger-zone">' +
-                '<h3>危険な操作</h3>' +
-                '<p>投稿の削除は元に戻せません。</p>' +
+                '<h3>' + MSG_DANGER_HEADING + '</h3>' +
+                '<p>' + MSG_DANGER_DESC + '</p>' +
                 '<button class="ak-btn-danger" id="delete-btn" onclick="handleDelete(\'' + escapeHtmlGlobal(post.id) + '\')">' +
-                'この投稿を削除する</button>' +
+                MSG_DELETE_BTN + '</button>' +
             '</div>';
     }
 
-    async function handleDelete(id) {
-        if (!confirm('この投稿を本当に削除しますか？この操作は元に戻せません。')) {
-            return;
-        }
-
+    async function loadEngagement(id) {
         var token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
-
-        var deleteBtn = document.getElementById('delete-btn');
-        if (deleteBtn) {
-            deleteBtn.disabled = true;
-            deleteBtn.setAttribute('aria-busy', 'true');
-            deleteBtn.textContent = '削除中...';
-        }
-
         try {
-            var response = await fetch('/api/v1/posts/' + id, {
-                method: 'DELETE',
+            var response = await fetch('/api/v1/posts/' + id + '/engagement', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
-            }
-
-            if (response.ok || response.status === 204) {
-                showToast('success', '投稿を削除しました');
-                window.location.href = '/posts';
-            } else {
-                await showApiError(response, '投稿の削除に失敗しました');
+            if (!response.ok) return;
+            var data = await response.json();
+            var row = document.getElementById('engagement-row');
+            if (row) {
+                row.innerHTML =
+                    '<span class="ak-engagement-item"><span class="num">' + formatNumber(data.likeCount) + '</span> ' + MSG_ENGAGEMENT_LIKES + '</span>' +
+                    '<span class="ak-engagement-item"><span class="num">' + formatNumber(data.repostCount) + '</span> ' + MSG_ENGAGEMENT_REPOSTS + '</span>' +
+                    '<span class="ak-engagement-item"><span class="num">' + formatNumber(data.replyCount) + '</span> ' + MSG_ENGAGEMENT_REPLIES + '</span>' +
+                    '<span class="ak-engagement-item"><span class="num">' + formatNumber(data.impressionCount) + '</span> ' + MSG_ENGAGEMENT_IMPRESSIONS + '</span>';
+                row.style.display = 'flex';
             }
         } catch (err) {
-            showToast('error', '投稿の削除に失敗しました', 'サーバーに接続できませんでした。再度お試しください。');
-        } finally {
-            if (deleteBtn) {
-                deleteBtn.disabled = false;
-                deleteBtn.removeAttribute('aria-busy');
-                deleteBtn.textContent = 'この投稿を削除する';
-            }
+            showToast('error', MSG_ENGAGEMENT_LOAD_ERROR);
         }
     }
 
-    async function handleCancelSchedule(id) {
-        if (!confirm('この予約を本当にキャンセルしますか？')) {
-            return;
-        }
-
+    async function loadCrossPostRecommendations(id) {
         var token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
-
-        var cancelBtn = document.getElementById('cancel-btn');
-        if (cancelBtn) {
-            cancelBtn.disabled = true;
-            cancelBtn.setAttribute('aria-busy', 'true');
-            cancelBtn.textContent = 'キャンセル中...';
-        }
-
         try {
-            var response = await fetch('/api/v1/posts/' + id, {
-                method: 'DELETE',
+            var response = await fetch('/api/v1/posts/' + id + '/cross-post-recommendations', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
+            if (!response.ok) return;
+            var data = await response.json();
+            if (!data || data.length === 0) return;
 
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
-            }
+            document.getElementById('post-sections').style.display = 'block';
+            var container = document.getElementById('cross-post-recommendations');
+            var html = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">' +
+                '<div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); margin-bottom: 0.75rem;">' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">' + MSG_CROSS_POST_TITLE + '</h3>' +
+                '<span style="font-size: 0.78rem; color: var(--text-muted, var(--ak-text-muted));">' + MSG_CROSS_POST_UNPOSTED + '</span>' +
+                '</div>' +
+                '<div class="ak-recommend-list">';
 
-            if (response.ok || response.status === 204) {
-                showToast('success', '予約をキャンセルしました');
-                window.location.href = '/posts';
-            } else {
-                await showApiError(response, '予約のキャンセルに失敗しました');
-            }
+            data.forEach(function(rec) {
+                var scoreClass = rec.score >= 70 ? 'ak-score-bar-fill--high' : (rec.score >= 40 ? 'ak-score-bar-fill--mid' : 'ak-score-bar-fill--low');
+                var convertedTag = rec.contentConverted ? ' <span class="ak-tag-converted">' + MSG_CROSS_POST_CONVERTED + '</span>' : '';
+                html += '<a class="ak-recommend-item" href="/posts/compose?crosspost=' + encodeURIComponent(currentPost.id) + '&platform=' + encodeURIComponent(rec.platform) + '">' +
+                    '<div>' +
+                    '<div style="font-weight: 500; color: var(--text-heading, var(--ak-text));">' + escapeHtmlGlobal(rec.platform) + convertedTag + '</div>' +
+                    '<div style="font-size: 0.78rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.15rem;">' + escapeHtmlGlobal(rec.reason) + '</div>' +
+                    '</div>' +
+                    '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                    '<div class="ak-score-bar-wrap">' +
+                    '<div class="ak-score-bar"><div class="ak-score-bar-fill ' + scoreClass + '" style="width:' + rec.score + '%;"></div></div>' +
+                    '<span style="font-size: 0.78rem; font-weight: 600; color: var(--text-heading, var(--ak-text)); min-width: 2.2rem; text-align: right;">' + rec.score + '</span>' +
+                    '</div>' +
+                    '<span style="color: var(--text-muted, var(--ak-text-muted)); font-size: 0.85rem;">&rsaquo;</span>' +
+                    '</div>' +
+                    '</a>';
+            });
+
+            html += '</div></div>';
+            container.innerHTML = html;
         } catch (err) {
-            showToast('error', '予約のキャンセルに失敗しました', 'サーバーに接続できませんでした。再度お試しください。');
-        } finally {
-            if (cancelBtn) {
-                cancelBtn.disabled = false;
-                cancelBtn.removeAttribute('aria-busy');
-                cancelBtn.textContent = '予約をキャンセル';
-            }
+            showToast('error', MSG_CROSS_POST_LOAD_ERROR);
         }
     }
 
-    async function handleReschedule(id) {
-        var datetimeInput = document.getElementById('reschedule-datetime');
-        if (!datetimeInput || !datetimeInput.value) {
-            showToast('error', '日時を入力してください', '予約日時を選択してから変更ボタンを押してください。');
+    async function loadComplianceCheck(id) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/posts/' + id + '/compliance', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var data = await response.json();
+
+            document.getElementById('post-sections').style.display = 'block';
+            var container = document.getElementById('compliance-check');
+            var cardClass = data.allPassed ? 'ak-compliance-card all-passed' : 'ak-compliance-card';
+            var statusBadge = data.allPassed
+                ? '<span class="ak-status-badge ak-status-PUBLISHED" style="font-size: 0.72rem;">' + MSG_COMPLIANCE_ALL_PASSED + '</span>'
+                : '<span class="ak-status-badge ak-status-FAILED" style="font-size: 0.72rem;">' + MSG_COMPLIANCE_HAS_ISSUES + '</span>';
+
+            var html = '<div class="ak-card ' + cardClass + '" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">' +
+                '<div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); margin-bottom: 0;">' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">' + MSG_COMPLIANCE_TITLE + '</h3>' +
+                statusBadge + '</div>' +
+                '<table class="ak-compliance-table"><thead><tr><th>' + MSG_COMPLIANCE_COL_LAW + '</th><th>' + MSG_COMPLIANCE_COL_CHECK + '</th><th>' + MSG_COMPLIANCE_COL_RESULT + '</th></tr></thead><tbody>';
+
+            data.items.forEach(function(item) {
+                var resultClass = item.result === 'PASS' ? 'ak-check-pass' : (item.result === 'WARN' ? 'ak-check-warn' : 'ak-check-fail');
+                var icon = item.result === 'PASS' ? '&#10003;' : (item.result === 'WARN' ? '!' : '&#10007;');
+                var label = item.result === 'PASS' ? MSG_COMPLIANCE_PASS : (item.result === 'WARN' ? MSG_COMPLIANCE_WARN : MSG_COMPLIANCE_FAIL);
+                html += '<tr><td>' + escapeHtmlGlobal(item.lawName) + '</td><td>' + escapeHtmlGlobal(item.checkItem) + '</td>' +
+                    '<td><span class="' + resultClass + '" style="font-weight: 500;">' + icon + ' ' + label + '</span></td></tr>';
+            });
+
+            html += '</tbody></table>' +
+                '<div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--bg-elevated, var(--ak-bg)); border-top: 1px solid var(--border-lt, var(--ak-border)); font-size: 0.85rem;">' +
+                '<span style="color: #3A5A2A; font-weight: 600;">' + data.passedCount + ' / ' + data.totalCount + ' ' + MSG_COMPLIANCE_SCORE + '</span>' +
+                '</div></div>';
+
+            container.innerHTML = html;
+        } catch (err) {
+            showToast('error', MSG_COMPLIANCE_LOAD_ERROR);
+        }
+    }
+
+    async function loadReplies(id) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/posts/' + id + '/replies?page=0&size=20', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (!response.ok) return;
+            var data = await response.json();
+            if (!data || data.length === 0) return;
+
+            var container = document.getElementById('post-replies');
+            container.style.display = 'block';
+
+            var html = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 1.5rem;">' +
+                '<div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); margin-bottom: 0.75rem;">' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">' + MSG_REPLIES_TITLE + '</h3>' +
+                '<span style="font-size: 0.78rem; color: var(--text-muted, var(--ak-text-muted));">' + data.length + MSG_REPLIES_COUNT_SUFFIX + '</span>' +
+                '</div><div class="ak-reply-list">';
+
+            data.forEach(function(reply, idx) {
+                var replyId = 'reply-' + idx;
+                var initial = reply.userName ? reply.userName.charAt(0) : '?';
+                var timeAgo = formatTimeAgo(reply.createdAt);
+                html += '<div class="ak-reply-item" id="' + replyId + '">' +
+                    '<div class="ak-reply-header">' +
+                    '<div class="ak-reply-user">' +
+                    '<span class="ak-reply-avatar">' + escapeHtmlGlobal(initial) + '</span>' +
+                    '<span style="font-size: 0.85rem; font-weight: 500; color: var(--text-heading, var(--ak-text));">' + escapeHtmlGlobal(reply.userName) + '</span>' +
+                    '<span style="font-size: 0.75rem; color: var(--text-muted, var(--ak-text-muted));">' + escapeHtmlGlobal(reply.platform) + '</span>' +
+                    '</div>' +
+                    '<span style="font-size: 0.75rem; color: var(--text-muted, var(--ak-text-muted));">' + escapeHtmlGlobal(timeAgo) + '</span>' +
+                    '</div>' +
+                    '<div style="font-size: 0.88rem; line-height: 1.6; color: var(--text-body, var(--ak-text)); margin-bottom: 0.5rem;">' + escapeHtmlGlobal(reply.content) + '</div>' +
+                    '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                    '<button class="ak-btn-sm ak-btn-sm-primary" onclick="togglePersonaSelector(\'' + replyId + '\', \'' + escapeHtmlGlobal(reply.id) + '\', this)">' + MSG_SUGGEST_REPLY + '</button>' +
+                    '</div>' +
+                    '<div class="ak-persona-selector" id="' + replyId + '-persona"></div>' +
+                    '<div class="ak-generated-reply" id="' + replyId + '-generated"></div>' +
+                    '</div>';
+            });
+
+            html += '</div></div>';
+            container.innerHTML = html;
+        } catch (err) {
+            showToast('error', MSG_REPLIES_LOAD_ERROR);
+        }
+    }
+
+    async function togglePersonaSelector(replyId, interactionId, btn) {
+        var selector = document.getElementById(replyId + '-persona');
+        if (selector.classList.contains('is-open')) {
+            selector.classList.remove('is-open');
+            document.getElementById(replyId + '-generated').classList.remove('is-visible');
             return;
         }
 
         var token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
-
-        var rescheduleBtn = document.getElementById('reschedule-btn');
-        if (rescheduleBtn) {
-            rescheduleBtn.disabled = true;
-            rescheduleBtn.setAttribute('aria-busy', 'true');
-            rescheduleBtn.textContent = '変更中...';
-        }
-
-        var scheduledAt = new Date(datetimeInput.value).toISOString();
-
         try {
-            var getResponse = await fetch('/api/v1/posts/' + id, {
+            var response = await fetch('/api/v1/ai/personas', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
+            if (!response.ok) return;
+            var personas = await response.json();
 
-            if (getResponse.status === 401) {
-                window.location.href = '/';
-                return;
-            }
+            var html = '<div style="font-size: 0.8rem; font-weight: 500; color: var(--text-sec, var(--ak-text-muted)); margin-bottom: 0.5rem;">' + MSG_SELECT_PERSONA + '</div>' +
+                '<div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">';
+            personas.forEach(function(p) {
+                html += '<span class="ak-persona-chip" onclick="generatePersonaReply(\'' + replyId + '\', \'' + escapeHtmlGlobal(interactionId) + '\', \'' + escapeHtmlGlobal(p.id) + '\', this)">' + escapeHtmlGlobal(p.name) + '</span>';
+            });
+            html += '</div>';
+            selector.innerHTML = html;
+            selector.classList.add('is-open');
+        } catch (err) {
+            showToast('error', MSG_PERSONA_LOAD_ERROR);
+        }
+    }
 
-            if (!getResponse.ok) {
-                await showApiError(getResponse, '投稿の取得に失敗しました');
-                return;
-            }
+    async function generatePersonaReply(replyId, interactionId, personaId, chip) {
+        var container = chip.parentElement;
+        var chips = container.querySelectorAll('.ak-persona-chip');
+        for (var i = 0; i < chips.length; i++) {
+            chips[i].classList.remove('is-selected');
+        }
+        chip.classList.add('is-selected');
 
-            var post = await getResponse.json();
+        var replyItem = document.getElementById(replyId);
+        var contentEl = replyItem.querySelector('[style*="line-height: 1.6"]');
+        var originalContent = contentEl ? contentEl.textContent : '';
 
-            var platforms = [];
-            if (post.targets && post.targets.length > 0) {
-                platforms = post.targets.map(function(t) { return t.platform; });
-            } else if (post.targetPlatforms) {
-                platforms = post.targetPlatforms;
-            }
-
-            var response = await fetch('/api/v1/posts/' + id, {
-                method: 'PUT',
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/posts/' + postId + '/replies/suggest', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
                 },
                 body: JSON.stringify({
-                    content: post.content,
-                    mediaUrls: post.mediaUrls || [],
-                    targetPlatforms: platforms,
-                    scheduledAt: scheduledAt
+                    replyId: interactionId,
+                    personaId: personaId,
+                    originalContent: originalContent
                 })
             });
-
-            if (response.status === 401) {
-                window.location.href = '/';
+            if (!response.ok) {
+                await showApiError(response, MSG_SUGGEST_API_ERROR);
                 return;
             }
+            var data = await response.json();
+            var generated = document.getElementById(replyId + '-generated');
+            generated.innerHTML =
+                '<div style="font-size: 0.75rem; font-weight: 600; color: var(--accent-gold-hover, var(--ak-primary)); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.06em;">' + MSG_SUGGESTED_REPLY + ' (' + escapeHtmlGlobal(data.personaName) + ')</div>' +
+                '<div style="font-size: 0.88rem; line-height: 1.6; color: var(--text-body, var(--ak-text));">' + escapeHtmlGlobal(data.generatedReply) + '</div>' +
+                '<div style="display: flex; gap: 0.25rem; margin-top: 0.5rem;">' +
+                '<button class="ak-btn-sm ak-btn-sm-primary">' + MSG_USE_REPLY + '</button>' +
+                '<button class="ak-btn-sm" onclick="generatePersonaReply(\'' + replyId + '\', \'' + escapeHtmlGlobal(interactionId) + '\', \'' + escapeHtmlGlobal(personaId) + '\', document.querySelector(\'#' + replyId + '-persona .is-selected\'))">' + MSG_REGENERATE + '</button>' +
+                '</div>';
+            generated.classList.add('is-visible');
+        } catch (err) {
+            showToast('error', MSG_SUGGEST_ERROR);
+        }
+    }
 
-            if (response.ok) {
-                showToast('success', '予約日時を変更しました');
-                loadPostDetail(id);
+    function formatNumber(n) {
+        if (n >= 10000) return (n / 10000).toFixed(1) + MSG_UNIT_TEN_THOUSAND;
+        if (n >= 1000) return n.toLocaleString();
+        return String(n);
+    }
+
+    function formatTimeAgo(dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr);
+        var now = new Date();
+        var diffMs = now - d;
+        var diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 60) return diffMin + MSG_TIME_MINUTES_AGO;
+        var diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return diffHour + MSG_TIME_HOURS_AGO;
+        var diffDay = Math.floor(diffHour / 24);
+        return diffDay + MSG_TIME_DAYS_AGO;
+    }
+
+    async function handleDelete(id) {
+        if (!confirm(MSG_DELETE_CONFIRM)) {
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var deleteBtn = document.getElementById('delete-btn');
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.setAttribute('aria-busy', 'true');
+            deleteBtn.textContent = MSG_DELETING;
+        }
+
+        try {
+            var response = await fetch('/api/v1/posts/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.status === 401) { window.location.href = '/'; return; }
+
+            if (response.ok || response.status === 204) {
+                showToast('success', MSG_DELETE_SUCCESS);
+                window.location.href = '/posts';
             } else {
-                await showApiError(response, '予約日時の変更に失敗しました');
+                await showApiError(response, MSG_DELETE_ERROR);
             }
         } catch (err) {
-            showToast('error', '予約日時の変更に失敗しました', 'サーバーに接続できませんでした。再度お試しください。');
+            showToast('error', MSG_DELETE_ERROR, MSG_DELETE_NETWORK_ERROR);
         } finally {
-            if (rescheduleBtn) {
-                rescheduleBtn.disabled = false;
-                rescheduleBtn.removeAttribute('aria-busy');
-                rescheduleBtn.textContent = '予約日時を変更';
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.removeAttribute('aria-busy');
+                deleteBtn.textContent = MSG_DELETE_BTN;
             }
+        }
+    }
+
+    async function handleCancelSchedule(id) {
+        if (!confirm(MSG_CANCEL_CONFIRM)) return;
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var cancelBtn = document.getElementById('cancel-btn');
+        if (cancelBtn) { cancelBtn.disabled = true; cancelBtn.setAttribute('aria-busy', 'true'); cancelBtn.textContent = MSG_CANCELLING; }
+
+        try {
+            var response = await fetch('/api/v1/posts/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (response.ok || response.status === 204) { showToast('success', MSG_CANCEL_SUCCESS); window.location.href = '/posts'; }
+            else { await showApiError(response, MSG_CANCEL_ERROR); }
+        } catch (err) {
+            showToast('error', MSG_CANCEL_ERROR, MSG_CANCEL_NETWORK_ERROR);
+        } finally {
+            if (cancelBtn) { cancelBtn.disabled = false; cancelBtn.removeAttribute('aria-busy'); cancelBtn.textContent = MSG_CANCEL_SCHEDULE; }
+        }
+    }
+
+    async function handleReschedule(id) {
+        var datetimeInput = document.getElementById('reschedule-datetime');
+        if (!datetimeInput || !datetimeInput.value) { showToast('error', MSG_DATETIME_REQUIRED); return; }
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        var rescheduleBtn = document.getElementById('reschedule-btn');
+        if (rescheduleBtn) { rescheduleBtn.disabled = true; rescheduleBtn.setAttribute('aria-busy', 'true'); rescheduleBtn.textContent = MSG_RESCHEDULING; }
+        var scheduledAt = new Date(datetimeInput.value).toISOString();
+        try {
+            var getResponse = await fetch('/api/v1/posts/' + id, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (getResponse.status === 401) { window.location.href = '/'; return; }
+            if (!getResponse.ok) { await showApiError(getResponse, MSG_POST_GET_ERROR); return; }
+            var post = await getResponse.json();
+            var platforms = [];
+            if (post.targets && post.targets.length > 0) { platforms = post.targets.map(function(t) { return t.platform; }); }
+            else if (post.targetPlatforms) { platforms = post.targetPlatforms; }
+            var response = await fetch('/api/v1/posts/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ content: post.content, mediaUrls: post.mediaUrls || [], targetPlatforms: platforms, scheduledAt: scheduledAt })
+            });
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (response.ok) { showToast('success', MSG_RESCHEDULE_SUCCESS); loadPostDetail(id); }
+            else { await showApiError(response, MSG_RESCHEDULE_ERROR); }
+        } catch (err) {
+            showToast('error', MSG_RESCHEDULE_ERROR, MSG_RESCHEDULE_NETWORK_ERROR);
+        } finally {
+            if (rescheduleBtn) { rescheduleBtn.disabled = false; rescheduleBtn.removeAttribute('aria-busy'); rescheduleBtn.textContent = MSG_RESCHEDULE_BTN; }
         }
     }
 
     function showError(message) {
         var errorDiv = document.getElementById('post-error');
-        errorDiv.innerHTML = '<div class="ak-card" style="border-color: var(--status-error, var(--ak-primary)); color: var(--status-error, var(--ak-primary));">' +
-            escapeHtmlGlobal(message) + '</div>';
+        errorDiv.innerHTML = '<div class="ak-card" style="border-color: var(--status-error, var(--ak-primary)); color: var(--status-error, var(--ak-primary));">' + escapeHtmlGlobal(message) + '</div>';
         errorDiv.style.display = 'block';
     }
 
@@ -570,11 +1000,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

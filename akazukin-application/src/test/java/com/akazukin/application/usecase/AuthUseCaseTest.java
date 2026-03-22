@@ -55,7 +55,7 @@ class AuthUseCaseTest {
 
         DomainException exception = assertThrows(DomainException.class,
                 () -> authUseCase.register(duplicate));
-        assertEquals("DUPLICATE_USER", exception.getErrorCode());
+        assertEquals("DUPLICATE_USERNAME", exception.getErrorCode());
     }
 
     @Test
@@ -67,7 +67,7 @@ class AuthUseCaseTest {
 
         DomainException exception = assertThrows(DomainException.class,
                 () -> authUseCase.register(duplicate));
-        assertEquals("DUPLICATE_USER", exception.getErrorCode());
+        assertEquals("DUPLICATE_EMAIL", exception.getErrorCode());
     }
 
     @Test

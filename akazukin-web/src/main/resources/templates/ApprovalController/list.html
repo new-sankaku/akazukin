@@ -1,5 +1,5 @@
 {#include base}
-{#title}承認待ち一覧 - Akazukin{/title}
+{#title}{msg:approval_page_title} - Akazukin{/title}
 {#body}
 {#appheader /}
 
@@ -7,98 +7,597 @@
     {#sidebar active="approvals" /}
 
     <main class="ak-main">
-        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">承認待ち一覧</h2>
+        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 0.3rem;">{msg:approval_page_title}</h2>
+        <p style="color: var(--text-sec, var(--ak-text-muted)); margin-bottom: 1.5rem; font-size: 0.9rem;">{msg:approval_page_desc}</p>
 
-        <div id="approvals-list">
-            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">承認リクエストを読み込み中...</p>
+        <nav class="ak-section-nav">
+            <button class="active" onclick="switchSection('rules', this)">{msg:approval_tab_rules}</button>
+            <button onclick="switchSection('dashboard', this)">{msg:approval_tab_dashboard}</button>
+            <button onclick="switchSection('review', this)">{msg:approval_tab_review}</button>
+        </nav>
+
+        <div id="sec-rules" class="ak-section ak-section--visible">
+            <div id="team-tabs" class="ak-team-tab-group"></div>
+            <div id="rules-content">
+                <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">{msg:approval_loading}</p>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem;">
+                <button class="ak-btn-outline" onclick="loadApprovalRules()">{msg:approval_rules_discard}</button>
+                <button class="ak-btn-primary" onclick="saveApprovalRules()">{msg:approval_rules_save}</button>
+            </div>
         </div>
 
-        <div id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;"></div>
+        <div id="sec-dashboard" class="ak-section">
+            <div id="dashboard-summary" class="ak-summary-grid"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="ak-dashboard-grid">
+                <div id="rejection-trends"></div>
+                <div id="team-approval-status"></div>
+            </div>
+            <div id="pending-queue" style="margin-top: 1.5rem;"></div>
+        </div>
+
+        <div id="sec-review" class="ak-section">
+            <div id="review-selector" style="margin-bottom: 1rem;"></div>
+            <div id="review-post-content"></div>
+            <div id="review-ai-report"></div>
+            <div id="review-approval-history"></div>
+            <div id="review-actions" style="display: none;"></div>
+        </div>
     </main>
 </div>
 
 <style>
-    .approval-card {
-        background: var(--bg-surface, var(--ak-bg-secondary));
-        border: 1px solid var(--border-lt, var(--ak-border));
-        border-radius: 8px;
-        padding: 1.25rem 1.5rem;
-        margin-bottom: 1rem;
-        transition: border-color 0.2s;
-    }
-    .approval-card:hover {
-        border-color: var(--accent-gold, var(--ak-primary));
-    }
-    .approval-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 0.75rem;
-    }
-    .approval-card-content {
-        color: var(--text-body, var(--ak-text));
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 0.75rem;
-        word-break: break-word;
-    }
-    .approval-card-meta {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem;
-        color: var(--text-muted, var(--ak-text-muted));
-        font-size: 0.8rem;
-        margin-bottom: 0.75rem;
-    }
-    .approval-card-actions {
+    .ak-section-nav {
         display: flex;
         gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid var(--border, var(--ak-border));
+        padding-bottom: 0;
     }
-    .ak-btn-approve {
-        background: rgba(106, 168, 106, 0.1);
-        color: #4A7A4A;
-        border: 1px solid #8AB88A;
-        padding: 0.35rem 0.9rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: 600;
+    .ak-section-nav button {
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 0.95rem;
+        padding: 0.7rem 1.2rem;
+        color: var(--text-sec, var(--ak-text-muted));
         cursor: pointer;
-        letter-spacing: 0.03em;
-        transition: background 0.2s, color 0.2s;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
     }
-    .ak-btn-approve:hover {
-        background: #4A7A4A;
-        color: white;
-    }
-    .ak-btn-reject {
-        background: transparent;
-        color: var(--status-error, #B04040);
-        border: 1px solid var(--status-error, #B04040);
-        padding: 0.35rem 0.9rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: 600;
+    .ak-section-nav button:hover { color: var(--text-heading, var(--ak-text)); }
+    .ak-section-nav button.active { color: var(--accent-gold, var(--ak-primary)); border-bottom-color: var(--accent-gold, var(--ak-primary)); font-weight: 500; }
+
+    .ak-section { display: none; }
+    .ak-section--visible { display: block; }
+
+    .ak-team-tab-group { display: flex; gap: 0.3rem; margin-bottom: 1rem; }
+    .ak-team-tab {
+        font-family: inherit;
+        font-size: 0.85rem;
+        padding: 0.45rem 1rem;
+        border: 1px solid var(--border, var(--ak-border));
+        border-radius: 6px 6px 0 0;
+        background: var(--bg-subtle, #E4DECC);
+        color: var(--text-sec, var(--ak-text-muted));
         cursor: pointer;
-        letter-spacing: 0.03em;
-        transition: background 0.2s, color 0.2s;
+        border-bottom: none;
+        margin-bottom: -1px;
+        position: relative;
+        z-index: 1;
     }
-    .ak-btn-reject:hover {
-        background: var(--status-error, #B04040);
-        color: white;
+    .ak-team-tab.active { background: var(--bg-surface, var(--ak-bg-secondary)); color: var(--accent-gold, var(--ak-primary)); font-weight: 500; z-index: 2; }
+
+    .ak-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .ak-summary-card {
+        background: var(--bg-elevated, var(--ak-bg));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 8px;
+        padding: 1.2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .ak-summary-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .ak-summary-card.gold::before { background: var(--accent-gold, var(--ak-primary)); }
+    .ak-summary-card.success::before { background: var(--status-success, #6B8B4A); }
+    .ak-summary-card.error::before { background: var(--status-error, #B04040); }
+    .ak-summary-card.info::before { background: var(--status-info, #5A8BA0); }
+
+    .ak-toggle { position: relative; display: inline-block; width: 2.8rem; height: 1.5rem; flex-shrink: 0; }
+    .ak-toggle input { opacity: 0; width: 0; height: 0; }
+    .ak-toggle-track {
+        position: absolute; inset: 0; background: var(--border, var(--ak-border)); border-radius: 1rem; cursor: pointer; transition: background 0.25s;
+    }
+    .ak-toggle-track::after {
+        content: ''; position: absolute; width: 1.1rem; height: 1.1rem; left: 0.2rem; top: 0.2rem;
+        background: var(--bg-elevated, var(--ak-bg)); border-radius: 50%; transition: transform 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .ak-toggle input:checked + .ak-toggle-track { background: var(--accent-gold, var(--ak-primary)); }
+    .ak-toggle input:checked + .ak-toggle-track::after { transform: translateX(1.3rem); }
+
+    .ak-rule-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid var(--border-lt, var(--ak-border));
+    }
+    .ak-rule-row:last-child { border-bottom: none; }
+
+    .ak-risk-level {
+        display: grid;
+        grid-template-columns: 6rem 1fr;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.8rem 1rem;
+        background: var(--bg-elevated, var(--ak-bg));
+        border-radius: 6px;
+        border-left: 4px solid;
+        margin-bottom: 0.8rem;
+    }
+    .ak-risk-level.risk-high { border-left-color: var(--status-error, #B04040); }
+    .ak-risk-level.risk-medium { border-left-color: var(--status-warning, #C8A96E); }
+    .ak-risk-level.risk-low { border-left-color: var(--status-success, #6B8B4A); }
+
+    .ak-risk-config { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; font-size: 0.88rem; }
+
+    .ak-num-input {
+        width: 4rem;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid var(--border, var(--ak-border));
+        border-radius: 6px;
+        background: var(--bg-field, var(--ak-bg));
+        color: var(--text-body, var(--ak-text));
+        font-family: inherit;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+    .ak-num-input:focus { outline: none; border-color: var(--accent-gold, var(--ak-primary)); }
+
+    .ak-badge {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 2px; font-weight: 500; white-space: nowrap;
+    }
+    .ak-badge-admin { background: var(--badge-admin-bg, #D4C4A0); color: var(--badge-admin-text, #5A4B28); }
+    .ak-badge-user { background: var(--badge-user-bg, #C5D5B8); color: var(--badge-user-text, #3B5228); }
+    .ak-badge-viewer { background: var(--badge-viewer-bg, #B8CDD6); color: var(--badge-viewer-text, #2A4A56); }
+    .ak-badge-high { background: var(--status-error-bg, #E8C4C4); color: var(--status-error-text, #6B2020); }
+    .ak-badge-medium { background: var(--status-warning-bg, #E8DCC0); color: var(--status-warning-text, #6B5828); }
+    .ak-badge-low { background: var(--status-success-bg, #C8D8C0); color: var(--status-success-text, #3B5228); }
+    .ak-badge-pending { background: var(--accent-gold-light, #F2E6D0); color: var(--status-warning-text, #8B6A2A); }
+    .ak-badge-approved { background: var(--status-success-bg, #C8DEB8); color: var(--status-success-text, #3B5228); }
+    .ak-badge-rejected { background: var(--status-error-bg, #E8C4C4); color: var(--status-error-text, #6B2020); }
+
+    .ak-btn-outline {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        font-family: inherit; font-size: 0.85rem; padding: 0.5rem 1rem;
+        border: 1px solid var(--border, var(--ak-border)); border-radius: 6px;
+        background: var(--bg-elevated, var(--ak-bg)); color: var(--text-body, var(--ak-text));
+        cursor: pointer; transition: all 0.2s;
+    }
+    .ak-btn-outline:hover { background: var(--bg-subtle, #E4DECC); }
+    .ak-btn-primary {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        font-family: inherit; font-size: 0.85rem; padding: 0.5rem 1rem;
+        border: 1px solid var(--accent-gold, var(--ak-primary)); border-radius: 6px;
+        background: var(--accent-gold, var(--ak-primary)); color: #fff; cursor: pointer; transition: all 0.2s;
+    }
+    .ak-btn-primary:hover { opacity: 0.85; }
+
+    .ak-btn-approve { background: var(--status-success, #6B8B4A); color: #fff; border: 1px solid var(--status-success, #6B8B4A); }
+    .ak-btn-reject { background: var(--status-error, #B04040); color: #fff; border: 1px solid var(--status-error, #B04040); }
+
+    .ak-trend-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .ak-trend-bar-label { font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted)); min-width: 8rem; }
+    .ak-trend-bar-track { flex: 1; height: 0.5rem; background: var(--border-lt, var(--ak-border)); border-radius: 2px; overflow: hidden; }
+    .ak-trend-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .ak-trend-bar-val { font-size: 0.82rem; color: var(--text-body, var(--ak-text)); min-width: 2.5rem; text-align: right; }
+
+    .ak-queue-item {
+        display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start;
+        padding: 1rem; border-bottom: 1px solid var(--border-lt, var(--ak-border));
+    }
+    .ak-queue-item:last-child { border-bottom: none; }
+    .ak-queue-item:hover { background: var(--bg-elevated, var(--ak-bg)); }
+
+    .ak-ai-report {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border, var(--ak-border));
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .ak-finding {
+        border: 1px solid var(--border-lt, var(--ak-border));
+        border-radius: 6px;
+        margin-bottom: 0.6rem;
+        overflow: hidden;
+        background: var(--bg-elevated, var(--ak-bg));
+    }
+    .ak-finding-header {
+        display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; cursor: pointer;
+        transition: background 0.2s;
+    }
+    .ak-finding-header:hover { background: var(--bg-subtle, #E4DECC); }
+    .ak-finding-detail {
+        display: none; padding: 0.8rem 1rem; border-top: 1px solid var(--border-lt, var(--ak-border));
+        font-size: 0.85rem; color: var(--text-body, var(--ak-text)); background: var(--bg-surface, var(--ak-bg-secondary));
+    }
+    .ak-finding.open .ak-finding-detail { display: block; }
+
+    .ak-severity-icon {
+        width: 1.4rem; height: 1.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .ak-severity-icon.critical { background: var(--status-error, #B04040); }
+    .ak-severity-icon.warning { background: var(--status-warning, #C8A96E); }
+    .ak-severity-icon.info { background: var(--status-info, #5A8BA0); }
+
+    .ak-finding-law {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        background: var(--accent-gold-light, #F2E6D0); color: #8B6A2A;
+        font-size: 0.78rem; padding: 0.2rem 0.5rem; border-radius: 2px; margin-right: 0.5rem; margin-bottom: 0.3rem;
+    }
+
+    .ak-actions-bar { display: flex; gap: 0.6rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid var(--border-lt, var(--ak-border)); }
+
+    .ak-table-wrap { overflow-x: auto; border: 1px solid var(--border-lt, var(--ak-border)); border-radius: 6px; }
+    .ak-table-wrap table { width: 100%; border-collapse: collapse; }
+    .ak-table-wrap th, .ak-table-wrap td { text-align: left; padding: 0.65rem 0.8rem; border-bottom: 1px solid var(--border-lt, var(--ak-border)); }
+    .ak-table-wrap th { font-size: 0.82rem; color: var(--text-muted, var(--ak-text-muted)); font-weight: 500; background: var(--bg-subtle, #E4DECC); }
+    .ak-table-wrap tr:last-child td { border-bottom: none; }
+    .ak-table-wrap tr:hover td { background: var(--bg-elevated, var(--ak-bg)); }
+
+    @media (max-width: 640px) {
+        .ak-rule-row { grid-template-columns: 1fr; gap: 0.5rem; }
+        .ak-risk-level { grid-template-columns: 1fr; }
+        .ak-summary-grid { grid-template-columns: repeat(2, 1fr); }
+        .ak-dashboard-grid { grid-template-columns: 1fr; }
     }
 </style>
 
 <script>
+    var teams = [];
+    var selectedTeamId = null;
+    var pendingApprovals = [];
     var currentPage = 0;
     var pageSize = 20;
 
+    var MSG_LOADING = '{msg:approval_loading}';
+    var MSG_TEAM_LOAD_ERROR = '{msg:approval_team_load_error}';
+    var MSG_RULES_ROLE_TITLE = '{msg:approval_rules_role_title}';
+    var MSG_RULES_VIEWER_NOTE = '{msg:approval_rules_viewer_note}';
+    var MSG_AI_SETTINGS_TITLE = '{msg:approval_ai_settings_title}';
+    var MSG_AI_CHECK_REQUIRED = '{msg:approval_ai_check_required}';
+    var MSG_AI_CHECK_REQUIRED_DESC = '{msg:approval_ai_check_required_desc}';
+    var MSG_AI_AUTO_REJECT = '{msg:approval_ai_auto_reject}';
+    var MSG_AI_AUTO_REJECT_DESC = '{msg:approval_ai_auto_reject_desc}';
+    var MSG_MIN_APPROVERS = '{msg:approval_min_approvers}';
+    var MSG_MIN_APPROVERS_DESC = '{msg:approval_min_approvers_desc}';
+    var MSG_MIN_APPROVERS_UNIT = '{msg:approval_min_approvers_unit}';
+    var MSG_DEADLINE = '{msg:approval_deadline}';
+    var MSG_DEADLINE_DESC = '{msg:approval_deadline_desc}';
+    var MSG_DEADLINE_UNIT = '{msg:approval_deadline_unit}';
+    var MSG_RISK_FLOW_TITLE = '{msg:approval_risk_flow_title}';
+    var MSG_RISK_HIGH = '{msg:approval_risk_high}';
+    var MSG_RISK_MEDIUM = '{msg:approval_risk_medium}';
+    var MSG_RISK_LOW = '{msg:approval_risk_low}';
+    var MSG_RISK_APPROVERS = '{msg:approval_risk_approvers}';
+    var MSG_RISK_APPROVERS_UNIT = '{msg:approval_risk_approvers_unit}';
+    var MSG_RISK_ADMIN_REQUIRED = '{msg:approval_risk_admin_required}';
+    var MSG_RISK_LEGAL_REQUIRED = '{msg:approval_risk_legal_required}';
+    var MSG_RULES_SAVE_SUCCESS = '{msg:approval_rules_save_success}';
+    var MSG_RULES_SAVE_ERROR = '{msg:approval_rules_save_error}';
+    var MSG_COL_ROLE = '{msg:approval_col_role}';
+    var MSG_COL_POST_APPROVAL = '{msg:approval_col_post_approval}';
+    var MSG_COL_SCHEDULE_APPROVAL = '{msg:approval_col_schedule_approval}';
+    var MSG_COL_MEDIA_APPROVAL = '{msg:approval_col_media_approval}';
+    var MSG_DASHBOARD_PENDING = '{msg:approval_dashboard_pending}';
+    var MSG_DASHBOARD_APPROVED_TODAY = '{msg:approval_dashboard_approved_today}';
+    var MSG_DASHBOARD_REJECTED = '{msg:approval_dashboard_rejected}';
+    var MSG_DASHBOARD_AI_FAIL_RATE = '{msg:approval_dashboard_ai_fail_rate}';
+    var MSG_DASHBOARD_REJECTION_TREND = '{msg:approval_dashboard_rejection_trend}';
+    var MSG_TREND_EXPRESSION = '{msg:approval_trend_expression}';
+    var MSG_TREND_LEGAL = '{msg:approval_trend_legal}';
+    var MSG_TREND_BRAND = '{msg:approval_trend_brand}';
+    var MSG_TREND_ACCURACY = '{msg:approval_trend_accuracy}';
+    var MSG_TREND_OTHER = '{msg:approval_trend_other}';
+    var MSG_TEAM_STATUS_TITLE = '{msg:approval_dashboard_team_status}';
+    var MSG_TEAM_COL_TEAM = '{msg:approval_team_col_team}';
+    var MSG_TEAM_COL_PENDING = '{msg:approval_team_col_pending}';
+    var MSG_TEAM_COL_APPROVED = '{msg:approval_team_col_approved}';
+    var MSG_TEAM_COL_REJECTED = '{msg:approval_team_col_rejected}';
+    var MSG_TEAM_COL_FAIL_RATE = '{msg:approval_team_col_fail_rate}';
+    var MSG_NO_PENDING = '{msg:approval_no_pending}';
+    var MSG_PENDING_LIST_TITLE = '{msg:approval_pending_list_title}';
+    var MSG_REVIEW_BTN = '{msg:approval_review_btn}';
+    var MSG_REVIEW_TARGET = '{msg:approval_review_target}';
+    var MSG_REVIEW_SELECT = '{msg:approval_review_select}';
+    var MSG_REVIEW_POST_CONTENT = '{msg:approval_review_post_content}';
+    var MSG_REVIEW_REQUESTER = '{msg:approval_review_requester}';
+    var MSG_ACTION_APPROVE = '{msg:approval_action_approve}';
+    var MSG_ACTION_REJECT = '{msg:approval_action_reject}';
+    var MSG_ACTION_RETURN = '{msg:approval_action_return}';
+    var MSG_AI_RECHECK = '{msg:approval_ai_recheck}';
+    var MSG_AI_REPORT_TITLE = '{msg:approval_ai_report_title}';
+    var MSG_AI_SCORE_PASS = '{msg:approval_ai_score_pass}';
+    var MSG_AI_SCORE_WARN = '{msg:approval_ai_score_warn}';
+    var MSG_AI_SCORE_FAIL = '{msg:approval_ai_score_fail}';
+    var MSG_AI_PAST_CASE = '{msg:approval_ai_past_case}';
+    var MSG_AI_RECHECK_ERROR = '{msg:approval_ai_recheck_error}';
+    var MSG_AI_RECHECK_SUCCESS = '{msg:approval_ai_recheck_success}';
+    var MSG_REVIEW_LOAD_ERROR = '{msg:approval_review_load_error}';
+    var MSG_REJECT_PROMPT = '{msg:approval_reject_prompt}';
+    var MSG_DECISION_APPROVE = '{msg:approval_decision_approve}';
+    var MSG_DECISION_RETURN = '{msg:approval_decision_return}';
+    var MSG_DECISION_REJECT = '{msg:approval_decision_reject}';
+    var MSG_DECISION_ERROR = '{msg:approval_decision_error}';
+    var MSG_NETWORK_ERROR = '{msg:approval_network_error}';
+    var MSG_SCORE_SUFFIX = '{msg:approval_score_suffix}';
+
     document.addEventListener('DOMContentLoaded', function() {
-        loadApprovals(0);
+        loadTeamsForTabs();
+        loadDashboard();
+        loadPendingApprovals(0);
     });
 
-    async function loadApprovals(page) {
+    function switchSection(id, btn) {
+        document.querySelectorAll('.ak-section').forEach(function(s) { s.classList.remove('ak-section--visible'); });
+        document.getElementById('sec-' + id).classList.add('ak-section--visible');
+        document.querySelectorAll('.ak-section-nav button').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+    }
+
+    async function loadTeamsForTabs() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+        try {
+            var response = await fetch('/api/v1/teams', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            teams = await response.json();
+            renderTeamTabs();
+            if (teams.length > 0) {
+                selectedTeamId = teams[0].id;
+                loadApprovalRules();
+            }
+        } catch (err) {
+            showToast('error', MSG_TEAM_LOAD_ERROR);
+        }
+    }
+
+    function renderTeamTabs() {
+        var container = document.getElementById('team-tabs');
+        container.innerHTML = teams.map(function(team, idx) {
+            return '<button class="ak-team-tab' + (idx === 0 ? ' active' : '') + '" onclick="switchTeam(\'' + team.id + '\', this)">' + escapeHtmlGlobal(team.name) + '</button>';
+        }).join('');
+    }
+
+    function switchTeam(teamId, btn) {
+        selectedTeamId = teamId;
+        document.querySelectorAll('.ak-team-tab').forEach(function(t) { t.classList.remove('active'); });
+        btn.classList.add('active');
+        loadApprovalRules();
+    }
+
+    async function loadApprovalRules() {
+        if (!selectedTeamId) return;
+        var token = localStorage.getItem('accessToken');
+        var container = document.getElementById('rules-content');
+        container.innerHTML = '<p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">' + MSG_LOADING + '</p>';
+
+        try {
+            var response = await fetch('/api/v1/approvals/rules/' + selectedTeamId, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) {
+                container.innerHTML = renderDefaultRules();
+                return;
+            }
+            var rules = await response.json();
+            renderApprovalRules(rules);
+        } catch (err) {
+            container.innerHTML = renderDefaultRules();
+        }
+    }
+
+    function renderDefaultRules() {
+        return renderRulesHtml(
+            [
+                { role: 'ADMIN', postApprovalRequired: false, scheduleApprovalRequired: false, mediaApprovalRequired: false },
+                { role: 'USER', postApprovalRequired: true, scheduleApprovalRequired: true, mediaApprovalRequired: true }
+            ],
+            true, true, 2, 24,
+            [
+                { riskLevel: 'HIGH', requiredApprovers: 3, adminRequired: true, legalReviewRequired: true },
+                { riskLevel: 'MEDIUM', requiredApprovers: 2, adminRequired: true, legalReviewRequired: false },
+                { riskLevel: 'LOW', requiredApprovers: 1, adminRequired: false, legalReviewRequired: false }
+            ]
+        );
+    }
+
+    function renderApprovalRules(rules) {
+        var container = document.getElementById('rules-content');
+        var adminRule = rules.find(function(r) { return r.role === 'ADMIN'; }) || { postApprovalRequired: false, scheduleApprovalRequired: false, mediaApprovalRequired: false };
+        var userRule = rules.find(function(r) { return r.role === 'USER'; }) || { postApprovalRequired: true, scheduleApprovalRequired: true, mediaApprovalRequired: true };
+        var firstRule = rules[0] || {};
+
+        container.innerHTML = renderRulesHtml(
+            [adminRule, userRule],
+            firstRule.aiCheckRequired !== undefined ? firstRule.aiCheckRequired : true,
+            firstRule.aiAutoReject !== undefined ? firstRule.aiAutoReject : true,
+            firstRule.minApprovers || 2,
+            firstRule.approvalDeadlineHours || 24,
+            []
+        );
+    }
+
+    function renderRulesHtml(roleSettings, aiCheckRequired, aiAutoReject, minApprovers, deadlineHours, riskFlows) {
+        var selectedTeamName = '';
+        for (var i = 0; i < teams.length; i++) {
+            if (teams[i].id === selectedTeamId) { selectedTeamName = teams[i].name; break; }
+        }
+
+        var html = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem; padding: 1.5rem;">' +
+            '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">' +
+            '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">' + MSG_RULES_ROLE_TITLE + '</h3>' +
+            '<span class="ak-badge ak-badge-admin">' + escapeHtmlGlobal(selectedTeamName) + '</span></div>' +
+            '<div class="ak-table-wrap"><table>' +
+            '<thead><tr><th>' + MSG_COL_ROLE + '</th><th>' + MSG_COL_POST_APPROVAL + '</th><th>' + MSG_COL_SCHEDULE_APPROVAL + '</th><th>' + MSG_COL_MEDIA_APPROVAL + '</th></tr></thead>' +
+            '<tbody>';
+
+        html += '<tr><td><span class="ak-badge ak-badge-admin">ADMIN</span></td>';
+        html += '<td><label class="ak-toggle"><input type="checkbox" id="rule-admin-post"' + (roleSettings[0].postApprovalRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></td>';
+        html += '<td><label class="ak-toggle"><input type="checkbox" id="rule-admin-schedule"' + (roleSettings[0].scheduleApprovalRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></td>';
+        html += '<td><label class="ak-toggle"><input type="checkbox" id="rule-admin-media"' + (roleSettings[0].mediaApprovalRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></td></tr>';
+
+        html += '<tr><td><span class="ak-badge ak-badge-user">USER</span></td>';
+        html += '<td><label class="ak-toggle"><input type="checkbox" id="rule-user-post"' + (roleSettings[1].postApprovalRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></td>';
+        html += '<td><label class="ak-toggle"><input type="checkbox" id="rule-user-schedule"' + (roleSettings[1].scheduleApprovalRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></td>';
+        html += '<td><label class="ak-toggle"><input type="checkbox" id="rule-user-media"' + (roleSettings[1].mediaApprovalRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></td></tr>';
+
+        html += '<tr><td><span class="ak-badge ak-badge-viewer">VIEWER</span></td><td colspan="3" style="color: var(--text-muted, var(--ak-text-muted)); font-size: 0.85rem;">' + MSG_RULES_VIEWER_NOTE + '</td></tr>';
+        html += '</tbody></table></div></div>';
+
+        html += '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem; padding: 1.5rem;">' +
+            '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0 0 1rem 0;">' + MSG_AI_SETTINGS_TITLE + '</h3>';
+
+        html += '<div class="ak-rule-row"><div><div style="font-weight: 500; color: var(--text-body, var(--ak-text));">' + MSG_AI_CHECK_REQUIRED + '</div><div style="font-size: 0.8rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.15rem;">' + MSG_AI_CHECK_REQUIRED_DESC + '</div></div>' +
+            '<label class="ak-toggle"><input type="checkbox" id="ai-check-required"' + (aiCheckRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></div>';
+        html += '<div class="ak-rule-row"><div><div style="font-weight: 500; color: var(--text-body, var(--ak-text));">' + MSG_AI_AUTO_REJECT + '</div><div style="font-size: 0.8rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.15rem;">' + MSG_AI_AUTO_REJECT_DESC + '</div></div>' +
+            '<label class="ak-toggle"><input type="checkbox" id="ai-auto-reject"' + (aiAutoReject ? ' checked' : '') + '><span class="ak-toggle-track"></span></label></div>';
+        html += '<div class="ak-rule-row"><div><div style="font-weight: 500; color: var(--text-body, var(--ak-text));">' + MSG_MIN_APPROVERS + '</div><div style="font-size: 0.8rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.15rem;">' + MSG_MIN_APPROVERS_DESC + '</div></div>' +
+            '<input type="number" class="ak-num-input" id="min-approvers" value="' + minApprovers + '" min="1" max="10"><span style="font-size: 0.85rem; color: var(--text-sec, var(--ak-text-muted));">' + MSG_MIN_APPROVERS_UNIT + '</span></div>';
+        html += '<div class="ak-rule-row"><div><div style="font-weight: 500; color: var(--text-body, var(--ak-text));">' + MSG_DEADLINE + '</div><div style="font-size: 0.8rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.15rem;">' + MSG_DEADLINE_DESC + '</div></div>' +
+            '<input type="number" class="ak-num-input" id="deadline-hours" value="' + deadlineHours + '" min="1" max="168"><span style="font-size: 0.85rem; color: var(--text-sec, var(--ak-text-muted));">' + MSG_DEADLINE_UNIT + '</span></div>';
+        html += '</div>';
+
+        html += '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); padding: 1.5rem;">' +
+            '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0 0 1rem 0;">' + MSG_RISK_FLOW_TITLE + '</h3>';
+
+        var defaultFlows = riskFlows.length > 0 ? riskFlows : [
+            { riskLevel: 'HIGH', requiredApprovers: 3, adminRequired: true, legalReviewRequired: true },
+            { riskLevel: 'MEDIUM', requiredApprovers: 2, adminRequired: true, legalReviewRequired: false },
+            { riskLevel: 'LOW', requiredApprovers: 1, adminRequired: false, legalReviewRequired: false }
+        ];
+
+        defaultFlows.forEach(function(flow) {
+            var levelClass = 'risk-' + flow.riskLevel.toLowerCase();
+            var badgeClass = 'ak-badge-' + flow.riskLevel.toLowerCase();
+            var levelLabel = flow.riskLevel === 'HIGH' ? MSG_RISK_HIGH : (flow.riskLevel === 'MEDIUM' ? MSG_RISK_MEDIUM : MSG_RISK_LOW);
+            html += '<div class="ak-risk-level ' + levelClass + '">' +
+                '<span class="ak-badge ' + badgeClass + '">' + levelLabel + '</span>' +
+                '<div class="ak-risk-config">' +
+                '<span>' + MSG_RISK_APPROVERS + '</span><input type="number" class="ak-num-input risk-approvers" data-risk="' + flow.riskLevel + '" value="' + flow.requiredApprovers + '" min="1" max="10"><span>' + MSG_RISK_APPROVERS_UNIT + '</span>' +
+                '<span style="margin: 0 0.3rem; color: var(--border, var(--ak-border));">|</span>' +
+                '<label class="ak-toggle"><input type="checkbox" class="risk-admin" data-risk="' + flow.riskLevel + '"' + (flow.adminRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label><span>' + MSG_RISK_ADMIN_REQUIRED + '</span>' +
+                '<span style="margin: 0 0.3rem; color: var(--border, var(--ak-border));">|</span>' +
+                '<label class="ak-toggle"><input type="checkbox" class="risk-legal" data-risk="' + flow.riskLevel + '"' + (flow.legalReviewRequired ? ' checked' : '') + '><span class="ak-toggle-track"></span></label><span>' + MSG_RISK_LEGAL_REQUIRED + '</span>' +
+                '</div></div>';
+        });
+        html += '</div>';
+
+        return html;
+    }
+
+    async function saveApprovalRules() {
+        if (!selectedTeamId) return;
+        var token = localStorage.getItem('accessToken');
+
+        var roleSettings = [
+            { role: 'ADMIN', postApprovalRequired: document.getElementById('rule-admin-post').checked, scheduleApprovalRequired: document.getElementById('rule-admin-schedule').checked, mediaApprovalRequired: document.getElementById('rule-admin-media').checked },
+            { role: 'USER', postApprovalRequired: document.getElementById('rule-user-post').checked, scheduleApprovalRequired: document.getElementById('rule-user-schedule').checked, mediaApprovalRequired: document.getElementById('rule-user-media').checked }
+        ];
+
+        var riskFlows = [];
+        document.querySelectorAll('.risk-approvers').forEach(function(input) {
+            var risk = input.getAttribute('data-risk');
+            riskFlows.push({
+                riskLevel: risk,
+                requiredApprovers: parseInt(input.value) || 1,
+                adminRequired: document.querySelector('.risk-admin[data-risk="' + risk + '"]').checked,
+                legalReviewRequired: document.querySelector('.risk-legal[data-risk="' + risk + '"]').checked
+            });
+        });
+
+        var body = {
+            roleSettings: roleSettings,
+            aiCheckRequired: document.getElementById('ai-check-required').checked,
+            aiAutoReject: document.getElementById('ai-auto-reject').checked,
+            minApprovers: parseInt(document.getElementById('min-approvers').value) || 1,
+            approvalDeadlineHours: parseInt(document.getElementById('deadline-hours').value) || 24,
+            riskLevelFlows: riskFlows
+        };
+
+        try {
+            var response = await fetch('/api/v1/approvals/rules/' + selectedTeamId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(body)
+            });
+            if (response.ok) {
+                showToast('success', MSG_RULES_SAVE_SUCCESS);
+            } else {
+                await showApiError(response, MSG_RULES_SAVE_ERROR);
+            }
+        } catch (err) {
+            showToast('error', MSG_RULES_SAVE_ERROR);
+        }
+    }
+
+    async function loadDashboard() {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/approvals/dashboard', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            var data = await response.json();
+            renderDashboard(data);
+        } catch (err) {
+            showToast('error', '{msg:error_load_failed}');
+        }
+    }
+
+    function renderDashboard(data) {
+        var summary = document.getElementById('dashboard-summary');
+        summary.innerHTML =
+            '<div class="ak-summary-card gold"><div style="font-size: 2rem; font-weight: 700; color: var(--accent-gold, var(--ak-primary)); line-height: 1.2;">' + data.pendingCount + '</div><div style="font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.3rem;">' + MSG_DASHBOARD_PENDING + '</div></div>' +
+            '<div class="ak-summary-card success"><div style="font-size: 2rem; font-weight: 700; color: var(--status-success, #6B8B4A); line-height: 1.2;">' + data.approvedTodayCount + '</div><div style="font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.3rem;">' + MSG_DASHBOARD_APPROVED_TODAY + '</div></div>' +
+            '<div class="ak-summary-card error"><div style="font-size: 2rem; font-weight: 700; color: var(--status-error, #B04040); line-height: 1.2;">' + data.rejectedCount + '</div><div style="font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.3rem;">' + MSG_DASHBOARD_REJECTED + '</div></div>' +
+            '<div class="ak-summary-card info"><div style="font-size: 2rem; font-weight: 700; color: var(--status-info, #5A8BA0); line-height: 1.2;">' + data.aiFailRate.toFixed(1) + '%</div><div style="font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted)); margin-top: 0.3rem;">' + MSG_DASHBOARD_AI_FAIL_RATE + '</div></div>';
+
+        var trendsContainer = document.getElementById('rejection-trends');
+        if (data.rejectionTrends && data.rejectionTrends.length > 0) {
+            var trendLabels = { expression_inappropriate: MSG_TREND_EXPRESSION, legal_violation: MSG_TREND_LEGAL, brand_deviation: MSG_TREND_BRAND, accuracy: MSG_TREND_ACCURACY, other: MSG_TREND_OTHER };
+            var trendColors = { expression_inappropriate: 'var(--status-error, #B04040)', legal_violation: 'var(--status-warning, #C8A96E)', brand_deviation: 'var(--status-info, #5A8BA0)', accuracy: 'var(--accent-gold, var(--ak-primary))', other: 'var(--text-muted, var(--ak-text-muted))' };
+            var html = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); padding: 1.5rem;">' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0 0 1rem 0;">' + MSG_DASHBOARD_REJECTION_TREND + '</h3>';
+            data.rejectionTrends.forEach(function(trend) {
+                var label = trendLabels[trend.reason] || trend.reason;
+                var color = trendColors[trend.reason] || 'var(--text-muted, var(--ak-text-muted))';
+                var width = Math.min(trend.percentage * 1.7, 100);
+                html += '<div class="ak-trend-bar"><span class="ak-trend-bar-label">' + escapeHtmlGlobal(label) + '</span>' +
+                    '<div class="ak-trend-bar-track"><div class="ak-trend-bar-fill" style="width:' + width + '%; background:' + color + ';"></div></div>' +
+                    '<span class="ak-trend-bar-val">' + trend.percentage + '%</span></div>';
+            });
+            html += '</div>';
+            trendsContainer.innerHTML = html;
+        }
+
+        var teamStatusContainer = document.getElementById('team-approval-status');
+        if (data.teamStatuses && data.teamStatuses.length > 0) {
+            var html = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); padding: 1.5rem;">' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0 0 1rem 0;">' + MSG_TEAM_STATUS_TITLE + '</h3>' +
+                '<div class="ak-table-wrap"><table><thead><tr><th>' + MSG_TEAM_COL_TEAM + '</th><th>' + MSG_TEAM_COL_PENDING + '</th><th>' + MSG_TEAM_COL_APPROVED + '</th><th>' + MSG_TEAM_COL_REJECTED + '</th><th>' + MSG_TEAM_COL_FAIL_RATE + '</th></tr></thead><tbody>';
+            data.teamStatuses.forEach(function(ts) {
+                html += '<tr><td>' + escapeHtmlGlobal(ts.teamName) + '</td><td>' + ts.pendingCount + '</td><td>' + ts.approvedCount + '</td><td>' + ts.rejectedCount + '</td><td>' + ts.failRate.toFixed(1) + '%</td></tr>';
+            });
+            html += '</tbody></table></div></div>';
+            teamStatusContainer.innerHTML = html;
+        }
+    }
+
+    async function loadPendingApprovals(page) {
         var token = localStorage.getItem('accessToken');
         if (!token) { window.location.href = '/'; return; }
         currentPage = page;
@@ -108,74 +607,195 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.status === 401) { window.location.href = '/'; return; }
-            if (!response.ok) {
-                document.getElementById('approvals-list').innerHTML =
-                    '<div class="ak-card" style="color: var(--status-error);">承認リクエストの読み込みに失敗しました。</div>';
-                return;
-            }
+            if (!response.ok) return;
             var approvals = await response.json();
-            renderApprovals(Array.isArray(approvals) ? approvals : (approvals.data || []));
+            pendingApprovals = Array.isArray(approvals) ? approvals : (approvals.data || []);
+            renderPendingQueue(pendingApprovals);
+            renderReviewSelector(pendingApprovals);
         } catch (err) {
-            document.getElementById('approvals-list').innerHTML =
-                '<div class="ak-card" style="color: var(--status-error);">承認リクエストの読み込みに失敗しました。</div>';
-            showToast('error', '承認リクエストの読み込みに失敗しました');
+            showToast('error', '{msg:error_load_failed}');
         }
     }
 
-    function renderApprovals(approvals) {
-        var container = document.getElementById('approvals-list');
+    function renderPendingQueue(approvals) {
+        var container = document.getElementById('pending-queue');
         if (approvals.length === 0) {
-            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 3rem; color: var(--text-muted, var(--ak-text-muted));">承認待ちのリクエストはありません</div>';
+            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 3rem; color: var(--text-muted, var(--ak-text-muted));">' + MSG_NO_PENDING + '</div>';
             return;
         }
-        container.innerHTML = approvals.map(function(a) {
+        var html = '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); padding: 0;">' +
+            '<div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-lt, var(--ak-border));">' +
+            '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0;">' + MSG_PENDING_LIST_TITLE + '</h3></div>';
+        approvals.forEach(function(a) {
             var content = a.postContent || a.content || '';
-            if (content.length > 120) content = content.substring(0, 120) + '...';
-            var date = a.requestedAt ? new Date(a.requestedAt).toLocaleDateString('ja-JP', {
-                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-            }) : '';
-            return '<div class="approval-card">' +
-                '<div class="approval-card-header">' +
-                    '<span style="font-weight: 600; color: var(--text-heading, var(--ak-text));">承認リクエスト</span>' +
+            if (content.length > 80) content = content.substring(0, 80) + '...';
+            var date = a.requestedAt ? new Date(a.requestedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+            html += '<div class="ak-queue-item"><div>' +
+                '<div style="font-weight: 500; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.2rem;">' + escapeHtmlGlobal(a.requesterName || '') + '</div>' +
+                '<div style="font-size: 0.85rem; color: var(--text-sec, var(--ak-text-muted)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">' + escapeHtmlGlobal(content) + '</div>' +
+                '<div style="font-size: 0.78rem; color: var(--text-muted, var(--ak-text-muted)); margin-top: 0.4rem;">' + escapeHtmlGlobal(date) + '</div>' +
                 '</div>' +
-                '<div class="approval-card-content">' + escapeHtmlGlobal(content) + '</div>' +
-                '<div class="approval-card-meta">' +
-                    '<span>申請者: ' + escapeHtmlGlobal(a.requesterName || a.requesterId || '-') + '</span>' +
-                    '<span>' + escapeHtmlGlobal(date) + '</span>' +
-                '</div>' +
-                '<div class="approval-card-actions">' +
-                    '<a href="/approvals/' + escapeHtmlGlobal(a.id) + '/review" class="ak-btn-detail">詳細</a>' +
-                    '<button class="ak-btn-approve" onclick="quickDecide(\'' + escapeHtmlGlobal(a.id) + '\', \'APPROVED\')">承認</button>' +
-                    '<button class="ak-btn-reject" onclick="quickDecide(\'' + escapeHtmlGlobal(a.id) + '\', \'REJECTED\')">却下</button>' +
-                '</div>' +
-            '</div>';
-        }).join('');
+                '<button class="ak-btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.7rem;" onclick="openReview(\'' + a.id + '\')">' + MSG_REVIEW_BTN + '</button></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
     }
 
-    async function quickDecide(id, decision) {
-        var comment = '';
-        if (decision === 'REJECTED') {
-            comment = prompt('却下理由を入力してください:');
-            if (comment === null) return;
+    function renderReviewSelector(approvals) {
+        var container = document.getElementById('review-selector');
+        if (approvals.length === 0) {
+            container.innerHTML = '';
+            return;
         }
+        var html = '<div class="ak-card" style="padding: 1rem 1.5rem; background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">' +
+            '<div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">' +
+            '<span style="font-size: 0.85rem; color: var(--text-sec, var(--ak-text-muted));">' + MSG_REVIEW_TARGET + ':</span>' +
+            '<select id="review-select" style="flex: 1; min-width: 15rem; padding: 0.4rem 0.7rem; border: 1px solid var(--border, var(--ak-border)); border-radius: 6px; background: var(--bg-field, var(--ak-bg)); color: var(--text-body, var(--ak-text)); font-family: inherit; font-size: 0.85rem;" onchange="openReview(this.value)">';
+        html += '<option value="">' + MSG_REVIEW_SELECT + '</option>';
+        approvals.forEach(function(a) {
+            var label = (a.requesterName || '') + ' - ' + (a.postContent || '').substring(0, 40);
+            html += '<option value="' + a.id + '">' + escapeHtmlGlobal(label) + '</option>';
+        });
+        html += '</select></div></div>';
+        container.innerHTML = html;
+    }
+
+    async function openReview(approvalId) {
+        if (!approvalId) return;
+        switchSection('review', document.querySelectorAll('.ak-section-nav button')[2]);
+
+        var select = document.getElementById('review-select');
+        if (select) select.value = approvalId;
+
         var token = localStorage.getItem('accessToken');
         try {
-            var response = await fetch('/api/v1/approvals/' + id + '/decide', {
+            var detailResponse = await fetch('/api/v1/approvals/' + approvalId, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!detailResponse.ok) return;
+            var approval = await detailResponse.json();
+
+            document.getElementById('review-post-content').innerHTML =
+                '<div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1rem; padding: 1.5rem;">' +
+                '<h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin: 0 0 1rem 0;">' + MSG_REVIEW_POST_CONTENT + '</h3>' +
+                '<div style="line-height: 1.8; white-space: pre-wrap; word-break: break-word; color: var(--text-body, var(--ak-text));">' + escapeHtmlGlobal(approval.postContent || '') + '</div>' +
+                '<div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted, var(--ak-text-muted));">' + MSG_REVIEW_REQUESTER + ': ' + escapeHtmlGlobal(approval.requesterName || '') + '</div></div>';
+
+            loadAiReview(approvalId);
+
+            document.getElementById('review-actions').style.display = 'block';
+            document.getElementById('review-actions').innerHTML =
+                '<div class="ak-actions-bar">' +
+                '<button class="ak-btn-outline ak-btn-approve" style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 4px;" onclick="submitDecision(\'' + approvalId + '\', \'APPROVE\')">' + MSG_ACTION_APPROVE + '</button>' +
+                '<button class="ak-btn-outline ak-btn-reject" style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 4px;" onclick="submitDecision(\'' + approvalId + '\', \'REJECT\')">' + MSG_ACTION_REJECT + '</button>' +
+                '<button class="ak-btn-outline" style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 4px;" onclick="submitDecision(\'' + approvalId + '\', \'REQUEST_CHANGES\')">' + MSG_ACTION_RETURN + '</button>' +
+                '<div style="flex: 1;"></div>' +
+                '<button class="ak-btn-outline" style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 4px;" onclick="recheckAi(\'' + approvalId + '\')">' + MSG_AI_RECHECK + '</button>' +
+                '</div>';
+        } catch (err) {
+            showToast('error', MSG_REVIEW_LOAD_ERROR);
+        }
+    }
+
+    async function loadAiReview(approvalId) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/approvals/' + approvalId + '/ai-review', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            var data = await response.json();
+            renderAiReport(data);
+        } catch (err) {
+            showToast('error', '{msg:error_load_failed}');
+        }
+    }
+
+    function renderAiReport(data) {
+        var scoreClass = data.verdict === 'pass' ? 'pass' : (data.verdict === 'warn' ? 'warn' : 'fail');
+        var scoreLabel = data.verdict === 'pass' ? MSG_AI_SCORE_PASS : (data.verdict === 'warn' ? MSG_AI_SCORE_WARN : MSG_AI_SCORE_FAIL);
+        var scoreBgMap = { pass: '#C8DEB8; color: #3B5228', warn: '#E8DCC0; color: #6B5828', fail: '#E8C4C4; color: #6B2020' };
+
+        var html = '<div class="ak-ai-report">' +
+            '<div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">' +
+            '<div style="width: 1.8rem; height: 1.8rem; background: var(--accent-gold-light, #F2E6D0); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;">AI</div>' +
+            '<span style="font-weight: 500; color: var(--text-heading, var(--ak-text)); font-size: 1rem;">' + MSG_AI_REPORT_TITLE + '</span>' +
+            '<span style="margin-left: auto; font-size: 0.85rem; padding: 0.3rem 0.7rem; border-radius: 6px; font-weight: 500; background: ' + scoreBgMap[scoreClass] + ';">' + scoreLabel + ' (' + MSG_SCORE_SUFFIX + ': ' + data.score + '/100)</span>' +
+            '</div>';
+
+        if (data.findings && data.findings.length > 0) {
+            data.findings.forEach(function(finding, idx) {
+                var severityIcon = finding.severity === 'critical' ? '!' : (finding.severity === 'info' ? 'i' : '!');
+                var severityClass = finding.severity === 'critical' ? 'critical' : (finding.severity === 'info' ? 'info' : 'warning');
+                html += '<div class="ak-finding" id="finding-' + idx + '">' +
+                    '<div class="ak-finding-header" onclick="toggleFinding(\'finding-' + idx + '\')">' +
+                    '<div class="ak-severity-icon ' + severityClass + '">' + severityIcon + '</div>' +
+                    '<span style="font-size: 0.88rem; color: var(--text-body, var(--ak-text)); flex: 1;">' + escapeHtmlGlobal(finding.title) + '</span>' +
+                    '<span style="font-size: 0.7rem; color: var(--text-muted, var(--ak-text-muted)); transition: transform 0.2s;">&#9654;</span>' +
+                    '</div>' +
+                    '<div class="ak-finding-detail">' +
+                    '<p>' + escapeHtmlGlobal(finding.description) + '</p>';
+                if (finding.relatedLaws && finding.relatedLaws.length > 0) {
+                    html += '<div style="margin-top: 0.6rem;">';
+                    finding.relatedLaws.forEach(function(law) {
+                        html += '<span class="ak-finding-law">' + escapeHtmlGlobal(law) + '</span>';
+                    });
+                    html += '</div>';
+                }
+                if (finding.pastCase) {
+                    html += '<div style="margin-top: 0.5rem; padding: 0.6rem; background: var(--bg-elevated, var(--ak-bg)); border-radius: 6px; border-left: 3px solid var(--border, var(--ak-border)); font-size: 0.82rem; color: var(--text-sec, var(--ak-text-muted));"><strong>' + MSG_AI_PAST_CASE + ':</strong> ' + escapeHtmlGlobal(finding.pastCase) + '</div>';
+                }
+                html += '</div></div>';
+            });
+        }
+
+        html += '</div>';
+        document.getElementById('review-ai-report').innerHTML = html;
+    }
+
+    function toggleFinding(id) {
+        document.getElementById(id).classList.toggle('open');
+    }
+
+    async function recheckAi(approvalId) {
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/approvals/' + approvalId + '/ai-recheck', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ decision: decision, comment: comment })
+                headers: { 'Authorization': 'Bearer ' + token }
             });
             if (!response.ok) {
-                await showApiError(response, '処理に失敗しました');
+                await showApiError(response, MSG_AI_RECHECK_ERROR);
                 return;
             }
-            showToast('success', decision === 'APPROVED' ? '承認しました' : '却下しました');
-            loadApprovals(currentPage);
+            var data = await response.json();
+            renderAiReport(data);
+            showToast('success', MSG_AI_RECHECK_SUCCESS);
         } catch (err) {
-            showToast('error', 'ネットワークエラー');
+            showToast('error', MSG_AI_RECHECK_ERROR);
+        }
+    }
+
+    async function submitDecision(approvalId, action) {
+        var comment = '';
+        if (action === 'REJECT') {
+            comment = prompt(MSG_REJECT_PROMPT);
+            if (comment === null) return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        try {
+            var response = await fetch('/api/v1/approvals/' + approvalId + '/decide', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ action: action, comment: comment })
+            });
+            if (!response.ok) {
+                await showApiError(response, MSG_DECISION_ERROR);
+                return;
+            }
+            var messages = { 'APPROVE': MSG_DECISION_APPROVE, 'REQUEST_CHANGES': MSG_DECISION_RETURN, 'REJECT': MSG_DECISION_REJECT };
+            showToast('success', messages[action]);
+            loadPendingApprovals(currentPage);
+            loadDashboard();
+        } catch (err) {
+            showToast('error', MSG_NETWORK_ERROR);
         }
     }
 
@@ -183,11 +803,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

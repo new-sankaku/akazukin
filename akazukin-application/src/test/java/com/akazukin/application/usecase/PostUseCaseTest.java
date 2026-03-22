@@ -372,6 +372,21 @@ class PostUseCaseTest {
                 target.setErrorMessage(errorMessage);
             }
         }
+
+        @Override
+        public Map<String, Long> countByStatusForUser(UUID userId) {
+            return Map.of();
+        }
+
+        @Override
+        public List<PostTarget> findByUserIdAndCreatedAtBetween(UUID userId, java.time.Instant from, java.time.Instant to) {
+            return List.of();
+        }
+
+        @Override
+        public List<PostTarget> findByUserIdAndPlatformAndCreatedAtBetween(UUID userId, com.akazukin.domain.model.SnsPlatform platform, java.time.Instant from, java.time.Instant to) {
+            return List.of();
+        }
     }
 
     private static class InMemorySnsAccountRepository implements SnsAccountRepository {

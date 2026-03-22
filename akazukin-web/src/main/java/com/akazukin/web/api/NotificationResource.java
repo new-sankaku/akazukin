@@ -11,8 +11,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import jakarta.ws.rs.core.SecurityContext;
 
 import java.util.Map;
 import java.util.UUID;
@@ -25,13 +26,14 @@ public class NotificationResource {
     @Inject
     NotificationUseCase notificationUseCase;
 
-    @Inject
-    JsonWebToken jwt;
+    @Context
+    SecurityContext securityContext;
+
 
     @GET
     public Response list(@QueryParam("page") @DefaultValue("0") int page,
                          @QueryParam("size") @DefaultValue("20") int size) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var notifications = notificationUseCase.listNotifications(userId, page, size);
         return Response.ok(notifications).build();
     }
@@ -39,7 +41,7 @@ public class NotificationResource {
     @GET
     @Path("/unread")
     public Response listUnread() {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var unread = notificationUseCase.listUnread(userId);
         return Response.ok(unread).build();
     }
@@ -47,7 +49,7 @@ public class NotificationResource {
     @GET
     @Path("/unread/count")
     public Response countUnread() {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         long count = notificationUseCase.countUnread(userId);
         return Response.ok(Map.of("count", count)).build();
     }
@@ -55,7 +57,7 @@ public class NotificationResource {
     @PUT
     @Path("/{id}/read")
     public Response markAsRead(@PathParam("id") UUID id) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         notificationUseCase.markAsRead(id);
         return Response.noContent().build();
     }
@@ -63,7 +65,7 @@ public class NotificationResource {
     @PUT
     @Path("/read-all")
     public Response markAllAsRead() {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         notificationUseCase.markAllAsRead(userId);
         return Response.noContent().build();
     }

@@ -2,12 +2,14 @@ package com.akazukin.sdk.twitter;
 
 import com.akazukin.sdk.twitter.exception.TwitterApiException;
 import com.akazukin.sdk.twitter.model.TokenResponse;
+import com.akazukin.sdk.twitter.model.TweetMetrics;
 import com.akazukin.sdk.twitter.model.TweetResponse;
 import com.akazukin.sdk.twitter.model.TwitterUser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +19,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -178,6 +182,43 @@ public class TwitterClient implements AutoCloseable {
         }
     }
 
+    public TweetResponse replyToTweet(String accessToken, String inReplyToTweetId, String text) {
+        long perfStart = System.nanoTime();
+        try {
+            ObjectNode reply = objectMapper.createObjectNode();
+            reply.put("in_reply_to_tweet_id", inReplyToTweetId);
+
+            ObjectNode payload = objectMapper.createObjectNode();
+            payload.put("text", text);
+            payload.set("reply", reply);
+
+            String jsonBody = objectMapper.writeValueAsString(payload);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/tweets"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode data = root.get("data");
+            if (data == null) {
+                throw new TwitterApiException(response.statusCode(), "UNKNOWN",
+                    "Unexpected response: missing 'data' field", response.body());
+            }
+            return fromJson(data, TweetResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new TwitterApiException(0, "SERIALIZE_ERROR",
+                "Failed to serialize reply request body", e.getMessage(), e);
+        } finally {
+            perfLog("TwitterClient.replyToTweet", perfStart);
+        }
+    }
+
     public TweetResponse getTweetById(String bearerToken, String tweetId) {
         long perfStart = System.nanoTime();
         try {
@@ -199,6 +240,40 @@ public class TwitterClient implements AutoCloseable {
             return fromJson(data, TweetResponse.class);
         } finally {
             perfLog("TwitterClient.getTweetById", perfStart);
+        }
+    }
+
+    public TweetMetrics getTweetMetrics(String accessToken, String tweetId) {
+        long perfStart = System.nanoTime();
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/tweets/" + tweetId
+                    + "?tweet.fields=public_metrics"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            JsonNode root = parseJsonTree(response);
+            JsonNode data = root.get("data");
+            if (data == null) {
+                return null;
+            }
+            JsonNode metrics = data.get("public_metrics");
+            if (metrics == null) {
+                return new TweetMetrics(tweetId, 0, 0, 0, 0);
+            }
+            return new TweetMetrics(
+                tweetId,
+                metrics.path("like_count").asInt(0),
+                metrics.path("reply_count").asInt(0),
+                metrics.path("retweet_count").asInt(0),
+                metrics.path("impression_count").asInt(0)
+            );
+        } finally {
+            perfLog("TwitterClient.getTweetMetrics", perfStart);
         }
     }
 
@@ -237,6 +312,71 @@ public class TwitterClient implements AutoCloseable {
         } finally {
             perfLog("TwitterClient.getUserByUsername", perfStart);
         }
+    }
+
+    public List<TwitterUser> getFollowers(String accessToken, String userId, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            int maxResults = Math.max(1, Math.min(limit, 1000));
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/users/" + userId + "/followers"
+                    + "?max_results=" + maxResults
+                    + "&user.fields=profile_image_url,public_metrics"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            return parseUserList(response);
+        } finally {
+            perfLog("TwitterClient.getFollowers", perfStart);
+        }
+    }
+
+    public List<TwitterUser> getFollowing(String accessToken, String userId, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            int maxResults = Math.max(1, Math.min(limit, 1000));
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(apiBaseUrl + "/users/" + userId + "/following"
+                    + "?max_results=" + maxResults
+                    + "&user.fields=profile_image_url,public_metrics"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            return parseUserList(response);
+        } finally {
+            perfLog("TwitterClient.getFollowing", perfStart);
+        }
+    }
+
+    private List<TwitterUser> parseUserList(HttpResponse<String> response) {
+        JsonNode root = parseJsonTree(response);
+        JsonNode data = root.get("data");
+        if (data == null || !data.isArray()) {
+            return List.of();
+        }
+        List<TwitterUser> users = new ArrayList<>();
+        for (JsonNode node : data) {
+            JsonNode metrics = node.get("public_metrics");
+            int followersCount = metrics != null ? metrics.path("followers_count").asInt(0) : 0;
+            int followingCount = metrics != null ? metrics.path("following_count").asInt(0) : 0;
+            users.add(new TwitterUser(
+                node.path("id").asText(),
+                node.path("username").asText(),
+                node.path("name").asText(),
+                node.path("profile_image_url").asText(null),
+                followersCount,
+                followingCount
+            ));
+        }
+        return users;
     }
 
     public void deleteTweet(String accessToken, String tweetId) {

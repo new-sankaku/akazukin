@@ -1,5 +1,5 @@
 {#include base}
-{#title}投稿一覧 - Akazukin{/title}
+{#title}{msg:post_list_page_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,34 +7,30 @@
     {#sidebar active="posts" /}
 
     <main class="ak-main">
-        <!-- ページヘッダー -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">投稿一覧</h2>
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">{msg:post_list_heading}</h2>
             <a href="/posts/compose" role="button"
-                style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">新規投稿</a>
+                style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:post_list_new_post}</a>
         </div>
 
-        <!-- フィルターバー -->
         <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
             <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <label for="status-filter" style="font-weight: 600; color: var(--text-heading, var(--ak-text)); letter-spacing: 0.03em; white-space: nowrap;">ステータス:</label>
+                <label for="status-filter" style="font-weight: 600; color: var(--text-heading, var(--ak-text)); letter-spacing: 0.03em; white-space: nowrap;">{msg:post_list_filter_status}:</label>
                 <select id="status-filter" onchange="filterByStatus(this.value)"
                     style="background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.4rem 0.75rem; font-size: 0.9rem; color: var(--text-body, var(--ak-text)); min-width: 140px;">
-                    <option value="ALL">すべて</option>
-                    <option value="DRAFT">下書き</option>
-                    <option value="SCHEDULED">予約済み</option>
-                    <option value="PUBLISHED">公開済み</option>
-                    <option value="FAILED">失敗</option>
+                    <option value="ALL">{msg:post_list_filter_all}</option>
+                    <option value="DRAFT">{msg:post_list_status_draft}</option>
+                    <option value="SCHEDULED">{msg:post_list_status_scheduled}</option>
+                    <option value="PUBLISHED">{msg:post_list_status_published}</option>
+                    <option value="FAILED">{msg:post_list_status_failed}</option>
                 </select>
             </div>
         </div>
 
-        <!-- 投稿リスト -->
         <div id="posts-list">
-            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">投稿を読み込み中...</p>
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">{msg:post_list_loading}</p>
         </div>
 
-        <!-- ページネーション -->
         <div id="pagination" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;"></div>
     </main>
 </div>
@@ -154,16 +150,35 @@
 </style>
 
 <script>
+    var MSG_STATUS_DRAFT = '{msg:post_list_status_draft}';
+    var MSG_STATUS_SCHEDULED = '{msg:post_list_status_scheduled}';
+    var MSG_STATUS_PUBLISHED = '{msg:post_list_status_published}';
+    var MSG_STATUS_FAILED = '{msg:post_list_status_failed}';
+    var MSG_EMPTY_POSTS = '{msg:post_list_empty}';
+    var MSG_EMPTY_CREATE = '{msg:post_list_empty_create}';
+    var MSG_BTN_DETAIL = '{msg:post_list_btn_detail}';
+    var MSG_BTN_EDIT = '{msg:post_list_btn_edit}';
+    var MSG_BTN_DELETE = '{msg:post_list_btn_delete}';
+    var MSG_PAGE_PREV = '{msg:post_list_page_prev}';
+    var MSG_PAGE_NEXT = '{msg:post_list_page_next}';
+    var MSG_PAGE_LABEL = '{msg:post_list_page_label}';
+    var MSG_LOAD_ERROR = '{msg:post_list_load_error}';
+    var MSG_LOAD_ERROR_DETAIL = '{msg:post_list_load_error_detail}';
+    var MSG_DELETE_CONFIRM = '{msg:post_list_delete_confirm}';
+    var MSG_DELETE_SUCCESS = '{msg:post_list_delete_success}';
+    var MSG_DELETE_ERROR = '{msg:post_list_delete_error}';
+    var MSG_DELETE_NETWORK_ERROR = '{msg:post_list_delete_network_error}';
+
     var currentPage = 0;
     var pageSize = 20;
     var allPosts = [];
     var currentFilter = 'ALL';
 
     var STATUS_LABELS = {
-        'DRAFT': '下書き',
-        'SCHEDULED': '予約済み',
-        'PUBLISHED': '公開済み',
-        'FAILED': '失敗'
+        'DRAFT': MSG_STATUS_DRAFT,
+        'SCHEDULED': MSG_STATUS_SCHEDULED,
+        'PUBLISHED': MSG_STATUS_PUBLISHED,
+        'FAILED': MSG_STATUS_FAILED
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -196,8 +211,8 @@
             }
         } catch (err) {
             document.getElementById('posts-list').innerHTML =
-                '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">投稿の読み込みに失敗しました。</div>';
-            showToast('error', '投稿の読み込みに失敗しました', 'サーバーに接続できませんでした。接続状態を確認してください。');
+                '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">' + MSG_LOAD_ERROR + '</div>';
+            showToast('error', MSG_LOAD_ERROR, MSG_LOAD_ERROR_DETAIL);
         }
     }
 
@@ -221,8 +236,8 @@
         if (posts.length === 0) {
             container.innerHTML =
                 '<div class="ak-card ak-empty-state">' +
-                    '<p>投稿がまだありません</p>' +
-                    '<a href="/posts/compose" class="ak-btn-detail" style="display: inline-block; padding: 0.5rem 1.5rem; font-size: 0.9rem;">最初の投稿を作成する</a>' +
+                    '<p>' + MSG_EMPTY_POSTS + '</p>' +
+                    '<a href="/posts/compose" class="ak-btn-detail" style="display: inline-block; padding: 0.5rem 1.5rem; font-size: 0.9rem;">' + MSG_EMPTY_CREATE + '</a>' +
                 '</div>';
             return;
         }
@@ -261,9 +276,9 @@
                     (platformsHtml ? '<span style="display: flex; flex-wrap: wrap; gap: 0.3rem;">' + platformsHtml + '</span>' : '') +
                 '</div>' +
                 '<div class="ak-post-card-actions">' +
-                    '<a href="/posts/' + escapeHtmlGlobal(post.id) + '" class="ak-btn-detail">詳細</a>' +
-                    ((post.status === 'DRAFT' || post.status === 'SCHEDULED') ? '<a href="/posts/compose?edit=' + encodeURIComponent(post.id) + '" class="ak-btn-edit">編集</a>' : '') +
-                    '<button class="ak-btn-delete" onclick="deletePost(\'' + escapeHtmlGlobal(post.id) + '\')">削除</button>' +
+                    '<a href="/posts/' + escapeHtmlGlobal(post.id) + '" class="ak-btn-detail">' + MSG_BTN_DETAIL + '</a>' +
+                    ((post.status === 'DRAFT' || post.status === 'SCHEDULED') ? '<a href="/posts/compose?edit=' + encodeURIComponent(post.id) + '" class="ak-btn-edit">' + MSG_BTN_EDIT + '</a>' : '') +
+                    '<button class="ak-btn-delete" onclick="deletePost(\'' + escapeHtmlGlobal(post.id) + '\')">' + MSG_BTN_DELETE + '</button>' +
                 '</div>' +
             '</div>';
         }).join('');
@@ -273,17 +288,17 @@
         var container = document.getElementById('pagination');
         var html = '';
         if (currentPage > 0) {
-            html += '<button class="ak-btn-detail" onclick="loadPosts(' + (currentPage - 1) + ')">前へ</button>';
+            html += '<button class="ak-btn-detail" onclick="loadPosts(' + (currentPage - 1) + ')">' + MSG_PAGE_PREV + '</button>';
         }
-        html += '<span style="color: var(--text-sec, var(--ak-text-muted)); font-size: 0.9rem; letter-spacing: 0.05em;">ページ ' + (currentPage + 1) + '</span>';
+        html += '<span style="color: var(--text-sec, var(--ak-text-muted)); font-size: 0.9rem; letter-spacing: 0.05em;">' + MSG_PAGE_LABEL + ' ' + (currentPage + 1) + '</span>';
         if (count >= pageSize) {
-            html += '<button class="ak-btn-detail" onclick="loadPosts(' + (currentPage + 1) + ')">次へ</button>';
+            html += '<button class="ak-btn-detail" onclick="loadPosts(' + (currentPage + 1) + ')">' + MSG_PAGE_NEXT + '</button>';
         }
         container.innerHTML = html;
     }
 
     async function deletePost(id) {
-        if (!confirm('この投稿を削除してもよろしいですか？')) return;
+        if (!confirm(MSG_DELETE_CONFIRM)) return;
 
         var token = localStorage.getItem('accessToken');
         try {
@@ -293,13 +308,13 @@
             });
 
             if (response.ok || response.status === 204) {
-                showToast('success', '投稿を削除しました');
+                showToast('success', MSG_DELETE_SUCCESS);
                 loadPosts(currentPage);
             } else {
-                await showApiError(response, '投稿の削除に失敗しました');
+                await showApiError(response, MSG_DELETE_ERROR);
             }
         } catch (err) {
-            showToast('error', '投稿の削除に失敗しました', 'サーバーに接続できませんでした。再度お試しください。');
+            showToast('error', MSG_DELETE_ERROR, MSG_DELETE_NETWORK_ERROR);
         }
     }
 
@@ -307,11 +322,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

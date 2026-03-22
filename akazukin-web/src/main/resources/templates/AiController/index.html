@@ -1,5 +1,5 @@
 {#include base}
-{#title}AI コンテンツ生成 - Akazukin{/title}
+{#title}{msg:ai_content_page_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -8,33 +8,34 @@
 
     <main class="ak-main">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">AI コンテンツ生成</h2>
-            <a href="/ai/personas" role="button"
-                style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">ペルソナ管理</a>
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">{msg:ai_content_heading}</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="/ai/personas" role="button"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:persona_heading}</a>
+                <a href="/ai/settings" role="button"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:settings_ai_title}</a>
+            </div>
         </div>
 
         <form id="ai-generate-form" onsubmit="return handleGenerate(event)">
-            <!-- ペルソナ選択 -->
             <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <label for="persona" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">ペルソナ</label>
+                <label for="persona" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:ai_content_persona_label}</label>
                 <select id="persona" name="persona"
                     style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
-                    <option value="">（ペルソナなし）</option>
+                    <option value="">{msg:ai_content_no_persona}</option>
                 </select>
             </div>
 
-            <!-- プロンプト -->
             <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <label for="prompt" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">プロンプト</label>
+                <label for="prompt" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:ai_content_prompt_label}</label>
                 <textarea id="prompt" name="prompt" rows="5"
-                    placeholder="生成したいコンテンツの指示を入力してください..."
+                    placeholder="{msg:ai_content_prompt_placeholder}"
                     required
                     style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
             </div>
 
-            <!-- パラメータ -->
             <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">生成パラメータ</h3>
+                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">{msg:ai_content_params_heading}</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                     <div>
                         <label for="temperature" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">
@@ -44,42 +45,49 @@
                             oninput="document.getElementById('temperature-value').textContent = this.value"
                             style="width: 100%; cursor: pointer;">
                         <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
-                            <small style="color: var(--text-muted, var(--ak-text-muted));">0.0 (正確)</small>
-                            <small style="color: var(--text-muted, var(--ak-text-muted));">2.0 (創造的)</small>
+                            <small style="color: var(--text-muted, var(--ak-text-muted));">{msg:ai_content_temp_precise}</small>
+                            <small style="color: var(--text-muted, var(--ak-text-muted));">{msg:ai_content_temp_creative}</small>
                         </div>
                     </div>
                     <div>
-                        <label for="maxTokens" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">最大トークン数</label>
+                        <label for="maxTokens" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:ai_content_max_tokens}</label>
                         <input type="number" id="maxTokens" name="maxTokens" value="1024" min="64" max="4096" step="64"
                             style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
                     </div>
                 </div>
             </div>
 
-            <!-- 生成ボタン -->
             <button type="submit" id="generate-btn"
                 style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
                 onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
                 onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">
-                生成する
+                {msg:ai_content_generate_btn}
             </button>
         </form>
 
-        <!-- 生成結果 -->
         <div id="ai-result" class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 1.5rem; display: none;">
-            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">生成結果</h3>
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">{msg:ai_content_result_heading}</h3>
             <div id="ai-result-content" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
             <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                 <button type="button" onclick="copyResult()"
-                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; letter-spacing: 0.03em;">コピー</button>
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; letter-spacing: 0.03em;">{msg:ai_content_copy_btn}</button>
                 <button type="button" onclick="useAsPost()"
-                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; letter-spacing: 0.03em;">投稿に使用</button>
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; cursor: pointer; letter-spacing: 0.03em;">{msg:ai_content_use_as_post}</button>
             </div>
         </div>
     </main>
 </div>
 
 <script>
+    var MSG_GENERATING = '{msg:ai_content_generating}';
+    var MSG_GENERATE_BTN = '{msg:ai_content_generate_btn}';
+    var MSG_GENERATE_ERROR = '{msg:ai_content_generate_error}';
+    var MSG_GENERATE_SUCCESS = '{msg:ai_content_generate_success}';
+    var MSG_NETWORK_ERROR = '{msg:ai_content_network_error}';
+    var MSG_NETWORK_ERROR_DETAIL = '{msg:ai_content_network_error_detail}';
+    var MSG_COPY_SUCCESS = '{msg:ai_content_copy_success}';
+    var MSG_COPY_ERROR = '{msg:ai_content_copy_error}';
+
     document.addEventListener('DOMContentLoaded', function() {
         loadPersonas();
     });
@@ -101,7 +109,6 @@
                 select.appendChild(option);
             });
         } catch (err) {
-            // personas load failed silently
         }
     }
 
@@ -116,7 +123,7 @@
         var btn = document.getElementById('generate-btn');
         btn.disabled = true;
         btn.setAttribute('aria-busy', 'true');
-        btn.textContent = '生成中...';
+        btn.textContent = MSG_GENERATING;
 
         var personaId = document.getElementById('persona').value || null;
         var prompt = document.getElementById('prompt').value;
@@ -144,7 +151,7 @@
             }
 
             if (!response.ok) {
-                await showApiError(response, 'コンテンツの生成に失敗しました');
+                await showApiError(response, MSG_GENERATE_ERROR);
                 return false;
             }
 
@@ -153,13 +160,13 @@
             var resultContent = document.getElementById('ai-result-content');
             resultContent.textContent = result.content || result.text || '';
             resultDiv.style.display = 'block';
-            showToast('success', 'コンテンツを生成しました');
+            showToast('success', MSG_GENERATE_SUCCESS);
         } catch (err) {
-            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+            showToast('error', MSG_NETWORK_ERROR, MSG_NETWORK_ERROR_DETAIL);
         } finally {
             btn.disabled = false;
             btn.removeAttribute('aria-busy');
-            btn.textContent = '生成する';
+            btn.textContent = MSG_GENERATE_BTN;
         }
         return false;
     }
@@ -167,9 +174,9 @@
     function copyResult() {
         var text = document.getElementById('ai-result-content').textContent;
         navigator.clipboard.writeText(text).then(function() {
-            showToast('success', 'クリップボードにコピーしました');
+            showToast('success', MSG_COPY_SUCCESS);
         }).catch(function() {
-            showToast('error', 'コピーに失敗しました');
+            showToast('error', MSG_COPY_ERROR);
         });
     }
 
@@ -183,11 +190,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

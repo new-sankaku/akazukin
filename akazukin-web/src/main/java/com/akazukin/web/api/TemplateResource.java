@@ -13,8 +13,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import jakarta.ws.rs.core.SecurityContext;
 
 import java.util.UUID;
 
@@ -27,8 +28,9 @@ public class TemplateResource {
     @Inject
     TemplateUseCase templateUseCase;
 
-    @Inject
-    JsonWebToken jwt;
+    @Context
+    SecurityContext securityContext;
+
 
     @POST
     public Response create(PostTemplateRequestDto request) {
@@ -37,14 +39,14 @@ public class TemplateResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var template = templateUseCase.createTemplate(userId, request);
         return Response.status(Response.Status.CREATED).entity(template).build();
     }
 
     @GET
     public Response list() {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var templates = templateUseCase.listTemplates(userId);
         return Response.ok(templates).build();
     }
@@ -52,7 +54,7 @@ public class TemplateResource {
     @GET
     @Path("/{id}")
     public Response get(@PathParam("id") UUID id) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var template = templateUseCase.getTemplate(id);
         return Response.ok(template).build();
     }
@@ -60,7 +62,7 @@ public class TemplateResource {
     @DELETE
     @Path("/{id}")
     public Response delete(@PathParam("id") UUID id) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         templateUseCase.deleteTemplate(id, userId);
         return Response.noContent().build();
     }

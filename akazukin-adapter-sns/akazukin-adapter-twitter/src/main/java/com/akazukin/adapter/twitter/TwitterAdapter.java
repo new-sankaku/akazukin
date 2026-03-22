@@ -1,23 +1,28 @@
 package com.akazukin.adapter.twitter;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 import com.akazukin.sdk.twitter.TwitterClient;
 import com.akazukin.sdk.twitter.TwitterConfig;
 import com.akazukin.sdk.twitter.auth.OAuth2PkceFlow;
 import com.akazukin.sdk.twitter.model.TokenResponse;
+import com.akazukin.sdk.twitter.model.TweetMetrics;
 import com.akazukin.sdk.twitter.model.TweetResponse;
 import com.akazukin.sdk.twitter.model.TwitterUser;
 
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable {
@@ -39,10 +44,18 @@ public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable 
 
     public TwitterAdapter() {
         this(new TwitterConfig(
-            System.getProperty("akazukin.twitter.client-id", System.getenv("TWITTER_CLIENT_ID")),
-            System.getProperty("akazukin.twitter.client-secret", System.getenv("TWITTER_CLIENT_SECRET")),
+            envOrDefault("akazukin.twitter.client-id", "TWITTER_CLIENT_ID", "unconfigured"),
+            envOrDefault("akazukin.twitter.client-secret", "TWITTER_CLIENT_SECRET", "unconfigured"),
             System.getProperty("akazukin.twitter.redirect-uri", System.getenv("TWITTER_REDIRECT_URI"))
         ));
+    }
+
+    private static String envOrDefault(String sysProp, String envVar, String defaultValue) {
+        String value = System.getProperty(sysProp);
+        if (value != null && !value.isBlank()) return value;
+        value = System.getenv(envVar);
+        if (value != null && !value.isBlank()) return value;
+        return defaultValue;
     }
 
     @Override
@@ -168,8 +181,120 @@ public class TwitterAdapter extends AbstractSnsAdapter implements AutoCloseable 
     }
 
     @Override
+    public void reply(String accessToken, String postId, String content) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            client.replyToTweet(accessToken, postId, content);
+            recordApiCall();
+        } catch (RuntimeException e) {
+            throw wrapException("reply", e);
+        } finally {
+            perfLog("TwitterAdapter.reply", perfStart);
+        }
+    }
+
+    @Override
+    public void mention(String accessToken, String userId, String content) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String mentionText = "@" + userId + " " + content;
+            client.postTweet(accessToken, mentionText);
+            recordApiCall();
+        } catch (RuntimeException e) {
+            throw wrapException("mention", e);
+        } finally {
+            perfLog("TwitterAdapter.mention", perfStart);
+        }
+    }
+
+    @Override
+    public List<SnsProfile> getFollowers(String accessToken, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            TwitterUser me = client.getMe(accessToken);
+            List<TwitterUser> followers = client.getFollowers(accessToken, me.id(), limit);
+            recordApiCall();
+            return followers.stream()
+                .map(u -> new SnsProfile(u.username(), u.name(), u.profileImageUrl(), u.followersCount()))
+                .toList();
+        } catch (RuntimeException e) {
+            throw wrapException("getFollowers", e);
+        } finally {
+            perfLog("TwitterAdapter.getFollowers", perfStart);
+        }
+    }
+
+    @Override
+    public List<SnsProfile> getFollowing(String accessToken, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            TwitterUser me = client.getMe(accessToken);
+            List<TwitterUser> following = client.getFollowing(accessToken, me.id(), limit);
+            recordApiCall();
+            return following.stream()
+                .map(u -> new SnsProfile(u.username(), u.name(), u.profileImageUrl(), u.followersCount()))
+                .toList();
+        } catch (RuntimeException e) {
+            throw wrapException("getFollowing", e);
+        } finally {
+            perfLog("TwitterAdapter.getFollowing", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            TweetMetrics metrics = client.getTweetMetrics(accessToken, platformPostId);
+            recordApiCall();
+            if (metrics == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.TWITTER,
+                metrics.likeCount(),
+                metrics.replyCount(),
+                metrics.retweetCount(),
+                metrics.impressionCount(),
+                Instant.now()
+            ));
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("TwitterAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            TwitterUser user = client.getMe(accessToken);
+            recordApiCall();
+            return Optional.of(new AccountStats(
+                SnsPlatform.TWITTER,
+                user.username(),
+                user.followersCount(),
+                user.followingCount(),
+                0,
+                Instant.now()
+            ));
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("TwitterAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private void cleanupExpiredVerifiers() {

@@ -8,5 +8,6 @@ public enum PostStatus {
     FAILED,
     PENDING_APPROVAL,
     APPROVED,
-    REJECTED
+    REJECTED,
+    RETURNED
 }

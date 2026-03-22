@@ -51,6 +51,9 @@ dependencies {
     implementation("io.quarkus:quarkus-smallrye-jwt")
     implementation("io.quarkus:quarkus-smallrye-jwt-build")
 
+    // Security — BCrypt
+    implementation("at.favre.lib:bcrypt:0.10.2")
+
     // Validation
     implementation("io.quarkus:quarkus-hibernate-validator")
 

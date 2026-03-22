@@ -1,10 +1,12 @@
 package com.akazukin.adapter.pinterest;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -22,8 +24,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.Optional;
 
 public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final int PINTEREST_MAX_LENGTH = 500;
 
     private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
         .connectTimeout(CONNECTION_TIMEOUT)
@@ -67,6 +72,11 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
     @Override
     public SnsPlatform platform() {
         return SnsPlatform.PINTEREST;
+    }
+
+    @Override
+    public int getMaxContentLength() {
+        return PINTEREST_MAX_LENGTH;
     }
 
     @Override
@@ -306,8 +316,86 @@ public class PinterestAdapter extends AbstractSnsAdapter implements AutoCloseabl
     }
 
     @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/pins/" + platformPostId
+                    + "?pin_metrics=true"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            JsonNode metrics = json.path("pin_metrics").path("all_time");
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.PINTEREST,
+                metrics.path("save").asInt(0),
+                metrics.path("pin_click").asInt(0),
+                0,
+                metrics.path("impression").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("PinterestAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/user_account"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new AccountStats(
+                SnsPlatform.PINTEREST,
+                json.path("username").asText(),
+                json.path("follower_count").asInt(0),
+                json.path("following_count").asInt(0),
+                json.path("pin_count").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("PinterestAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

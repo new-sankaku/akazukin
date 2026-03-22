@@ -1,0 +1,547 @@
+<mxfile host="app.diagrams.net" modified="2026-03-21" agent="Claude" version="24.0">
+  <diagram id="hexagonal-architecture" name="ヘキサゴナルアーキテクチャ">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="akazukin ヘキサゴナルアーキテクチャ" style="text;html=1;fontSize=24;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="800" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="520" y="280" width="560" height="440" as="geometry"/>
+        </mxCell>
+        <mxCell id="domain-label" value="ドメイン層 (akazukin-domain)" style="text;html=1;fontSize=16;fontStyle=1;align=center;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="290" width="360" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="dm-entities" value="エンティティ&#xa;User, Post, PostTarget,&#xa;SnsAccount, Team,&#xa;ABTest, AgentTask,&#xa;ApprovalRequest" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="540" y="340" width="180" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="dm-values" value="値オブジェクト&#xa;AiPrompt, AiResponse,&#xa;PostRequest, PostResult,&#xa;SnsAuthToken, SnsProfile,&#xa;SnsPostStats" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="740" y="340" width="180" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="dm-enums" value="列挙型 (15種)&#xa;SnsPlatform, PostStatus,&#xa;Role, AgentType,&#xa;AiModelProvider,&#xa;RiskLevel" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="540" y="470" width="180" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="dm-services" value="ドメインサービス (8種)&#xa;祝日判定&#xa;連休検出&#xa;季節イベント&#xa;二十四節気&#xa;トーン解析&#xa;連携シナリオ" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="740" y="470" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="ports-in" value="受信ポート&#xa;(リポジトリ21 + アダプタ7&#xa;+ インフラ7 = 35)" style="rounded=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="610" width="220" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ports-out" value="送信ポート&#xa;SnsAdapter, AiTextGenerator,&#xa;PostPublisher, MediaStorage" style="rounded=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="610" width="220" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="app-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="360" y="180" width="880" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="app-label" value="アプリケーション層 (akazukin-application) — 26ユースケース, 139 DTO" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="370" y="185" width="520" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-auth" value="認証&#xa;アカウント&#xa;チーム" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="370" y="215" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-post" value="投稿&#xa;公開&#xa;予約" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="460" y="215" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-ai" value="AIコンテンツ&#xa;AI設定&#xa;エージェント" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="550" y="215" width="90" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-analytics" value="分析&#xa;ダッシュボード&#xa;インプレッション" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="650" y="215" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-social" value="フレンド&#xa;ニュース&#xa;カレンダー" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="215" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-workflow" value="承認&#xa;チーム承認&#xa;通知" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="215" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-misc" value="ABテスト&#xa;メディア&#xa;テンプレート&#xa;成長戦略" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="215" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="280" y="70" width="1040" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-label" value="Web層 (akazukin-web) — 駆動アダプタ" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="75" width="380" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-rest" value="REST API&#xa;16リソース&#xa;93エンドポイント" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="290" y="105" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-ctrl" value="コントローラー&#xa;16個&#xa;HTMX + Qute" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="420" y="105" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-sec" value="セキュリティ&#xa;JWT (15分/7日)&#xa;BCrypt (コスト12)&#xa;流量制限 (Bucket4j)" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="550" y="105" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-tmpl" value="テンプレート&#xa;28 Quteテンプレート&#xa;HTMX 2.0.8&#xa;NieR美学" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="710" y="105" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-filter" value="フィルター&#xa;認証フィルター&#xa;監査ログフィルター&#xa;例外ハンドラー" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="860" y="105" width="140" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-i18n" value="国際化&#xa;msg.properties&#xa;msg_en.properties" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="105" width="120" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="200" y="750" width="1200" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-label" value="インフラ層 (akazukin-infrastructure) — 被駆動アダプタ" style="text;html=1;fontSize=14;fontStyle=1;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="755" width="420" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-repo" value="永続化&#xa;リポジトリ実装 21&#xa;マッパー 20&#xa;エンティティ 21" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="210" y="790" width="150" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-db" value="PostgreSQL&#xa;Flyway V001-V027&#xa;24テーブル" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="380" y="790" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-cache" value="キャッシュ&#xa;Redis&#xa;Caffeine&#xa;5-7日 TTL" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="530" y="790" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-queue" value="キュー&#xa;Amazon SQS" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="660" y="790" width="100" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-monitor" value="監視&#xa;Prometheus&#xa;OpenTelemetry" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="780" y="790" width="120" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-native" value="GraalVM&#xa;ネイティブ&#xa;イメージ" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="920" y="790" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="infra-media" value="メディア保存&#xa;(ファイルシステム)" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="790" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="20" y="280" width="280" height="440" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-label" value="SNSアダプタ (16モジュール)&#xa;SPI: ServiceLoader" style="text;html=1;fontSize=13;fontStyle=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="285" width="260" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-core" value="adapter-core&#xa;基底アダプタ&#xa;耐障害アダプタ&#xa;SPIファクトリ" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="330" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-twitter" value="Twitter/X" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="400" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-bluesky" value="Bluesky" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="400" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-mastodon" value="Mastodon" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="210" y="400" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-threads" value="Threads" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="440" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-instagram" value="Instagram" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="440" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-reddit" value="Reddit" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="210" y="440" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-telegram" value="Telegram" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="480" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-vk" value="VK" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="480" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-pinterest" value="Pinterest" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="210" y="480" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-tiktok" value="TikTok" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="520" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-mixi2" value="mixi2" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="520" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-note" value="note" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="210" y="520" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-niconico" value="niconico" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="560" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-devkit" value="devkit" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="560" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sns-features" value="流量制限 / 5分キャッシュ&#xa;サーキットブレーカー / 性能ログ" style="text;html=1;fontSize=9;align=center;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="600" width="260" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="280" width="280" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-label" value="SDK層 (9モジュール)&#xa;Quarkus非依存" style="text;html=1;fontSize=13;fontStyle=1;align=center;fillColor=#f5f5f5;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="285" width="260" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-twitter" value="sdk-twitter&#xa;OAuth2 PKCE + OAuth1" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="330" width="125" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-bluesky" value="sdk-bluesky&#xa;AT Protocol" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1245" y="330" width="125" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-reddit2" value="sdk-reddit" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="380" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-pinterest2" value="sdk-pinterest" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="380" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-tiktok2" value="sdk-tiktok" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="380" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-mixi22" value="sdk-mixi2" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="420" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-note2" value="sdk-note" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="420" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-niconico2" value="sdk-niconico" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="420" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="sdk-ollama" value="sdk-ollama" style="rounded=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="460" width="80" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="510" width="280" height="210" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai-label" value="AI層 (3モジュール)" style="text;html=1;fontSize=13;fontStyle=1;align=center;fillColor=#e6d0de;strokeColor=#996185;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="515" width="260" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai-core" value="ai-core&#xa;7エージェント:&#xa;DIRECTOR / ANALYST&#xa;COMPOSER / TRANSFORMER&#xa;SENTINEL / COMPLIANCE&#xa;SCHEDULER" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="550" width="150" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai-ollama2" value="ai-ollama&#xa;ローカルAI&#xa;(Ollama)" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="550" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ai-external" value="ai-external&#xa;OpenAI&#xa;Anthropic" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="610" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="worker" value="ワーカー (akazukin-worker)&#xa;非同期スケジューリング&#xa;メトリクス集約&#xa;データクリーンアップ&#xa;サーキットブレーカー監視" style="rounded=1;whiteSpace=wrap;fillColor=#d0cee2;strokeColor=#56517e;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="750" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-web-app" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="web-rest" target="uc-post">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-web-app2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="web-ctrl" target="uc-ai">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-app-domain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="uc-post" target="dm-entities">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-app-domain2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="uc-analytics" target="dm-values">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-infra-domain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=2;endArrow=block;endFill=1;dashed=1;dashPattern=8 4;" edge="1" parent="1" source="infra-repo" target="ports-in">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-infra-label" value="実装" style="text;html=1;fontSize=10;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="700" width="50" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-sns-domain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;strokeWidth=2;endArrow=block;endFill=1;dashed=1;dashPattern=8 4;" edge="1" parent="1" source="sns-core" target="ports-out">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="310" y="360"/><mxPoint x="310" y="640"/><mxPoint x="810" y="640"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-sns-sdk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;strokeWidth=1;endArrow=block;endFill=1;" edge="1" parent="1" source="sns-twitter" target="sdk-twitter">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="70" y="700"/><mxPoint x="1090" y="700"/><mxPoint x="1090" y="350"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-sns-sdk-label" value="SDK利用" style="text;html=1;fontSize=10;fontStyle=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="500" y="700" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow-ai-domain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#996185;strokeWidth=2;endArrow=block;endFill=1;dashed=1;dashPattern=8 4;" edge="1" parent="1" source="ai-core" target="ports-out">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1080" y="600"/><mxPoint x="1080" y="640"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-worker-app" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#56517e;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="worker" target="uc-workflow">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1370" y="800"/><mxPoint x="1370" y="235"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-bg" value="" style="rounded=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="20" y="900" width="500" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-title" value="凡例" style="text;html=1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="905" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-solid" value="── 直接依存" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="930" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-dashed" value="- - - ポート実装 (依存性逆転)" style="text;html=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="950" width="180" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-yellow" value="ドメイン (純粋Java)" style="text;html=1;fontSize=10;fontColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="220" y="930" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-green" value="アプリケーション (CDIのみ)" style="text;html=1;fontSize=10;fontColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="220" y="950" width="150" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-blue" value="Web (Quarkus)" style="text;html=1;fontSize=10;fontColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="930" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-purple" value="インフラ" style="text;html=1;fontSize=10;fontColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="380" y="950" width="100" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="data-flow" name="データフロー">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="df-title" value="投稿パイプライン データフロー" style="text;html=1;fontSize=22;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="500" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-flow-label" value="1. 投稿作成・公開フロー" style="text;html=1;fontSize=16;fontStyle=5;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="70" width="400" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-user" value="ブラウザ&#xa;(HTMX)" style="shape=actor;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="30" y="120" width="60" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-compose" value="作成&#xa;(下書き)" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="130" y="120" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-ai-gen-bg" value="" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="260" y="100" width="350" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-ai-gen-label" value="AIエージェントパイプライン (任意)" style="text;html=1;fontSize=11;fontStyle=1;fillColor=#e6d0de;strokeColor=#996185;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="105" width="230" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-analyst" value="ANALYST&#xa;トレンド分析" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="270" y="135" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-composer" value="COMPOSER&#xa;コンテンツ起草" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390" y="135" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-transformer" value="TRANSFORMER&#xa;SNS別&#xa;最適化" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="135" width="90" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sentinel" value="SENTINEL&#xa;リスク検査" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="270" y="200" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-compliance" value="COMPLIANCE&#xa;法令検査" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="390" y="200" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-scheduler-agent" value="SCHEDULER&#xa;最適時刻" style="rounded=1;whiteSpace=wrap;fillColor=#e6d0de;strokeColor=#996185;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="200" width="90" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-an-co" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#996185;" edge="1" parent="1" source="df-analyst" target="df-composer">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-co-tr" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#996185;" edge="1" parent="1" source="df-composer" target="df-transformer">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-tr-se" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#996185;" edge="1" parent="1" source="df-transformer" target="df-sentinel">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-se-cm" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#996185;" edge="1" parent="1" source="df-sentinel" target="df-compliance">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-cm-sc" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#996185;" edge="1" parent="1" source="df-compliance" target="df-scheduler-agent">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-draft" value="下書き" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="200" width="80" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-scheduled" value="予約済み" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="260" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-approval-bg" value="" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="260" y="320" width="350" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-approval-label" value="承認ワークフロー (有効時)" style="text;html=1;fontSize=11;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="325" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-pending" value="承認待ち" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="270" y="350" width="90" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-ai-review" value="AIレビュー&#xa;(SENTINEL&#xa;+ COMPLIANCE)" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="350" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-human-review" value="人間の&#xa;判断" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="500" y="350" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-pend-air" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="df-status-pending" target="df-ai-review">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-air-hr" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#82b366;" edge="1" parent="1" source="df-ai-review" target="df-human-review">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-publish-bg" value="" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="660" y="100" width="450" height="320" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-publish-label" value="公開処理 (SNS別並列)" style="text;html=1;fontSize=11;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="105" width="200" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-processing" value="公開処理中" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="670" y="140" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-circuit-check" value="サーキット&#xa;ブレーカー&#xa;確認" style="rhombus;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="125" width="110" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sns-post" value="SNS投稿&#xa;(プラットフォーム別並列)" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="950" y="130" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-retry" value="リトライ&#xa;最大2回&#xa;指数バックオフ" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="950" y="200" width="90" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-published" value="公開済み" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="240" width="110" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-partial" value="一部公開" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="240" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-status-failed" value="失敗" style="rounded=1;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="940" y="280" width="80" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-proc-cb" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#b85450;" edge="1" parent="1" source="df-status-processing" target="df-circuit-check">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-cb-sns" value="OPEN" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#b85450;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-circuit-check" target="df-sns-post">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sns-retry" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="df-sns-post" target="df-retry">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-retry-sns" value="再試行" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#b85450;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-retry" target="df-sns-post">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1060" y="230"/><mxPoint x="1060" y="180"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="df-a-sns-ok" value="全成功" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#82b366;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-sns-post" target="df-status-published">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1025" y="257"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="df-a-sns-partial" value="一部" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#d6b656;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-retry" target="df-status-partial">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-retry-fail" value="全失敗" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#b85450;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-retry" target="df-status-failed">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-notify" value="通知&#xa;(DB + プッシュ)" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="670" y="310" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-pub-notify" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="df-status-published" target="df-notify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-fail-notify" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="df-status-failed" target="df-notify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-metrics-bg" value="" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="660" y="430" width="450" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-metrics-label" value="分析パイプライン (ワーカー)" style="text;html=1;fontSize=11;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="435" width="220" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-impression" value="インプレッション&#xa;スナップショット&#xa;収集" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="670" y="465" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-interaction" value="インタラクション&#xa;追跡&#xa;(いいね, 共有)" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="800" y="465" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-dashboard-agg" value="ダッシュボード&#xa;集約&#xa;(5分キャッシュ)" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="930" y="465" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-imp-int" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="df-impression" target="df-interaction">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-int-dash" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="df-interaction" target="df-dashboard-agg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-user-compose" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-user" target="df-compose">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-compose-draft" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-compose" target="df-status-draft">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-compose-ai" value="AI支援" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;dashed=1;strokeColor=#996185;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-compose" target="df-analyst">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-draft-sched" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-status-draft" target="df-status-scheduled">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sched-approval" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="df-status-scheduled" target="df-status-pending">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sched-proc" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-status-scheduled" target="df-status-processing">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="350"/><mxPoint x="180" y="440"/><mxPoint x="640" y="440"/><mxPoint x="640" y="160"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="df-a-approval-proc" value="承認" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#82b366;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="df-human-review" target="df-status-processing">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="640" y="370"/><mxPoint x="640" y="160"/></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="df-a-pub-analytics" style="rounded=1;strokeWidth=1;endArrow=block;endFill=1;strokeColor=#9673a6;" edge="1" parent="1" source="df-status-published" target="df-impression">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-label" value="2. セキュリティスタック (リクエスト毎)" style="text;html=1;fontSize=16;fontStyle=5;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="570" width="400" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-req" value="HTTP&#xa;リクエスト" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="30" y="610" width="80" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-filter" value="認証フィルター&#xa;(JWT検証)" style="rounded=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="150" y="610" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-audit" value="監査ログ&#xa;フィルター" style="rounded=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="300" y="610" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-rate" value="流量制限&#xa;(Bucket4j)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="440" y="610" width="100" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-roles" value="ロール認可&#xa;(ADMIN/USER)" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="580" y="610" width="110" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-sec-logic" value="業務&#xa;ロジック" style="rounded=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="730" y="610" width="90" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sec1" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-sec-req" target="df-sec-filter">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sec2" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-sec-filter" target="df-sec-audit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sec3" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-sec-audit" target="df-sec-rate">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sec4" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-sec-rate" target="df-sec-roles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-a-sec5" style="rounded=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="df-sec-roles" target="df-sec-logic">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-jwt-detail" value="JWT: アクセス15分 / リフレッシュ7日&#xa;BCrypt コスト12" style="text;html=1;fontSize=10;fontStyle=2;align=left;" vertex="1" parent="1">
+          <mxGeometry x="150" y="655" width="260" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-cache-label" value="3. キャッシュ戦略" style="text;html=1;fontSize=16;fontStyle=5;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="700" width="250" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-cache-analytics" value="分析サマリー&#xa;Caffeine 5分TTL&#xa;1000件" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="30" y="740" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-cache-profile" value="SNSプロフィール&#xa;Caffeine 10分TTL&#xa;500件" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="190" y="740" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-cache-adapter" value="アダプタプロフィール&#xa;ConcurrentHashMap&#xa;5分TTL" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="350" y="740" width="140" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-cache-static" value="HTTP静的&#xa;7日キャッシュ&#xa;(不変)" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="740" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-cache-redis" value="Redis&#xa;セッション / 共有&#xa;5-7日TTL" style="rounded=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="650" y="740" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-state-label" value="投稿ステータス状態遷移" style="text;html=1;fontSize=11;fontStyle=5;align=left;fillColor=#ffffcc;strokeColor=#cccc00;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="440" width="200" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-state-flow" value="下書き → 予約済み → 承認待ち → 公開処理中 → 公開済み / 一部公開 / 失敗" style="text;html=1;fontSize=10;align=left;fillColor=#ffffcc;strokeColor=#cccc00;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="465" width="560" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="df-state-note" value="却下 (承認から) / アーカイブ (手動)" style="text;html=1;fontSize=10;align=left;fillColor=#ffffcc;strokeColor=#cccc00;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="490" width="280" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -18,6 +18,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -172,6 +174,76 @@ public class BlueskyClient implements AutoCloseable {
             return parseResponse(response, ProfileResponse.class);
         } finally {
             perfLog("BlueskyClient.getProfile", perfStart);
+        }
+    }
+
+    public List<ProfileResponse> getFollowers(String accessJwt, String actor, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            int maxResults = Math.max(1, Math.min(limit, 100));
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/app.bsky.graph.getFollowers?actor=" + actor
+                    + "&limit=" + maxResults))
+                .header("Authorization", "Bearer " + accessJwt)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            return parseProfileList(response, "followers");
+        } finally {
+            perfLog("BlueskyClient.getFollowers", perfStart);
+        }
+    }
+
+    public List<ProfileResponse> getFollows(String accessJwt, String actor, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            int maxResults = Math.max(1, Math.min(limit, 100));
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(xrpcBaseUrl + "/app.bsky.graph.getFollows?actor=" + actor
+                    + "&limit=" + maxResults))
+                .header("Authorization", "Bearer " + accessJwt)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = sendRequest(request);
+            return parseProfileList(response, "follows");
+        } finally {
+            perfLog("BlueskyClient.getFollows", perfStart);
+        }
+    }
+
+    private List<ProfileResponse> parseProfileList(HttpResponse<String> response, String arrayField) {
+        JsonNode root = parseJsonTree(response);
+        JsonNode data = root.get(arrayField);
+        if (data == null || !data.isArray()) {
+            return List.of();
+        }
+        List<ProfileResponse> profiles = new ArrayList<>();
+        for (JsonNode node : data) {
+            profiles.add(new ProfileResponse(
+                node.path("did").asText(),
+                node.path("handle").asText(),
+                node.path("displayName").asText(null),
+                node.path("avatar").asText(null),
+                node.path("followersCount").asInt(0),
+                node.path("followsCount").asInt(0),
+                node.path("postsCount").asInt(0)
+            ));
+        }
+        return profiles;
+    }
+
+    private JsonNode parseJsonTree(HttpResponse<String> response) {
+        try {
+            return objectMapper.readTree(response.body());
+        } catch (JsonProcessingException e) {
+            throw new BlueskyApiException(response.statusCode(), "PARSE_ERROR",
+                "Failed to parse response JSON", e);
         }
     }
 

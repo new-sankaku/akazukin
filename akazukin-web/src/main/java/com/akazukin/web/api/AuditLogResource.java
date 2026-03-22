@@ -26,6 +26,10 @@ import java.util.UUID;
 @RolesAllowed("ADMIN")
 public class AuditLogResource {
 
+    private static final int PAGE_SIZE_MAX = 100;
+    private static final int DEFAULT_RANGE_DAYS = 7;
+    private static final int SECONDS_PER_DAY = 24 * 3600;
+
     @Inject
     AuditLogRepository auditLogRepository;
 
@@ -37,7 +41,7 @@ public class AuditLogResource {
                          @QueryParam("category") String category,
                          @QueryParam("from") String from,
                          @QueryParam("to") String to) {
-        int effectiveSize = Math.min(size, 100);
+        int effectiveSize = Math.min(size, PAGE_SIZE_MAX);
         int offset = page * effectiveSize;
 
         List<AuditLog> logs;
@@ -52,7 +56,7 @@ public class AuditLogResource {
             Instant toInstant = LocalDate.parse(to).plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
             logs = auditLogRepository.findByCreatedAtBetween(fromInstant, toInstant, offset, effectiveSize);
         } else {
-            Instant weekAgo = Instant.now().minusSeconds(7 * 24 * 3600);
+            Instant weekAgo = Instant.now().minusSeconds((long) DEFAULT_RANGE_DAYS * SECONDS_PER_DAY);
             logs = auditLogRepository.findByCreatedAtBetween(weekAgo, Instant.now(), offset, effectiveSize);
         }
 

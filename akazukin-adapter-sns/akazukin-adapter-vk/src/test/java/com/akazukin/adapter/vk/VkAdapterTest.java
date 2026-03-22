@@ -40,9 +40,9 @@ class VkAdapterTest {
     class MaxContentLengthTests {
 
         @Test
-        @DisplayName("returns default 2200")
+        @DisplayName("returns 15895")
         void returnsDefault() {
-            assertEquals(2200, adapter.getMaxContentLength());
+            assertEquals(15895, adapter.getMaxContentLength());
         }
     }
 

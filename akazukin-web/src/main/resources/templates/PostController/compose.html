@@ -1,5 +1,5 @@
 {#include base}
-{#title}投稿作成 - Akazukin{/title}
+{#title}{msg:compose_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,132 +7,324 @@
     {#sidebar active="compose" /}
 
     <main class="ak-main">
-        <h2 id="compose-heading" style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">新規投稿</h2>
+        <div class="compose-grid">
 
-        <form id="compose-form" onsubmit="return handleCompose(event)">
-            <!-- 投稿内容 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <label for="content" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">投稿内容</label>
-                <textarea id="content" name="content" rows="6"
-                    placeholder="投稿する内容を入力してください..."
-                    required
-                    style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                    <small id="char-count" style="color: var(--text-muted, var(--ak-text-muted)); transition: color 0.2s;">0 文字</small>
-                    <small id="char-warning" style="color: var(--status-warning, #C8A96E); display: none; font-weight: 600;"></small>
+            <div class="compose-top-bar">
+                <div style="display: flex; align-items: center; gap: var(--sp-md); flex-wrap: wrap;">
+                    <h2 id="compose-heading" style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 0;">{msg:compose_heading_new}</h2>
+                    <span id="status-badge" class="status-badge draft">{msg:compose_status_draft}</span>
+                </div>
+
+                <div class="persona-toggle-area">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="personaToggle" onchange="togglePersona()">
+                        <span class="toggle-track"></span>
+                        <span>{msg:compose_persona_toggle}</span>
+                    </label>
+                    <div id="personaDropdowns" class="persona-dropdown-list" style="display:none;"></div>
+                </div>
+
+                <div class="tone-area">
+                    <label>{msg:compose_tone_label}</label>
+                    <div class="tone-slider-wrap">
+                        <span class="tone-label">{msg:compose_tone_formal}</span>
+                        <input type="range" min="1" max="5" value="3" id="toneSlider" oninput="updateTone()">
+                        <span class="tone-label">{msg:compose_tone_casual}</span>
+                    </div>
+                    <span id="toneValue" class="tone-badge">Lv.3 {msg:compose_tone_3}</span>
                 </div>
             </div>
 
-            <!-- 投稿先プラットフォーム -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">投稿先プラットフォーム</h3>
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                    <button type="button" onclick="toggleAllPlatforms(true)" class="ak-btn-sm"
-                        style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; letter-spacing: 0.03em;">すべて選択</button>
-                    <button type="button" onclick="toggleAllPlatforms(false)" class="ak-btn-sm"
-                        style="background: transparent; color: var(--text-sec, var(--ak-text-muted)); border: 1px solid var(--border, var(--ak-border)); padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; letter-spacing: 0.03em;">選択解除</button>
-                </div>
-                <fieldset style="border: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.4rem;">
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="TWITTER">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/x/1DA1F2" alt="X">
-                        <span class="platform-label">Twitter / X</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="BLUESKY">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/bluesky/0085FF" alt="Bluesky">
-                        <span class="platform-label">Bluesky</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="MASTODON">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/mastodon/6364FF" alt="Mastodon">
-                        <span class="platform-label">Mastodon</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="THREADS">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/threads/333333" alt="Threads">
-                        <span class="platform-label">Threads</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="INSTAGRAM">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/instagram/E4405F" alt="Instagram">
-                        <span class="platform-label">Instagram</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="REDDIT">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/reddit/FF4500" alt="Reddit">
-                        <span class="platform-label">Reddit</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="TELEGRAM">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/telegram/26A5E4" alt="Telegram">
-                        <span class="platform-label">Telegram</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="VK">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/vk/4680C2" alt="VK">
-                        <span class="platform-label">VK</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="PINTEREST">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/pinterest/BD081C" alt="Pinterest">
-                        <span class="platform-label">Pinterest</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="MIXI2">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/mixi/D1A019" alt="MIXI2">
-                        <span class="platform-label">MIXI2</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="NOTE">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/note/41C9B4" alt="note">
-                        <span class="platform-label">note</span>
-                    </label>
-                    <label class="platform-check">
-                        <input type="checkbox" name="platforms" value="NICONICO">
-                        <img class="platform-icon" src="https://cdn.simpleicons.org/niconico/231815" alt="niconico">
-                        <span class="platform-label">niconico</span>
-                    </label>
-                </fieldset>
+            <div class="compose-left">
+                <form id="compose-form" onsubmit="return handleCompose(event)">
+
+                    <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                        <div class="ak-card-header">
+                            <h3 style="margin-bottom: 0;">{msg:compose_content_label}</h3>
+                            <span class="char-count" id="mainCharCount">0 / 280</span>
+                        </div>
+                        <textarea id="content" name="content" rows="8"
+                            placeholder="{msg:compose_content_placeholder}"
+                            required
+                            oninput="onContentInput()"
+                            style="width: 100%; background: var(--bg-field); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem; font-size: 1rem; color: var(--text-body); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--sp-sm);">
+                            <small id="char-count" style="color: var(--text-muted); transition: color 0.2s;">0 {msg:compose_char_count_suffix}</small>
+                            <small id="char-warning" style="color: var(--status-warning); display: none; font-weight: 600;"></small>
+                        </div>
+                    </div>
+
+                    <div class="ak-card ak-card--plain" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                        <div class="ak-card-header">
+                            <h3 style="margin-bottom: 0;">{msg:compose_platform_heading}</h3>
+                            <div style="display: flex; gap: var(--sp-sm);">
+                                <button type="button" onclick="toggleAllPlatforms(true)" class="ak-btn-sm"
+                                    style="background: var(--accent-gold); color: white; border: none; padding: 0.3rem 0.8rem; border-radius: var(--radius-md); cursor: pointer; font-size: 0.8rem;">{msg:compose_select_all}</button>
+                                <button type="button" onclick="toggleAllPlatforms(false)" class="ak-btn-sm"
+                                    style="background: transparent; color: var(--text-sec); border: 1px solid var(--border); padding: 0.3rem 0.8rem; border-radius: var(--radius-md); cursor: pointer; font-size: 0.8rem;">{msg:compose_deselect_all}</button>
+                            </div>
+                        </div>
+                        <fieldset style="border: none; padding: 0; margin: 0;" class="sns-check-grid">
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="TWITTER" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/x/1DA1F2" alt="X">
+                                <span class="platform-label">Twitter / X</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="BLUESKY" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/bluesky/0085FF" alt="Bluesky">
+                                <span class="platform-label">Bluesky</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="MASTODON" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/mastodon/6364FF" alt="Mastodon">
+                                <span class="platform-label">Mastodon</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="THREADS" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/threads/333333" alt="Threads">
+                                <span class="platform-label">Threads</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="INSTAGRAM" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/instagram/E4405F" alt="Instagram">
+                                <span class="platform-label">Instagram</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="REDDIT" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/reddit/FF4500" alt="Reddit">
+                                <span class="platform-label">Reddit</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="TELEGRAM" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/telegram/26A5E4" alt="Telegram">
+                                <span class="platform-label">Telegram</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="VK" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/vk/4680C2" alt="VK">
+                                <span class="platform-label">VK</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="PINTEREST" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/pinterest/BD081C" alt="Pinterest">
+                                <span class="platform-label">Pinterest</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="MIXI2" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/mixi/D1A019" alt="MIXI2">
+                                <span class="platform-label">MIXI2</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="NOTE" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/note/41C9B4" alt="note">
+                                <span class="platform-label">note</span>
+                            </label>
+                            <label class="platform-check">
+                                <input type="checkbox" name="platforms" value="NICONICO" onchange="onPlatformChange()">
+                                <img class="platform-icon" src="https://cdn.simpleicons.org/niconico/231815" alt="niconico">
+                                <span class="platform-label">niconico</span>
+                            </label>
+                        </fieldset>
+                    </div>
+
+                    <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                        <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: var(--sp-md);">{msg:compose_media_heading}</h3>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <label style="background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 0.4rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem; cursor: pointer; display: inline-block;">
+                                {msg:compose_media_select}
+                                <input type="file" id="media-files" multiple accept="image/*,video/*" style="display: none;" onchange="handleMediaSelect(this)">
+                            </label>
+                            <small style="color: var(--text-muted);">{msg:compose_media_hint}</small>
+                        </div>
+                        <div id="media-preview" style="display: flex; gap: var(--sp-sm); flex-wrap: wrap; margin-top: 0.75rem;"></div>
+                        <div id="media-upload-status" style="margin-top: var(--sp-sm); font-size: 0.85rem;"></div>
+                    </div>
+
+                    <div class="schedule-area">
+                        <div style="margin-bottom: var(--sp-sm);">
+                            <label style="display: block; font-weight: 600; color: var(--text-heading); margin-bottom: var(--sp-xs); font-size: 0.85rem;">{msg:compose_schedule_heading}</label>
+                            <div style="display: flex; align-items: center; gap: var(--sp-sm);">
+                                <input type="datetime-local" id="scheduledAt" name="scheduledAt"
+                                    onclick="this.showPicker && this.showPicker()"
+                                    style="flex: 1; max-width: 280px; background: var(--bg-field); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body); cursor: pointer;">
+                                <button type="button" onclick="document.getElementById('scheduledAt').value=''"
+                                    style="background: transparent; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.4rem 0.6rem; cursor: pointer; color: var(--text-sec); font-size: 0.8rem;">{msg:compose_schedule_clear}</button>
+                            </div>
+                            <small style="display: block; margin-top: var(--sp-xs); color: var(--text-muted);">{msg:compose_schedule_hint}</small>
+                        </div>
+
+                        <div class="timezone-section" id="timezoneSection">
+                            <label class="toggle-switch" style="margin-bottom: var(--sp-sm);">
+                                <input type="checkbox" id="tzToggle" onchange="toggleTimezone()">
+                                <span class="toggle-track"></span>
+                                <span>{msg:compose_timezone_toggle}</span>
+                            </label>
+                            <div id="tzContent" style="display:none;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: var(--sp-sm);">{msg:compose_timezone_hint}</div>
+                                <div id="tzBadges" style="display: flex; gap: var(--sp-sm); flex-wrap: wrap; margin-bottom: var(--sp-sm);"></div>
+                                <div class="timeline-bar" id="timelineBar">
+                                    <div class="timeline-hours">
+                                        <div class="timeline-hour"><span>0</span></div>
+                                        <div class="timeline-hour"><span>2</span></div>
+                                        <div class="timeline-hour"><span>4</span></div>
+                                        <div class="timeline-hour"><span>6</span></div>
+                                        <div class="timeline-hour"><span>8</span></div>
+                                        <div class="timeline-hour"><span>10</span></div>
+                                        <div class="timeline-hour"><span>12</span></div>
+                                        <div class="timeline-hour"><span>14</span></div>
+                                        <div class="timeline-hour"><span>16</span></div>
+                                        <div class="timeline-hour"><span>18</span></div>
+                                        <div class="timeline-hour"><span>20</span></div>
+                                        <div class="timeline-hour"><span>22</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="risk-gauge" id="riskGauge">
+                        <div class="risk-gauge-header">
+                            <h4>{msg:compose_risk_heading}</h4>
+                            <span id="riskBadge" class="status-badge" style="background:var(--bg-subtle); color:var(--text-muted); border-color:var(--border-lt);">{msg:compose_risk_unchecked}</span>
+                        </div>
+                        <div class="risk-bar-track">
+                            <div id="riskBarFill" class="risk-bar-fill" style="width:0%; background: var(--border);"></div>
+                        </div>
+                        <div class="risk-items" id="riskItems">
+                            <div class="risk-item">
+                                <span class="risk-dot" id="riskDotFlame" style="background:var(--border);"></span>
+                                <span id="riskLabelFlame">{msg:compose_risk_flame}: &#x2014;</span>
+                            </div>
+                            <div class="risk-item">
+                                <span class="risk-dot" id="riskDotLaw" style="background:var(--border);"></span>
+                                <span id="riskLabelLaw">{msg:compose_risk_law}: &#x2014;</span>
+                            </div>
+                            <div class="risk-item">
+                                <span class="risk-dot" id="riskDotPolicy" style="background:var(--border);"></span>
+                                <span id="riskLabelPolicy">{msg:compose_risk_policy}: &#x2014;</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="approval-pipeline" id="approvalPipeline">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <h4 style="margin-bottom:0;">{msg:compose_pipeline_heading}</h4>
+                            <button type="button" id="pipelineRunBtn" onclick="runPipelineCheck()"
+                                style="background: var(--accent-gold); border-color: var(--accent-gold); color: #fff; font-size: 0.8rem; padding: 0.35rem 0.8rem; border-radius: var(--radius-md); cursor: pointer; border: 1px solid var(--accent-gold);">{msg:compose_pipeline_run}</button>
+                        </div>
+                        <div class="pipeline-steps" id="pipelineSteps">
+                            <div class="pipeline-step active" data-step="draft">
+                                <span class="step-circle">1</span>
+                                <span class="step-label">{msg:compose_step_draft}</span>
+                            </div>
+                            <div class="pipeline-step" data-step="ai_check">
+                                <span class="step-circle">2</span>
+                                <span class="step-label">{msg:compose_step_ai_check}</span>
+                            </div>
+                            <div class="pipeline-step" data-step="compliance">
+                                <span class="step-circle">3</span>
+                                <span class="step-label">{msg:compose_step_compliance}</span>
+                            </div>
+                            <div class="pipeline-step" data-step="approval">
+                                <span class="step-circle">4</span>
+                                <span class="step-label">{msg:compose_step_approval}</span>
+                            </div>
+                            <div class="pipeline-step" data-step="post">
+                                <span class="step-circle">5</span>
+                                <span class="step-label">{msg:compose_step_post}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="compose-action-bar">
+                        <button type="submit" id="submit-btn"
+                            style="background: var(--accent-gold); color: white; border: none; padding: 0.75rem 2rem; border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
+                            onmouseover="this.style.background='var(--accent-gold-hover)'"
+                            onmouseout="this.style.background='var(--accent-gold)'">{msg:compose_submit}</button>
+                        <button type="button" id="review-btn" onclick="openReview()"
+                            style="background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, color 0.2s;"
+                            onmouseover="this.style.background='var(--accent-gold)'; this.style.color='white'"
+                            onmouseout="this.style.background='transparent'; this.style.color='var(--accent-gold)'">{msg:compose_ai_review}</button>
+                        <button type="button" id="approval-btn" onclick="submitForApproval()"
+                            style="background: transparent; color: var(--accent-gold); border: 1px solid var(--accent-gold); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, color 0.2s;"
+                            onmouseover="this.style.background='var(--accent-gold)'; this.style.color='white'"
+                            onmouseout="this.style.background='transparent'; this.style.color='var(--accent-gold)'">{msg:compose_approval_submit}</button>
+                    </div>
+                </form>
             </div>
 
-            <!-- 予約投稿 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">予約投稿（任意）</h3>
-                <div style="display: flex; align-items: center; gap: 0.5rem; max-width: 360px;">
-                    <input type="datetime-local" id="scheduledAt" name="scheduledAt"
-                        onclick="this.showPicker &amp;&amp; this.showPicker()"
-                        style="flex: 1; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text)); cursor: pointer;">
-                    <button type="button" onclick="document.getElementById('scheduledAt').value=''"
-                        style="background: transparent; border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.4rem 0.6rem; cursor: pointer; color: var(--text-sec, var(--ak-text-muted)); font-size: 0.8rem;">クリア</button>
-                </div>
-                <small style="display: block; margin-top: 0.5rem; color: var(--text-muted, var(--ak-text-muted));">空欄の場合は下書きとして保存されます</small>
+            <div class="compose-right">
+                <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em;">{msg:compose_preview_heading}</h3>
+                <div id="previewCards"></div>
             </div>
 
-            <!-- 送信ボタン -->
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                <button type="submit" id="submit-btn"
-                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
-                    onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
-                    onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">
-                    投稿を作成
-                </button>
-                <button type="button" id="approval-btn" onclick="submitForApproval()"
-                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, color 0.2s;"
-                    onmouseover="this.style.background='var(--accent-gold, var(--ak-primary))'; this.style.color='white'"
-                    onmouseout="this.style.background='transparent'; this.style.color='var(--accent-gold, var(--ak-primary))'">
-                    承認申請
-                </button>
-            </div>
-        </form>
+        </div>
     </main>
 </div>
 
+<div class="panel-overlay" id="panelOverlay" onclick="closeReview()"></div>
+<div class="review-panel" id="reviewPanel">
+    <div class="review-panel-header">
+        <h3>{msg:compose_ai_review}</h3>
+        <button class="review-panel-close" onclick="closeReview()">&times;</button>
+    </div>
+    <div class="review-chat" id="reviewChat"></div>
+    <div class="review-panel-footer">
+        <div class="review-input-row">
+            <input type="text" id="reviewInput" placeholder="{msg:compose_review_input_placeholder}"
+                style="background: var(--bg-field); border: 1px solid var(--border-lt); border-radius: var(--radius-md); color: var(--text-body); padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+            <button onclick="sendReviewQuestion()"
+                style="background: var(--accent-gold); border: 1px solid var(--accent-gold); color: #fff; font-size: 0.8rem; padding: 0.35rem 0.8rem; border-radius: var(--radius-md); cursor: pointer;">{msg:compose_review_send}</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var ri = document.getElementById('reviewInput');
+        if (ri) ri.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') { event.preventDefault(); sendReviewQuestion(); }
+        });
+    });
     var contentEl = document.getElementById('content');
     var charCountEl = document.getElementById('char-count');
     var charWarningEl = document.getElementById('char-warning');
+    var mainCharCountEl = document.getElementById('mainCharCount');
     var editPostId = null;
+    var uploadedMediaUrls = [];
+    var currentToneLevel = 3;
+    var personasCache = null;
+    var transformDebounceTimer = null;
+    var riskDebounceTimer = null;
+    var hashtagDebounceTimer = null;
+    var currentPipelineStep = 0;
+
+    var rootCss = getComputedStyle(document.documentElement);
+    function cssVar(name, fallback) { return rootCss.getPropertyValue(name).trim() || fallback; }
+
+    var PLATFORM_META = {
+        TWITTER:   { label: 'X (Twitter)', badgeClass: 'twitter',   charLimit: 280,  abbrev: 'X',  color: cssVar('--platform-twitter',   '#1a8cd8') },
+        BLUESKY:   { label: 'Bluesky',     badgeClass: 'bluesky',   charLimit: 300,  abbrev: 'Bs', color: cssVar('--platform-bluesky',   '#0070E0') },
+        MASTODON:  { label: 'Mastodon',     badgeClass: 'mastodon',  charLimit: 500,  abbrev: 'Ma', color: cssVar('--platform-mastodon',  '#595AFF') },
+        THREADS:   { label: 'Threads',      badgeClass: 'threads',   charLimit: 500,  abbrev: 'Th', color: cssVar('--platform-threads',   '#333333') },
+        INSTAGRAM: { label: 'Instagram',    badgeClass: 'instagram', charLimit: 2200, abbrev: 'Ig', color: cssVar('--platform-instagram', '#C13584') },
+        REDDIT:    { label: 'Reddit',       badgeClass: 'reddit',    charLimit: 40000,abbrev: 'Re', color: cssVar('--platform-reddit',    '#D93A00') },
+        TELEGRAM:  { label: 'Telegram',     badgeClass: 'telegram',  charLimit: 4096, abbrev: 'Tg', color: cssVar('--platform-telegram',  '#0077B5') },
+        VK:        { label: 'VK',           badgeClass: 'vk',        charLimit: 15895,abbrev: 'Vk', color: cssVar('--platform-vk',        '#3D6A99') },
+        PINTEREST: { label: 'Pinterest',    badgeClass: 'pinterest', charLimit: 500,  abbrev: 'Pi', color: cssVar('--platform-pinterest', '#A00818') },
+        MIXI2:     { label: 'MIXI2',        badgeClass: 'threads',   charLimit: 500,  abbrev: 'Mx', color: cssVar('--platform-threads',   '#D1A019') },
+        NOTE:      { label: 'note',         badgeClass: 'bluesky',   charLimit: 80000,abbrev: 'No', color: cssVar('--platform-bluesky',   '#41C9B4') },
+        NICONICO:  { label: 'niconico',     badgeClass: 'threads',   charLimit: 10000,abbrev: 'Ni', color: cssVar('--platform-threads',   '#231815') }
+    };
+
+    var TONE_LABELS = ['', 'Lv.1 {msg:compose_tone_1}', 'Lv.2 {msg:compose_tone_2}', 'Lv.3 {msg:compose_tone_3}', 'Lv.4 {msg:compose_tone_4}', 'Lv.5 {msg:compose_tone_5}'];
+
+    var OPTIMAL_HOURS = {
+        TWITTER: 12, BLUESKY: 10, MASTODON: 14, THREADS: 18,
+        INSTAGRAM: 19, REDDIT: 9, TELEGRAM: 11, VK: 13,
+        PINTEREST: 20, MIXI2: 21, NOTE: 17, NICONICO: 22
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
         var token = localStorage.getItem('accessToken');
@@ -142,15 +334,15 @@
         var editId = params.get('edit');
         if (editId) {
             editPostId = editId;
-            document.getElementById('compose-heading').textContent = '投稿を編集';
-            document.getElementById('submit-btn').textContent = '更新';
+            document.getElementById('compose-heading').textContent = '{msg:compose_heading_edit}';
+            document.getElementById('submit-btn').textContent = '{msg:compose_submit_update}';
             loadPostForEdit(editId, token);
         }
 
         fetch('/api/v1/accounts', {
             headers: { 'Authorization': 'Bearer ' + token }
         }).then(function(res) {
-            if (!res.ok) return;
+            if (!res.ok) throw new Error('{msg:error_load_failed}');
             return res.json();
         }).then(function(accounts) {
             if (!accounts) return;
@@ -163,12 +355,29 @@
                     if (label) {
                         label.style.opacity = '0.45';
                         label.style.cursor = 'not-allowed';
-                        label.title = 'このプラットフォームは未連携です。アカウント管理から連携してください。';
+                        label.title = '{msg:compose_platform_not_connected}';
                     }
                 }
             });
-        }).catch(function() { /* ignore */ });
+        }).catch(function(err) {
+            showToast('error', '{msg:error_load_failed}', err.message);
+        });
+
+        loadPersonas(token);
     });
+
+    function loadPersonas(token) {
+        fetch('/api/v1/ai/personas', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function(res) {
+            if (!res.ok) throw new Error('{msg:error_load_failed}');
+            return res.json();
+        }).then(function(personas) {
+            personasCache = personas;
+        }).catch(function(err) {
+            showToast('error', '{msg:error_load_failed}', err.message);
+        });
+    }
 
     async function loadPostForEdit(id, token) {
         try {
@@ -182,14 +391,16 @@
             }
 
             if (!response.ok) {
-                showToast('error', '投稿の読み込みに失敗しました');
+                showToast('error', '{msg:compose_load_error}');
                 return;
             }
 
             var post = await response.json();
 
             contentEl.value = post.content || '';
-            contentEl.dispatchEvent(new Event('input'));
+            onContentInput();
+
+            updateStatusBadge(post.status);
 
             var platforms = [];
             if (post.targets && post.targets.length > 0) {
@@ -211,37 +422,665 @@
                     String(dt.getMinutes()).padStart(2, '0');
                 document.getElementById('scheduledAt').value = iso;
             }
+
+            onPlatformChange();
         } catch (err) {
-            showToast('error', '投稿の読み込みに失敗しました', 'サーバーに接続できませんでした。');
+            showToast('error', '{msg:compose_load_error}', err.message);
         }
     }
 
-    contentEl.addEventListener('input', function() {
-        var len = this.value.length;
-        charCountEl.textContent = len + ' 文字';
+    function updateStatusBadge(status) {
+        var badge = document.getElementById('status-badge');
+        var statusLabels = {
+            DRAFT: '{msg:compose_status_draft}',
+            SCHEDULED: '{msg:compose_status_scheduled}',
+            PUBLISHED: '{msg:compose_status_published}',
+            PUBLISHING: '{msg:compose_status_publishing}',
+            FAILED: '{msg:compose_status_failed}',
+            PENDING_APPROVAL: '{msg:compose_status_pending}',
+            APPROVED: '{msg:compose_status_approved}',
+            REJECTED: '{msg:compose_status_rejected}'
+        };
+        badge.textContent = statusLabels[status] || status;
+        badge.className = 'status-badge ' + status.toLowerCase();
+    }
 
-        // Twitter limit warning
+    function onContentInput() {
+        var len = contentEl.value.length;
+        charCountEl.textContent = len + ' {msg:compose_char_count_suffix}';
+        mainCharCountEl.textContent = len + ' / 280';
+
         if (len > 280) {
-            charCountEl.style.color = 'var(--status-error, #B04040)';
+            charCountEl.style.color = 'var(--status-error)';
+            mainCharCountEl.classList.add('over');
             charWarningEl.style.display = 'inline';
-            charWarningEl.textContent = 'Twitter の文字数上限 (280) を超えています';
-            charWarningEl.style.color = 'var(--status-error, #B04040)';
+            charWarningEl.textContent = '{msg:compose_char_over}';
+            charWarningEl.style.color = 'var(--status-error)';
         } else if (len > 250) {
-            charCountEl.style.color = 'var(--status-warning, #C8A96E)';
+            charCountEl.style.color = 'var(--status-warning)';
+            mainCharCountEl.classList.remove('over');
             charWarningEl.style.display = 'inline';
-            charWarningEl.textContent = 'Twitter の上限まであと ' + (280 - len) + ' 文字';
-            charWarningEl.style.color = 'var(--status-warning, #C8A96E)';
+            charWarningEl.textContent = '{msg:compose_char_near} ' + (280 - len) + ' {msg:compose_char_count_suffix}';
+            charWarningEl.style.color = 'var(--status-warning)';
         } else {
-            charCountEl.style.color = 'var(--text-muted, var(--ak-text-muted))';
+            charCountEl.style.color = 'var(--text-muted)';
+            mainCharCountEl.classList.remove('over');
             charWarningEl.style.display = 'none';
         }
-    });
+
+        scheduleTransformPreview();
+        scheduleRiskCheck();
+        scheduleHashtagSuggestion();
+    }
+
+    function getSelectedPlatforms() {
+        return Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
+            .map(function(cb) { return cb.value; });
+    }
 
     function toggleAllPlatforms(checked) {
         var checkboxes = document.querySelectorAll('input[name="platforms"]');
         checkboxes.forEach(function(cb) {
             if (!cb.disabled) cb.checked = checked;
         });
+        onPlatformChange();
+    }
+
+    function onPlatformChange() {
+        updatePersonaDropdowns();
+        updateTimezoneDisplay();
+        scheduleTransformPreview();
+        scheduleRiskCheck();
+        scheduleHashtagSuggestion();
+    }
+
+    function togglePersona() {
+        var dropdowns = document.getElementById('personaDropdowns');
+        var isOn = document.getElementById('personaToggle').checked;
+        dropdowns.style.display = isOn ? 'flex' : 'none';
+        if (isOn) updatePersonaDropdowns();
+    }
+
+    function updatePersonaDropdowns() {
+        var container = document.getElementById('personaDropdowns');
+        if (!document.getElementById('personaToggle').checked) return;
+        var platforms = getSelectedPlatforms();
+        container.innerHTML = '';
+
+        platforms.forEach(function(p) {
+            var meta = PLATFORM_META[p];
+            var badgeSpan = document.createElement('span');
+            badgeSpan.className = 'platform-badge ' + meta.badgeClass;
+            badgeSpan.textContent = meta.label;
+            container.appendChild(badgeSpan);
+
+            var select = document.createElement('select');
+            select.setAttribute('data-platform', p);
+            select.style.cssText = 'width: auto; min-width: 120px; font-size: 0.8rem; padding: 0.3rem 0.5rem; background: var(--bg-field); border: 1px solid var(--border-lt); border-radius: var(--radius-md); color: var(--text-body);';
+
+            var defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '{msg:compose_persona_default}';
+            select.appendChild(defaultOpt);
+
+            if (personasCache) {
+                personasCache.forEach(function(persona) {
+                    var opt = document.createElement('option');
+                    opt.value = persona.id;
+                    opt.textContent = persona.name;
+                    select.appendChild(opt);
+                });
+            }
+            container.appendChild(select);
+        });
+    }
+
+    function updateTone() {
+        currentToneLevel = parseInt(document.getElementById('toneSlider').value);
+        document.getElementById('toneValue').textContent = TONE_LABELS[currentToneLevel];
+        scheduleTransformPreview();
+    }
+
+    function toggleTimezone() {
+        var el = document.getElementById('tzContent');
+        el.style.display = document.getElementById('tzToggle').checked ? 'block' : 'none';
+        if (document.getElementById('tzToggle').checked) updateTimezoneDisplay();
+    }
+
+    function updateTimezoneDisplay() {
+        var platforms = getSelectedPlatforms();
+        var badgesEl = document.getElementById('tzBadges');
+        badgesEl.innerHTML = '';
+
+        var markers = document.querySelectorAll('#timelineBar .timeline-marker');
+        markers.forEach(function(m) { m.remove(); });
+
+        platforms.forEach(function(p) {
+            var meta = PLATFORM_META[p];
+            var hour = OPTIMAL_HOURS[p] || 12;
+            var badge = document.createElement('span');
+            badge.className = 'platform-badge ' + meta.badgeClass;
+            badge.textContent = meta.label + ' \u2014 ' + String(hour).padStart(2, '0') + ':00 JST';
+            badgesEl.appendChild(badge);
+
+            var hourIndex = Math.floor(hour / 2);
+            var hourEls = document.querySelectorAll('#timelineBar .timeline-hour');
+            if (hourEls[hourIndex]) {
+                var marker = document.createElement('div');
+                marker.className = 'timeline-marker';
+                marker.style.left = '50%';
+                marker.style.background = meta.color;
+                marker.textContent = meta.abbrev;
+                hourEls[hourIndex].appendChild(marker);
+            }
+        });
+    }
+
+    function scheduleTransformPreview() {
+        clearTimeout(transformDebounceTimer);
+        transformDebounceTimer = setTimeout(function() {
+            runTransformPreview();
+        }, 800);
+    }
+
+    async function runTransformPreview() {
+        var content = contentEl.value;
+        var platforms = getSelectedPlatforms();
+        if (!content || platforms.length === 0) {
+            document.getElementById('previewCards').innerHTML = '';
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        var previewContainer = document.getElementById('previewCards');
+
+        platforms.forEach(function(p) {
+            var existingCard = document.getElementById('preview-' + p);
+            if (!existingCard) {
+                var meta = PLATFORM_META[p];
+                var card = document.createElement('div');
+                card.className = 'ak-card preview-card';
+                card.id = 'preview-' + p;
+                card.innerHTML =
+                    '<div class="ak-card-header">' +
+                        '<div style="display: flex; align-items: center; gap: var(--sp-sm);">' +
+                            '<span class="platform-badge ' + meta.badgeClass + '">' + meta.label + '</span>' +
+                            '<div class="culture-score">' +
+                                '<span class="culture-score-label">{msg:compose_culture_score}</span>' +
+                                '<div class="culture-dots" id="cultureDots-' + p + '">' +
+                                    '<span class="culture-dot"></span><span class="culture-dot"></span><span class="culture-dot"></span><span class="culture-dot"></span><span class="culture-dot"></span>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="tone-badge" id="toneBadge-' + p + '">' + TONE_LABELS[currentToneLevel] + '</span>' +
+                    '</div>' +
+                    '<div class="preview-card-body">' +
+                        '<textarea id="previewText-' + p + '" rows="4" style="width:100%; background: var(--bg-field); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.55rem 0.75rem; font-size: 0.85rem; color: var(--text-body); resize: vertical; font-family: inherit; line-height: 1.6;">{msg:compose_preview_loading}</textarea>' +
+                    '</div>' +
+                    '<div class="hashtag-area" id="hashtags-' + p + '"></div>' +
+                    '<div class="preview-card-meta">' +
+                        '<span class="char-count" id="previewCharCount-' + p + '">0 / ' + meta.charLimit + '</span>' +
+                        '<button type="button" onclick="resetPreview(\'' + p + '\')" style="background: var(--bg-elevated); border: 1px solid var(--border-lt); border-radius: var(--radius-md); padding: 0.35rem 0.8rem; font-size: 0.8rem; cursor: pointer; color: var(--text-primary);">{msg:compose_preview_reset}</button>' +
+                    '</div>';
+                previewContainer.appendChild(card);
+            }
+        });
+
+        var existingCards = previewContainer.querySelectorAll('.preview-card');
+        existingCards.forEach(function(card) {
+            var cardPlatform = card.id.replace('preview-', '');
+            if (platforms.indexOf(cardPlatform) === -1) {
+                card.remove();
+            }
+        });
+
+        for (var i = 0; i < platforms.length; i++) {
+            var platform = platforms[i];
+            try {
+                var response = await fetch('/api/v1/agents/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        agentType: 'TRANSFORMER',
+                        input: 'Adapt for ' + platform + ' (tone level: ' + currentToneLevel + '/5): ' + content
+                    })
+                });
+
+                if (!response.ok) {
+                    var el = document.getElementById('previewText-' + platform);
+                    if (el) el.value = content;
+                    updatePreviewCharCount(platform);
+                    continue;
+                }
+
+                var task = await response.json();
+                var el = document.getElementById('previewText-' + platform);
+                if (el && task.output) {
+                    el.value = task.output;
+                } else if (el) {
+                    el.value = content;
+                }
+                updatePreviewCharCount(platform);
+
+                var score = parseCultureScore(task.output, platform);
+                renderCultureDots(platform, score);
+
+                var tBadge = document.getElementById('toneBadge-' + platform);
+                if (tBadge) tBadge.textContent = TONE_LABELS[currentToneLevel];
+            } catch (err) {
+                var el = document.getElementById('previewText-' + platform);
+                if (el) el.value = content;
+                updatePreviewCharCount(platform);
+            }
+        }
+    }
+
+    function updatePreviewCharCount(platform) {
+        var textEl = document.getElementById('previewText-' + platform);
+        var countEl = document.getElementById('previewCharCount-' + platform);
+        if (!textEl || !countEl) return;
+        var meta = PLATFORM_META[platform];
+        var len = textEl.value.length;
+        countEl.textContent = len + ' / ' + meta.charLimit;
+        if (len > meta.charLimit) {
+            countEl.classList.add('over');
+        } else {
+            countEl.classList.remove('over');
+        }
+    }
+
+    function parseCultureScore(output, platform) {
+        if (!output) return 3;
+        var match = output.match(/\[score:\s*(\d)\]/);
+        if (match) return parseInt(match[1]);
+        var len = output.length;
+        var limit = PLATFORM_META[platform].charLimit;
+        if (len <= limit && len > limit * 0.3) return 4;
+        if (len <= limit) return 3;
+        return 2;
+    }
+
+    function renderCultureDots(platform, score) {
+        var container = document.getElementById('cultureDots-' + platform);
+        if (!container) return;
+        var dots = container.querySelectorAll('.culture-dot');
+        for (var i = 0; i < dots.length; i++) {
+            if (i < score) {
+                dots[i].classList.add('filled');
+            } else {
+                dots[i].classList.remove('filled');
+            }
+        }
+    }
+
+    function resetPreview(platform) {
+        var textEl = document.getElementById('previewText-' + platform);
+        if (textEl) {
+            textEl.value = contentEl.value;
+            updatePreviewCharCount(platform);
+        }
+    }
+
+    function scheduleRiskCheck() {
+        clearTimeout(riskDebounceTimer);
+        riskDebounceTimer = setTimeout(function() {
+            runRiskCheck();
+        }, 1200);
+    }
+
+    async function runRiskCheck() {
+        var content = contentEl.value;
+        if (!content) return;
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        try {
+            var sentinelRes = await fetch('/api/v1/agents/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    agentType: 'SENTINEL',
+                    input: 'Check for risks: ' + content
+                })
+            });
+
+            var complianceRes = await fetch('/api/v1/agents/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    agentType: 'COMPLIANCE',
+                    input: 'Check compliance: ' + content
+                })
+            });
+
+            var sentinelTask = sentinelRes.ok ? await sentinelRes.json() : null;
+            var complianceTask = complianceRes.ok ? await complianceRes.json() : null;
+
+            var riskLevel = analyzeRiskLevel(sentinelTask, complianceTask);
+            renderRiskGauge(riskLevel);
+        } catch (err) {
+            showToast('error', '{msg:compose_risk_error}', err.message);
+        }
+    }
+
+    function analyzeRiskLevel(sentinel, compliance) {
+        var result = { overall: 0, flame: 'low', law: 'none', policy: 'none' };
+        if (!sentinel && !compliance) return result;
+
+        if (sentinel && sentinel.output) {
+            var out = sentinel.output.toLowerCase();
+            if (out.indexOf('high') !== -1 || out.indexOf('\u9ad8') !== -1) {
+                result.flame = 'high'; result.overall = Math.max(result.overall, 80);
+            } else if (out.indexOf('medium') !== -1 || out.indexOf('\u4e2d') !== -1) {
+                result.flame = 'medium'; result.overall = Math.max(result.overall, 50);
+            } else {
+                result.flame = 'low'; result.overall = Math.max(result.overall, 15);
+            }
+        }
+
+        if (compliance && compliance.output) {
+            var out = compliance.output.toLowerCase();
+            if (out.indexOf('violation') !== -1 || out.indexOf('\u9055\u53cd') !== -1) {
+                result.law = 'violation'; result.overall = Math.max(result.overall, 90);
+            }
+            if (out.indexOf('policy') !== -1 || out.indexOf('\u30dd\u30ea\u30b7\u30fc') !== -1 || out.indexOf('\u6ce8\u610f') !== -1) {
+                result.policy = 'caution'; result.overall = Math.max(result.overall, 40);
+            }
+        }
+
+        return result;
+    }
+
+    function renderRiskGauge(risk) {
+        var fill = document.getElementById('riskBarFill');
+        var badge = document.getElementById('riskBadge');
+        fill.style.width = risk.overall + '%';
+
+        if (risk.overall >= 70) {
+            fill.style.background = 'var(--status-error)';
+            badge.textContent = '{msg:compose_risk_high}';
+            badge.style.cssText = 'background:var(--status-error-bg); color:var(--status-error); border-color:#D4AAAA;';
+        } else if (risk.overall >= 35) {
+            fill.style.background = 'var(--status-warning)';
+            badge.textContent = '{msg:compose_risk_medium}';
+            badge.style.cssText = 'background:var(--status-warning-bg); color:#8A7030; border-color:#D4C090;';
+        } else {
+            fill.style.background = 'var(--status-success)';
+            badge.textContent = '{msg:compose_risk_low}';
+            badge.style.cssText = 'background:var(--status-success-bg); color:var(--status-success); border-color:#B0C89A;';
+        }
+
+        var riskColorMap = {
+            low: 'var(--status-success)', medium: 'var(--status-warning)', high: 'var(--status-error)',
+            none: 'var(--status-success)', caution: 'var(--status-warning)', violation: 'var(--status-error)'
+        };
+        var riskLabelMap = {
+            low: '{msg:compose_risk_level_low}', medium: '{msg:compose_risk_level_medium}', high: '{msg:compose_risk_level_high}',
+            none: '{msg:compose_risk_level_none}', caution: '{msg:compose_risk_level_caution}', violation: '{msg:compose_risk_level_violation}'
+        };
+
+        document.getElementById('riskDotFlame').style.background = riskColorMap[risk.flame];
+        document.getElementById('riskLabelFlame').textContent = '{msg:compose_risk_flame}: ' + riskLabelMap[risk.flame];
+        document.getElementById('riskDotLaw').style.background = riskColorMap[risk.law];
+        document.getElementById('riskLabelLaw').textContent = '{msg:compose_risk_law}: ' + riskLabelMap[risk.law];
+        document.getElementById('riskDotPolicy').style.background = riskColorMap[risk.policy];
+        document.getElementById('riskLabelPolicy').textContent = '{msg:compose_risk_policy}: ' + riskLabelMap[risk.policy];
+    }
+
+    function scheduleHashtagSuggestion() {
+        clearTimeout(hashtagDebounceTimer);
+        hashtagDebounceTimer = setTimeout(function() {
+            runHashtagSuggestion();
+        }, 1500);
+    }
+
+    async function runHashtagSuggestion() {
+        var content = contentEl.value;
+        var platforms = getSelectedPlatforms();
+        if (!content || platforms.length === 0) return;
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        for (var i = 0; i < platforms.length; i++) {
+            var platform = platforms[i];
+            try {
+                var response = await fetch('/api/v1/ai/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        prompt: 'Generate 3-5 hashtags for ' + platform + ' post. Content: ' + content + '. Return only hashtags separated by spaces, each starting with #.',
+                        temperature: 0.7,
+                        maxTokens: 100
+                    })
+                });
+
+                if (!response.ok) continue;
+                var result = await response.json();
+
+                var hashtagArea = document.getElementById('hashtags-' + platform);
+                if (hashtagArea && result.generatedText) {
+                    var tags = result.generatedText.match(/#[\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]+/g);
+                    if (tags) {
+                        hashtagArea.innerHTML = '';
+                        tags.forEach(function(tag) {
+                            var chip = document.createElement('span');
+                            chip.className = 'hashtag-chip';
+                            chip.textContent = tag;
+                            chip.onclick = function() {
+                                this.classList.toggle('selected');
+                            };
+                            hashtagArea.appendChild(chip);
+                        });
+                    }
+                }
+            } catch (err) {
+                showToast('error', '{msg:compose_hashtag_error}', err.message);
+            }
+        }
+    }
+
+    function setPipelineStep(stepIndex) {
+        currentPipelineStep = stepIndex;
+        var steps = document.querySelectorAll('#pipelineSteps .pipeline-step');
+        for (var i = 0; i < steps.length; i++) {
+            steps[i].classList.remove('done', 'active');
+            var circle = steps[i].querySelector('.step-circle');
+            if (i < stepIndex) {
+                steps[i].classList.add('done');
+                circle.innerHTML = '&#10003;';
+            } else if (i === stepIndex) {
+                steps[i].classList.add('active');
+                circle.textContent = String(i + 1);
+            } else {
+                circle.textContent = String(i + 1);
+            }
+        }
+    }
+
+    async function runPipelineCheck() {
+        var content = contentEl.value;
+        var platforms = getSelectedPlatforms();
+        if (!content) {
+            showToast('warning', '{msg:compose_content_required}');
+            return;
+        }
+        if (platforms.length === 0) {
+            showToast('warning', '{msg:compose_platform_required}');
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var runBtn = document.getElementById('pipelineRunBtn');
+        runBtn.disabled = true;
+        runBtn.textContent = '{msg:compose_submitting}';
+
+        setPipelineStep(1);
+
+        try {
+            var sentinelRes = await fetch('/api/v1/agents/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ agentType: 'SENTINEL', input: 'Check for risks: ' + content })
+            });
+            if (!sentinelRes.ok) throw new Error('{msg:compose_pipeline_ai_error}');
+
+            setPipelineStep(2);
+
+            var complianceRes = await fetch('/api/v1/agents/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ agentType: 'COMPLIANCE', input: 'Check compliance: ' + content })
+            });
+            if (!complianceRes.ok) throw new Error('{msg:compose_pipeline_compliance_error}');
+
+            setPipelineStep(3);
+            showToast('success', '{msg:compose_pipeline_ready}');
+        } catch (err) {
+            showToast('error', err.message);
+        } finally {
+            runBtn.disabled = false;
+            runBtn.textContent = '{msg:compose_pipeline_run}';
+        }
+    }
+
+    function openReview() {
+        document.getElementById('reviewPanel').classList.add('open');
+        document.getElementById('panelOverlay').classList.add('visible');
+
+        var chatEl = document.getElementById('reviewChat');
+        if (chatEl.children.length === 0) {
+            runAiReview();
+        }
+    }
+
+    function closeReview() {
+        document.getElementById('reviewPanel').classList.remove('open');
+        document.getElementById('panelOverlay').classList.remove('visible');
+    }
+
+    async function runAiReview() {
+        var content = contentEl.value;
+        if (!content) {
+            showToast('warning', '{msg:compose_content_required}');
+            return;
+        }
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        var chatEl = document.getElementById('reviewChat');
+        chatEl.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: var(--sp-lg);">{msg:compose_review_loading}</div>';
+
+        var agents = [
+            { type: 'SENTINEL',   name: 'Sentinel', label: '{msg:compose_agent_sentinel}', color: 'var(--accent-gold)',   initial: 'S' },
+            { type: 'COMPLIANCE', name: 'Compliance', label: '{msg:compose_agent_compliance}', color: 'var(--status-info)', initial: 'C' },
+            { type: 'TRANSFORMER',name: 'Transformer', label: '{msg:compose_agent_transformer}', color: '#595AFF',          initial: 'T' }
+        ];
+
+        chatEl.innerHTML = '';
+
+        for (var i = 0; i < agents.length; i++) {
+            var agent = agents[i];
+            try {
+                var response = await fetch('/api/v1/agents/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({
+                        agentType: agent.type,
+                        input: 'Review this post content and provide feedback: ' + content
+                    })
+                });
+
+                var task = response.ok ? await response.json() : null;
+                var output = (task && task.output) ? task.output : '{msg:compose_review_no_response}';
+
+                var msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-msg';
+                msgDiv.innerHTML =
+                    '<div class="chat-avatar" style="background:' + agent.color + ';">' + agent.initial + '</div>' +
+                    '<div class="chat-bubble">' +
+                        '<span class="agent-name">' + escapeHtmlGlobal(agent.name) + '\uFF08' + escapeHtmlGlobal(agent.label) + '\uFF09</span>' +
+                        escapeHtmlGlobal(output) +
+                    '</div>';
+                chatEl.appendChild(msgDiv);
+            } catch (err) {
+                var msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-msg';
+                msgDiv.innerHTML =
+                    '<div class="chat-avatar" style="background:' + agent.color + ';">' + agent.initial + '</div>' +
+                    '<div class="chat-bubble">' +
+                        '<span class="agent-name">' + escapeHtmlGlobal(agent.name) + '</span>' +
+                        '<span class="score-inline score-bad">{msg:compose_review_error}</span>' +
+                    '</div>';
+                chatEl.appendChild(msgDiv);
+            }
+        }
+    }
+
+    async function sendReviewQuestion() {
+        var input = document.getElementById('reviewInput');
+        var question = input.value.trim();
+        if (!question) return;
+        input.value = '';
+
+        var token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        var chatEl = document.getElementById('reviewChat');
+
+        var userMsg = document.createElement('div');
+        userMsg.className = 'chat-msg';
+        userMsg.innerHTML =
+            '<div class="chat-avatar" style="background:var(--text-sec);">U</div>' +
+            '<div class="chat-bubble">' + escapeHtmlGlobal(question) + '</div>';
+        chatEl.appendChild(userMsg);
+        chatEl.scrollTop = chatEl.scrollHeight;
+
+        try {
+            var response = await fetch('/api/v1/ai/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({
+                    prompt: question + '\n\nContext - post content: ' + contentEl.value,
+                    temperature: 0.7,
+                    maxTokens: 500
+                })
+            });
+
+            if (!response.ok) throw new Error('{msg:compose_review_error}');
+            var result = await response.json();
+
+            var aiMsg = document.createElement('div');
+            aiMsg.className = 'chat-msg';
+            aiMsg.innerHTML =
+                '<div class="chat-avatar" style="background:var(--accent-gold);">AI</div>' +
+                '<div class="chat-bubble">' +
+                    '<span class="agent-name">AI</span>' +
+                    escapeHtmlGlobal(result.generatedText) +
+                '</div>';
+            chatEl.appendChild(aiMsg);
+            chatEl.scrollTop = chatEl.scrollHeight;
+        } catch (err) {
+            showToast('error', '{msg:compose_review_error}', err.message);
+        }
     }
 
     async function handleCompose(event) {
@@ -256,11 +1095,10 @@
         var submitBtn = document.getElementById('submit-btn');
         submitBtn.disabled = true;
         submitBtn.setAttribute('aria-busy', 'true');
-        submitBtn.textContent = '送信中...';
+        submitBtn.textContent = '{msg:compose_submitting}';
 
         var content = document.getElementById('content').value;
-        var platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
-            .map(function(cb) { return cb.value; });
+        var platforms = getSelectedPlatforms();
         var scheduledAtInput = document.getElementById('scheduledAt').value;
         var scheduledAt = scheduledAtInput ? new Date(scheduledAtInput).toISOString() : null;
 
@@ -277,7 +1115,7 @@
                 },
                 body: JSON.stringify({
                     content: content,
-                    mediaUrls: [],
+                    mediaUrls: uploadedMediaUrls,
                     targetPlatforms: platforms,
                     scheduledAt: scheduledAt
                 })
@@ -289,26 +1127,34 @@
             }
 
             if (!response.ok) {
-                await showApiError(response, isEdit ? '投稿の更新に失敗しました' : '投稿の作成に失敗しました');
+                await showApiError(response, isEdit ? '{msg:compose_update_error}' : '{msg:compose_create_error}');
                 return false;
             }
 
             if (isEdit) {
-                showToast('success', '投稿を更新しました');
+                showToast('success', '{msg:compose_update_success}');
                 window.location.href = '/posts/' + editPostId;
             } else {
-                showToast('success', '投稿を作成しました');
+                showToast('success', '{msg:compose_create_success}');
                 document.getElementById('compose-form').reset();
-                charCountEl.textContent = '0 文字';
-                charCountEl.style.color = 'var(--text-muted, var(--ak-text-muted))';
+                charCountEl.textContent = '0 {msg:compose_char_count_suffix}';
+                charCountEl.style.color = 'var(--text-muted)';
+                mainCharCountEl.textContent = '0 / 280';
+                mainCharCountEl.classList.remove('over');
                 charWarningEl.style.display = 'none';
+                uploadedMediaUrls = [];
+                document.getElementById('media-preview').innerHTML = '';
+                document.getElementById('media-upload-status').textContent = '';
+                document.getElementById('previewCards').innerHTML = '';
+                setPipelineStep(0);
+                updateStatusBadge('DRAFT');
             }
         } catch (err) {
-            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+            showToast('error', '{msg:error_network}', err.message);
         } finally {
             submitBtn.disabled = false;
             submitBtn.removeAttribute('aria-busy');
-            submitBtn.textContent = isEdit ? '更新' : '投稿を作成';
+            submitBtn.textContent = isEdit ? '{msg:compose_submit_update}' : '{msg:compose_submit}';
         }
         return false;
     }
@@ -322,16 +1168,14 @@
 
         var approvalBtn = document.getElementById('approval-btn');
         approvalBtn.disabled = true;
-        approvalBtn.textContent = '送信中...';
+        approvalBtn.textContent = '{msg:compose_submitting}';
 
         var content = document.getElementById('content').value;
-        var platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
-            .map(function(cb) { return cb.value; });
+        var platforms = getSelectedPlatforms();
         var scheduledAtInput = document.getElementById('scheduledAt').value;
         var scheduledAt = scheduledAtInput ? new Date(scheduledAtInput).toISOString() : null;
 
         try {
-            // First create the post as draft
             var postResponse = await fetch('/api/v1/posts', {
                 method: 'POST',
                 headers: {
@@ -340,7 +1184,7 @@
                 },
                 body: JSON.stringify({
                     content: content,
-                    mediaUrls: [],
+                    mediaUrls: uploadedMediaUrls,
                     targetPlatforms: platforms,
                     scheduledAt: scheduledAt,
                     status: 'DRAFT'
@@ -353,13 +1197,12 @@
             }
 
             if (!postResponse.ok) {
-                await showApiError(postResponse, '投稿の作成に失敗しました');
+                await showApiError(postResponse, '{msg:compose_create_error}');
                 return;
             }
 
             var post = await postResponse.json();
 
-            // Then submit for approval
             var approvalResponse = await fetch('/api/v1/approvals/' + post.id + '/decide', {
                 method: 'POST',
                 headers: {
@@ -367,33 +1210,122 @@
                     'Authorization': 'Bearer ' + token
                 },
                 body: JSON.stringify({
-                    decision: 'PENDING',
+                    action: 'PENDING',
                     comment: ''
                 })
             });
 
-            showToast('success', '承認申請を送信しました');
+            if (approvalResponse.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (!approvalResponse.ok) {
+                await showApiError(approvalResponse, '{msg:compose_approval_error}');
+                return;
+            }
+
+            showToast('success', '{msg:compose_approval_success}');
+            setPipelineStep(4);
+            updateStatusBadge('PENDING_APPROVAL');
             document.getElementById('compose-form').reset();
-            charCountEl.textContent = '0 文字';
-            charCountEl.style.color = 'var(--text-muted, var(--ak-text-muted))';
+            charCountEl.textContent = '0 {msg:compose_char_count_suffix}';
+            charCountEl.style.color = 'var(--text-muted)';
+            mainCharCountEl.textContent = '0 / 280';
+            mainCharCountEl.classList.remove('over');
             charWarningEl.style.display = 'none';
+            uploadedMediaUrls = [];
+            document.getElementById('media-preview').innerHTML = '';
+            document.getElementById('media-upload-status').textContent = '';
         } catch (err) {
-            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+            showToast('error', '{msg:error_network}', err.message);
         } finally {
             approvalBtn.disabled = false;
-            approvalBtn.textContent = '承認申請';
+            approvalBtn.textContent = '{msg:compose_approval_submit}';
         }
+    }
+
+    async function handleMediaSelect(input) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var files = Array.from(input.files);
+        if (files.length === 0) return;
+
+        var statusEl = document.getElementById('media-upload-status');
+        var previewEl = document.getElementById('media-preview');
+        statusEl.textContent = '{msg:compose_media_uploading}';
+        statusEl.style.color = 'var(--text-muted)';
+
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                var response = await fetch('/api/v1/media', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                if (!response.ok) {
+                    await showApiError(response, '{msg:compose_media_upload_error}');
+                    continue;
+                }
+
+                var result = await response.json();
+                uploadedMediaUrls.push(result.storageUrl);
+
+                var item = document.createElement('div');
+                item.style.cssText = 'position: relative; display: inline-block;';
+                item.setAttribute('data-media-url', result.storageUrl);
+
+                var thumb = document.createElement('img');
+                thumb.src = result.thumbnailUrl || result.storageUrl;
+                thumb.alt = result.fileName;
+                thumb.style.cssText = 'width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border);';
+                item.appendChild(thumb);
+
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '\u00d7';
+                removeBtn.style.cssText = 'position: absolute; top: -6px; right: -6px; background: var(--status-error); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;';
+                removeBtn.onclick = (function(url, el) {
+                    return function() { removeMedia(url, el); };
+                })(result.storageUrl, item);
+                item.appendChild(removeBtn);
+
+                previewEl.appendChild(item);
+            } catch (err) {
+                showToast('error', '{msg:compose_media_upload_error}', err.message);
+            }
+        }
+
+        statusEl.textContent = uploadedMediaUrls.length > 0
+            ? uploadedMediaUrls.length + ' {msg:compose_media_attached}'
+            : '';
+        input.value = '';
+    }
+
+    function removeMedia(url, element) {
+        uploadedMediaUrls = uploadedMediaUrls.filter(function(u) { return u !== url; });
+        element.remove();
+        var statusEl = document.getElementById('media-upload-status');
+        statusEl.textContent = uploadedMediaUrls.length > 0
+            ? uploadedMediaUrls.length + ' {msg:compose_media_attached}'
+            : '';
     }
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

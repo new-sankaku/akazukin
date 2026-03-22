@@ -1,10 +1,12 @@
 package com.akazukin.adapter.mastodon;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -20,6 +22,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 public class MastodonAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
@@ -267,8 +270,142 @@ public class MastodonAdapter extends AbstractSnsAdapter implements AutoCloseable
     }
 
     @Override
+    public void reply(String accessToken, String postId, String content) {
+        try {
+            checkRateLimit();
+            String body = "status=" + encode(content)
+                + "&in_reply_to_id=" + encode(postId);
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(instanceUrl + "/api/v1/statuses"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "reply");
+            recordApiCall();
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("reply", e);
+        } catch (RuntimeException e) {
+            throw wrapException("reply", e);
+        }
+    }
+
+    @Override
+    public void mention(String accessToken, String userId, String content) {
+        try {
+            checkRateLimit();
+            String mentionText = "@" + userId + " " + content;
+            String body = "status=" + encode(mentionText);
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(instanceUrl + "/api/v1/statuses"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "mention");
+            recordApiCall();
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("mention", e);
+        } catch (RuntimeException e) {
+            throw wrapException("mention", e);
+        }
+    }
+
+    @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(instanceUrl + "/api/v1/statuses/" + platformPostId))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.MASTODON,
+                json.path("favourites_count").asInt(0),
+                json.path("replies_count").asInt(0),
+                json.path("reblogs_count").asInt(0),
+                0,
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("MastodonAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(instanceUrl + "/api/v1/accounts/verify_credentials"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new AccountStats(
+                SnsPlatform.MASTODON,
+                json.path("acct").asText(),
+                json.path("followers_count").asInt(0),
+                json.path("following_count").asInt(0),
+                json.path("statuses_count").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("MastodonAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

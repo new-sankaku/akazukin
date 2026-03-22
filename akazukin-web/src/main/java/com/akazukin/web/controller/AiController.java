@@ -15,6 +15,7 @@ public class AiController extends Controller {
     public static class Templates {
         public static native TemplateInstance index();
         public static native TemplateInstance personas();
+        public static native TemplateInstance settings();
     }
 
     @GET
@@ -29,5 +30,12 @@ public class AiController extends Controller {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance personas() {
         return Templates.personas();
+    }
+
+    @GET
+    @Path("/settings")
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance settings() {
+        return Templates.settings();
     }
 }

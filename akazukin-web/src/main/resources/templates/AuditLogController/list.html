@@ -1,5 +1,5 @@
 {#include base}
-{#title}監査ログ - Akazukin{/title}
+{#title}{msg:audit_page_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,33 +7,33 @@
     {#sidebar active="audit-logs" /}
 
     <main class="ak-main" style="max-width: 1200px;">
-        <h2>監査ログ</h2>
+        <h2>{msg:audit_heading}</h2>
 
         <div class="ak-card">
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
                 <label>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">開始日</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">{msg:audit_filter_from}</span>
                     <input type="date" id="filter-from" style="margin: 0;">
                 </label>
                 <label>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">終了日</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">{msg:audit_filter_to}</span>
                     <input type="date" id="filter-to" style="margin: 0;">
                 </label>
                 <label>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">カテゴリ</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">{msg:audit_filter_category}</span>
                     <select id="filter-category" style="margin: 0; min-width: 130px;">
-                        <option value="">すべて</option>
+                        <option value="">{msg:audit_filter_all}</option>
                         <option value="SNS_API">SNS API</option>
-                        <option value="INTERNAL_API">内部 API</option>
-                        <option value="PAGE">アクセス</option>
+                        <option value="INTERNAL_API">{msg:audit_category_internal_api}</option>
+                        <option value="PAGE">{msg:audit_category_page}</option>
                     </select>
                 </label>
                 <label>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">パス</span>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">{msg:audit_filter_path}</span>
                     <input type="text" id="filter-path" placeholder="/api/v1/..." style="margin: 0;">
                 </label>
-                <button onclick="applyFilter()" style="margin-bottom: 0;">検索</button>
-                <button class="secondary outline" onclick="clearFilter()" style="margin-bottom: 0;">クリア</button>
+                <button onclick="applyFilter()" style="margin-bottom: 0;">{msg:audit_search_btn}</button>
+                <button class="secondary outline" onclick="clearFilter()" style="margin-bottom: 0;">{msg:audit_clear_btn}</button>
             </div>
         </div>
 
@@ -44,18 +44,18 @@
             <table id="audit-table" role="grid">
                 <thead>
                     <tr>
-                        <th>日時</th>
-                        <th>カテゴリ</th>
-                        <th>ユーザー</th>
-                        <th>メソッド</th>
-                        <th>パス</th>
-                        <th>ステータス</th>
-                        <th>処理時間</th>
-                        <th>詳細</th>
+                        <th>{msg:audit_col_datetime}</th>
+                        <th>{msg:audit_col_category}</th>
+                        <th>{msg:audit_col_user}</th>
+                        <th>{msg:audit_col_method}</th>
+                        <th>{msg:audit_col_path}</th>
+                        <th>{msg:audit_col_status}</th>
+                        <th>{msg:audit_col_duration}</th>
+                        <th>{msg:audit_col_detail}</th>
                     </tr>
                 </thead>
                 <tbody id="audit-tbody">
-                    <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">読み込み中...</td></tr>
+                    <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">{msg:audit_loading}</td></tr>
                 </tbody>
             </table>
         </div>
@@ -64,15 +64,14 @@
     </main>
 </div>
 
-<!-- Detail modal -->
 <dialog id="detail-modal" class="audit-modal">
     <div class="audit-modal-inner">
         <div class="audit-modal-header">
             <div class="audit-modal-header-left">
-                <h3>リクエスト詳細</h3>
+                <h3>{msg:audit_detail_heading}</h3>
                 <span id="detail-category-badge"></span>
             </div>
-            <button class="audit-modal-close" onclick="document.getElementById('detail-modal').close()" aria-label="閉じる">
+            <button class="audit-modal-close" onclick="document.getElementById('detail-modal').close()" aria-label="{msg:audit_detail_close}">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </button>
         </div>
@@ -81,13 +80,42 @@
 </dialog>
 
 <script>
+    var MSG_CATEGORY_PAGE = '{msg:audit_category_page}';
+    var MSG_CATEGORY_INTERNAL_API = '{msg:audit_category_internal_api}';
+    var MSG_STAT_TOTAL = '{msg:audit_stat_total}';
+    var MSG_STAT_SHOWING = '{msg:audit_stat_showing}';
+    var MSG_STAT_ERROR = '{msg:audit_stat_error}';
+    var MSG_EMPTY = '{msg:audit_empty}';
+    var MSG_BTN_DETAIL = '{msg:audit_btn_detail}';
+    var MSG_PAGE_PREV = '{msg:audit_page_prev}';
+    var MSG_PAGE_NEXT = '{msg:audit_page_next}';
+    var MSG_PAGE_LABEL = '{msg:audit_page_label}';
+    var MSG_ACCESS_DENIED = '{msg:audit_access_denied}';
+    var MSG_LOAD_ERROR = '{msg:audit_load_error}';
+    var MSG_LOAD_ERROR_DETAIL = '{msg:audit_load_error_detail}';
+    var MSG_DETAIL_OVERVIEW = '{msg:audit_detail_overview}';
+    var MSG_DETAIL_DATETIME = '{msg:audit_detail_datetime}';
+    var MSG_DETAIL_USER = '{msg:audit_detail_user}';
+    var MSG_DETAIL_STATUS = '{msg:audit_detail_status}';
+    var MSG_DETAIL_DURATION = '{msg:audit_detail_duration}';
+    var MSG_DETAIL_REQUEST = '{msg:audit_detail_request}';
+    var MSG_DETAIL_METHOD = '{msg:audit_detail_method}';
+    var MSG_DETAIL_PATH = '{msg:audit_detail_path}';
+    var MSG_DETAIL_PLATFORM = '{msg:audit_detail_platform}';
+    var MSG_DETAIL_QUERY = '{msg:audit_detail_query}';
+    var MSG_DETAIL_BODY = '{msg:audit_detail_body}';
+    var MSG_DETAIL_CLIENT = '{msg:audit_detail_client}';
+    var MSG_DETAIL_IP = '{msg:audit_detail_ip}';
+    var MSG_DETAIL_UA = '{msg:audit_detail_ua}';
+    var MSG_DETAIL_USER_ID = '{msg:audit_detail_user_id}';
+
     let currentPage = 0;
     const pageSize = 50;
     let allLogs = [];
 
     const CATEGORY_MAP = {
-        'PAGE':         { type: 'page',         label: 'アクセス' },
-        'INTERNAL_API': { type: 'internal-api',  label: '内部 API' },
+        'PAGE':         { type: 'page',         label: MSG_CATEGORY_PAGE },
+        'INTERNAL_API': { type: 'internal-api',  label: MSG_CATEGORY_INTERNAL_API },
         'SNS_API':      { type: 'sns-api',       label: 'SNS API' }
     };
 
@@ -192,7 +220,7 @@
 
             if (response.status === 403) {
                 document.getElementById('audit-tbody').innerHTML =
-                    '<tr><td colspan="8" style="text-align: center; color: var(--status-error);">アクセスが拒否されました。管理者権限が必要です。</td></tr>';
+                    '<tr><td colspan="8" style="text-align: center; color: var(--status-error);">' + MSG_ACCESS_DENIED + '</td></tr>';
                 return;
             }
 
@@ -205,8 +233,8 @@
             }
         } catch (err) {
             document.getElementById('audit-tbody').innerHTML =
-                '<tr><td colspan="8" style="text-align: center; color: var(--status-error);">監査ログの読み込みに失敗しました</td></tr>';
-            showToast('error', '監査ログの読み込みに失敗しました', 'サーバーに接続できませんでした。');
+                '<tr><td colspan="8" style="text-align: center; color: var(--status-error);">' + MSG_LOAD_ERROR + '</td></tr>';
+            showToast('error', MSG_LOAD_ERROR, MSG_LOAD_ERROR_DETAIL);
         }
     }
 
@@ -215,17 +243,17 @@
         var errorCount = result.data.filter(function(l) { return l.responseStatus >= 400; }).length;
         var container = document.getElementById('audit-summary');
         container.innerHTML =
-            '<div class="ak-card ak-stat"><h3>' + result.totalCount + '</h3><p>総レコード数</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + result.data.length + '</h3><p>表示中</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + result.totalCount + '</h3><p>' + MSG_STAT_TOTAL + '</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + result.data.length + '</h3><p>' + MSG_STAT_SHOWING + '</p></div>' +
             '<div class="ak-card ak-stat"><h3>' + snsCount + '</h3><p>SNS API</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + errorCount + '</h3><p>エラー</p></div>';
+            '<div class="ak-card ak-stat"><h3>' + errorCount + '</h3><p>' + MSG_STAT_ERROR + '</p></div>';
     }
 
     function renderTable(logs) {
         var tbody = document.getElementById('audit-tbody');
 
         if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">監査ログが見つかりません</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">' + MSG_EMPTY + '</td></tr>';
             return;
         }
 
@@ -242,7 +270,7 @@
                 '<td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' + escapeHtmlGlobal(log.requestPath) + '">' + pathDisplay + '</td>' +
                 '<td>' + renderStatusBadge(log.responseStatus) + '</td>' +
                 '<td style="white-space: nowrap;">' + log.durationMs + '<span class="text-muted" style="font-size:0.75rem;">ms</span></td>' +
-                '<td><button class="btn-sm btn-secondary" onclick="showDetail(' + idx + ')">詳細</button></td>' +
+                '<td><button class="ak-btn-sm btn-secondary" onclick="showDetail(' + idx + ')">' + MSG_BTN_DETAIL + '</button></td>' +
                 '</tr>';
         }).join('');
     }
@@ -259,29 +287,29 @@
         var html = '';
 
         html += '<div class="audit-detail-section">' +
-            '<div class="audit-detail-section-title">概要</div>' +
+            '<div class="audit-detail-section-title">' + MSG_DETAIL_OVERVIEW + '</div>' +
             '<div class="audit-detail-grid">' +
-            '<div class="audit-detail-item"><span class="audit-detail-label">日時</span><span class="audit-detail-value">' + date + '</span></div>' +
-            '<div class="audit-detail-item"><span class="audit-detail-label">ユーザー</span><span class="audit-detail-value">' + escapeHtmlGlobal(log.username || '-') + '</span></div>' +
-            '<div class="audit-detail-item"><span class="audit-detail-label">ステータス</span><span class="audit-detail-value">' + renderStatusBadge(log.responseStatus) + '</span></div>' +
-            '<div class="audit-detail-item"><span class="audit-detail-label">処理時間</span><span class="audit-detail-value">' + log.durationMs + 'ms</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">' + MSG_DETAIL_DATETIME + '</span><span class="audit-detail-value">' + date + '</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">' + MSG_DETAIL_USER + '</span><span class="audit-detail-value">' + escapeHtmlGlobal(log.username || '-') + '</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">' + MSG_DETAIL_STATUS + '</span><span class="audit-detail-value">' + renderStatusBadge(log.responseStatus) + '</span></div>' +
+            '<div class="audit-detail-item"><span class="audit-detail-label">' + MSG_DETAIL_DURATION + '</span><span class="audit-detail-value">' + log.durationMs + 'ms</span></div>' +
             '</div>' +
             '</div>';
 
         html += '<div class="audit-detail-section">' +
-            '<div class="audit-detail-section-title">リクエスト</div>' +
-            '<div class="audit-detail-row"><span class="audit-detail-label">メソッド</span>' + renderMethodBadge(log.httpMethod) + '</div>' +
-            '<div class="audit-detail-row"><span class="audit-detail-label">パス</span><code class="audit-detail-path">' + escapeHtmlGlobal(displayPath) + '</code></div>';
+            '<div class="audit-detail-section-title">' + MSG_DETAIL_REQUEST + '</div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_METHOD + '</span>' + renderMethodBadge(log.httpMethod) + '</div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_PATH + '</span><code class="audit-detail-path">' + escapeHtmlGlobal(displayPath) + '</code></div>';
 
         if (log.category === 'SNS_API') {
             var parsed = parseSnsApiPath(log.requestPath);
             if (parsed.platform) {
-                html += '<div class="audit-detail-row"><span class="audit-detail-label">プラットフォーム</span><span class="audit-detail-value">' + escapeHtmlGlobal(parsed.platform) + '</span></div>';
+                html += '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_PLATFORM + '</span><span class="audit-detail-value">' + escapeHtmlGlobal(parsed.platform) + '</span></div>';
             }
         }
 
         if (log.queryString) {
-            html += '<div class="audit-detail-row"><span class="audit-detail-label">クエリ</span><code class="audit-detail-path">' + escapeHtmlGlobal(log.queryString) + '</code></div>';
+            html += '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_QUERY + '</span><code class="audit-detail-path">' + escapeHtmlGlobal(log.queryString) + '</code></div>';
         }
 
         if (log.requestBody) {
@@ -290,17 +318,17 @@
                 formatted = JSON.stringify(JSON.parse(log.requestBody), null, 2);
             } catch (e) { }
             html += '<div class="audit-detail-row" style="flex-direction:column; align-items:stretch;">' +
-                '<span class="audit-detail-label">リクエストボディ</span>' +
+                '<span class="audit-detail-label">' + MSG_DETAIL_BODY + '</span>' +
                 '<pre class="audit-detail-code">' + escapeHtmlGlobal(formatted) + '</pre>' +
                 '</div>';
         }
         html += '</div>';
 
         html += '<div class="audit-detail-section">' +
-            '<div class="audit-detail-section-title">クライアント情報</div>' +
-            '<div class="audit-detail-row"><span class="audit-detail-label">IP アドレス</span><span class="audit-detail-value">' + escapeHtmlGlobal(log.clientIp || '-') + '</span></div>' +
-            '<div class="audit-detail-row"><span class="audit-detail-label">User-Agent</span><span class="audit-detail-value audit-detail-ua">' + escapeHtmlGlobal(log.userAgent || '-') + '</span></div>' +
-            '<div class="audit-detail-row"><span class="audit-detail-label">ユーザー ID</span><span class="audit-detail-value" style="font-size:0.8rem;">' + (log.userId || '-') + '</span></div>' +
+            '<div class="audit-detail-section-title">' + MSG_DETAIL_CLIENT + '</div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_IP + '</span><span class="audit-detail-value">' + escapeHtmlGlobal(log.clientIp || '-') + '</span></div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_UA + '</span><span class="audit-detail-value audit-detail-ua">' + escapeHtmlGlobal(log.userAgent || '-') + '</span></div>' +
+            '<div class="audit-detail-row"><span class="audit-detail-label">' + MSG_DETAIL_USER_ID + '</span><span class="audit-detail-value" style="font-size:0.8rem;">' + (log.userId || '-') + '</span></div>' +
             '</div>';
 
         content.innerHTML = html;
@@ -311,11 +339,11 @@
         var container = document.getElementById('pagination');
         var html = '';
         if (currentPage > 0) {
-            html += '<button class="btn-secondary btn-sm" onclick="loadAuditLogs(' + (currentPage - 1) + ')">前へ</button>';
+            html += '<button class="btn-secondary ak-btn-sm" onclick="loadAuditLogs(' + (currentPage - 1) + ')">' + MSG_PAGE_PREV + '</button>';
         }
-        html += '<span style="line-height: 2.5; color: var(--text-muted);">ページ ' + (currentPage + 1) + '</span>';
+        html += '<span style="line-height: 2.5; color: var(--text-muted);">' + MSG_PAGE_LABEL + ' ' + (currentPage + 1) + '</span>';
         if (result.data.length >= pageSize) {
-            html += '<button class="btn-secondary btn-sm" onclick="loadAuditLogs(' + (currentPage + 1) + ')">次へ</button>';
+            html += '<button class="btn-secondary ak-btn-sm" onclick="loadAuditLogs(' + (currentPage + 1) + ')">' + MSG_PAGE_NEXT + '</button>';
         }
         container.innerHTML = html;
     }
@@ -336,11 +364,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

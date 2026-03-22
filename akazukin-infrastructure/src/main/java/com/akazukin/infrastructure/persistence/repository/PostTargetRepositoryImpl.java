@@ -2,6 +2,7 @@ package com.akazukin.infrastructure.persistence.repository;
 
 import com.akazukin.domain.model.PostStatus;
 import com.akazukin.domain.model.PostTarget;
+import com.akazukin.domain.model.SnsPlatform;
 import com.akazukin.domain.port.PostTargetRepository;
 import com.akazukin.infrastructure.persistence.entity.PostTargetEntity;
 import com.akazukin.infrastructure.persistence.mapper.PostTargetMapper;
@@ -9,7 +10,10 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -112,6 +116,70 @@ public class PostTargetRepositoryImpl implements PostTargetRepository, PanacheRe
                 LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByPostIds", perfMs});
             } else {
                 LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByPostIds", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public Map<String, Long> countByStatusForUser(UUID userId) {
+        long perfStart = System.nanoTime();
+        try {
+            Map<String, Long> result = new HashMap<>();
+            List<Object[]> rows = getEntityManager()
+                    .createQuery("SELECT pt.status, COUNT(pt) FROM PostTargetEntity pt " +
+                            "WHERE pt.post.userId = ?1 GROUP BY pt.status", Object[].class)
+                    .setParameter(1, userId)
+                    .getResultList();
+            for (Object[] row : rows) {
+                result.put((String) row[0], (Long) row[1]);
+            }
+            return result;
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.countByStatusForUser", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.countByStatusForUser", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public List<PostTarget> findByUserIdAndCreatedAtBetween(UUID userId, Instant from, Instant to) {
+        long perfStart = System.nanoTime();
+        try {
+            return find("post.userId = ?1 AND createdAt >= ?2 AND createdAt <= ?3 ORDER BY createdAt ASC",
+                    userId, from, to)
+                    .list()
+                    .stream()
+                    .map(PostTargetMapper::toDomain)
+                    .collect(Collectors.toList());
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByUserIdAndCreatedAtBetween", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByUserIdAndCreatedAtBetween", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public List<PostTarget> findByUserIdAndPlatformAndCreatedAtBetween(UUID userId, SnsPlatform platform, Instant from, Instant to) {
+        long perfStart = System.nanoTime();
+        try {
+            return find("post.userId = ?1 AND platform = ?2 AND createdAt >= ?3 AND createdAt <= ?4 ORDER BY createdAt ASC",
+                    userId, platform.name(), from, to)
+                    .list()
+                    .stream()
+                    .map(PostTargetMapper::toDomain)
+                    .collect(Collectors.toList());
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByUserIdAndPlatformAndCreatedAtBetween", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"PostTargetRepositoryImpl.findByUserIdAndPlatformAndCreatedAtBetween", perfMs});
             }
         }
     }

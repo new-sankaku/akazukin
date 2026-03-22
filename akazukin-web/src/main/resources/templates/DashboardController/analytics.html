@@ -1,5 +1,5 @@
 {#include base}
-{#title}アナリティクス - Akazukin{/title}
+{#title}{msg:analytics_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,136 +7,534 @@
     {#sidebar active="analytics" /}
 
     <main class="ak-main">
-        <h2>アナリティクス</h2>
+        <h2>{msg:analytics_title}</h2>
 
         <div id="analytics-summary"
-             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-md);">
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>総投稿数</p>
+                <p>{msg:analytics_total_posts}</p>
             </div>
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>公開済み</p>
+                <p>{msg:analytics_published}</p>
             </div>
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>予約済み</p>
+                <p>{msg:analytics_scheduled}</p>
             </div>
             <div class="ak-card ak-stat">
                 <h3>--</h3>
-                <p>失敗</p>
+                <p>{msg:analytics_failed}</p>
             </div>
         </div>
 
-        <div class="ak-card" style="margin-top: 2rem;">
-            <h3>プラットフォーム別投稿数</h3>
-            <div id="platform-chart" style="margin-top: 1rem;">
-                <p style="color: var(--ak-text-muted);">チャートデータを読み込み中...</p>
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <h3>{msg:analytics_platform_chart}</h3>
+            <div id="platform-chart" style="margin-top: var(--sp-md);">
+                <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
             </div>
         </div>
 
-        <div class="ak-card" style="margin-top: 2rem;">
-            <h3>グロース戦略</h3>
-            <div style="display: flex; gap: 1rem; align-items: flex-end; margin-top: 1rem;">
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <div class="ak-card-header">
+                <h3>{msg:analytics_agent_title}</h3>
+            </div>
+            <div class="ak-analytics-tab-bar">
+                <button class="active" onclick="showAnalyticsTab('agent')">{msg:analytics_tab_agent}</button>
+                <button onclick="showAnalyticsTab('persona')">{msg:analytics_tab_persona}</button>
+            </div>
+
+            <div id="tab-agent">
+                <div class="ak-card ak-card--plain" style="margin-bottom: var(--sp-md);">
+                    <div class="ak-card-header">
+                        <h3>{msg:analytics_agent_chart_title}</h3>
+                        <small>{msg:analytics_agent_chart_period}</small>
+                    </div>
+                    <div id="agent-chart" style="margin-top: var(--sp-md);">
+                        <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+                    </div>
+                </div>
+                <div id="agent-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-md);"></div>
+            </div>
+
+            <div id="tab-persona" style="display: none;">
+                <div class="ak-card ak-card--plain">
+                    <div class="ak-card-header">
+                        <h3>{msg:analytics_persona_title}</h3>
+                        <small>{msg:analytics_persona_subtitle}</small>
+                    </div>
+                    <div id="persona-table" style="margin-top: var(--sp-md);">
+                        <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <div class="ak-card-header">
+                <h3>{msg:analytics_seasonal_title}</h3>
+            </div>
+            <div class="ak-card-header">
+                <h3 style="font-size: 0.95rem;">{msg:analytics_seasonal_chart_title}</h3>
+                <div style="display: flex; gap: var(--sp-sm);">
+                    <span class="ak-analytics-legend-badge" style="border-style: solid;">&#9679; {msg:analytics_seasonal_current}</span>
+                    <span class="ak-analytics-legend-badge" style="border-style: dashed; opacity: 0.5;">&#9675; {msg:analytics_seasonal_previous}</span>
+                </div>
+            </div>
+            <div id="seasonal-chart" style="margin-top: var(--sp-md);">
+                <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <div class="ak-card-header">
+                <h3>{msg:analytics_heatmap_title}</h3>
+                <small>{msg:analytics_heatmap_score_label}</small>
+            </div>
+            <div id="heatmap-chart" style="margin-top: var(--sp-md);">
+                <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <div class="ak-card-header">
+                <h3>{msg:analytics_timeline_title}</h3>
+                <small>{msg:analytics_timeline_subtitle}</small>
+            </div>
+            <div id="trend-timeline" style="margin-top: var(--sp-md);">
+                <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <div class="ak-card-header">
+                <h3>{msg:analytics_correlation_title}</h3>
+                <small>{msg:analytics_correlation_description}</small>
+            </div>
+            <div id="correlation-matrix" style="margin-top: var(--sp-md);">
+                <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <div class="ak-card-header">
+                <h3>{msg:analytics_risk_title}</h3>
+            </div>
+            <div id="risk-analysis" style="margin-top: var(--sp-md);">
+                <p style="color: var(--text-muted);">{msg:analytics_loading}</p>
+            </div>
+        </div>
+
+        <div class="ak-card" style="margin-top: var(--sp-xl);">
+            <h3>{msg:analytics_growth_title}</h3>
+            <div style="display: flex; gap: var(--sp-md); align-items: flex-end; margin-top: var(--sp-md);">
                 <div style="flex: 1;">
-                    <label for="growth-account-select" style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--ak-text-muted);">アカウント選択</label>
-                    <select id="growth-account-select" style="width: 100%; padding: 0.5rem; border: 1px solid var(--ak-border); border-radius: 4px; background: var(--ak-bg); color: var(--ak-text);">
-                        <option value="">アカウントを選択してください</option>
+                    <label for="growth-account-select" style="display: block; margin-bottom: var(--sp-sm); font-size: 0.85rem; color: var(--text-muted);">{msg:analytics_growth_account_label}</label>
+                    <select id="growth-account-select" style="width: 100%; padding: var(--sp-sm); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary);">
+                        <option value="">{msg:analytics_growth_account_placeholder}</option>
                     </select>
                 </div>
-                <button onclick="loadGrowthAdvice()" style="padding: 0.5rem 1.5rem; background: var(--ak-primary); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">アドバイスを取得</button>
+                <button onclick="loadGrowthAdvice()" style="padding: var(--sp-sm) var(--sp-lg); background: var(--accent-gold); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; white-space: nowrap;">{msg:analytics_growth_submit}</button>
             </div>
-            <div id="growth-result" style="margin-top: 1rem;"></div>
+            <div id="growth-result" style="margin-top: var(--sp-md);"></div>
         </div>
 
         <style>
-            .ak-bar-chart {
+            .ak-analytics-tab-bar {
+                display: flex;
+                gap: 0;
+                border-bottom: 2px solid var(--border-lt);
+                margin-bottom: var(--sp-lg);
+                overflow-x: auto;
+            }
+
+            .ak-analytics-tab-bar button {
+                font-family: var(--font-sans);
+                font-size: 0.85rem;
+                padding: var(--sp-sm) var(--sp-md);
+                background: none;
+                border: none;
+                border-bottom: 2px solid transparent;
+                color: var(--text-muted);
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all var(--transition);
+                margin-bottom: -2px;
+            }
+
+            .ak-analytics-tab-bar button:hover { color: var(--text-primary); }
+            .ak-analytics-tab-bar button.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); font-weight: 600; }
+
+            .ak-analytics-legend-badge {
+                font-size: 0.75rem;
+                padding: var(--sp-xs) var(--sp-sm);
+                border: 1px solid var(--border-lt);
+                border-radius: var(--radius-sm);
+                color: var(--text-muted);
+                background: var(--bg-elevated);
+            }
+
+            .ak-analytics-bar-chart {
+                display: flex;
+                align-items: flex-end;
+                gap: var(--sp-sm);
+                padding-top: var(--sp-md);
+            }
+
+            .ak-analytics-bar-item {
                 display: flex;
                 flex-direction: column;
-                gap: 0.75rem;
+                align-items: center;
+                flex: 1;
+                gap: var(--sp-xs);
+                justify-content: flex-end;
             }
 
-            .ak-bar-row {
+            .ak-analytics-bar-fill {
+                width: 100%;
+                border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+                transition: height 0.4s ease;
+                min-height: 4px;
+            }
+
+            .ak-analytics-bar-label { font-size: 0.7rem; color: var(--text-muted); text-align: center; line-height: 1.2; }
+            .ak-analytics-bar-value { font-size: 0.75rem; color: var(--text-primary); font-weight: 600; }
+
+            .ak-analytics-heatmap-grid {
+                display: grid;
+                gap: 2px;
+            }
+
+            .ak-analytics-heatmap-cell {
+                border-radius: var(--radius-sm);
                 display: flex;
                 align-items: center;
-                gap: 0.75rem;
-            }
-
-            .ak-bar-label {
-                min-width: 100px;
-                font-size: 0.85rem;
-                text-align: right;
-                color: var(--ak-text-muted);
-            }
-
-            .ak-bar-track {
-                flex: 1;
-                height: 24px;
-                background: var(--ak-border);
-                border-radius: 4px;
-                overflow: hidden;
-            }
-
-            .ak-bar-fill {
-                height: 100%;
-                background: var(--ak-primary);
-                border-radius: 4px;
-                transition: width 0.5s ease;
-                min-width: 2px;
-            }
-
-            .ak-bar-value {
-                min-width: 40px;
-                font-size: 0.85rem;
+                justify-content: center;
+                font-size: 0.8rem;
                 font-weight: 600;
-                color: var(--ak-text);
+                color: var(--text-primary);
+                transition: transform var(--transition);
+                padding: var(--sp-md) var(--sp-sm);
+            }
+
+            .ak-analytics-heatmap-cell:hover { transform: scale(1.08); z-index: 1; }
+
+            .ak-analytics-heatmap-header {
+                font-size: 0.7rem;
+                font-weight: 600;
+                color: var(--text-sec);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .ak-analytics-scatter-area {
+                position: relative;
+                height: 280px;
+                border-left: 2px solid var(--border);
+                border-bottom: 2px solid var(--border);
+                margin: var(--sp-md) 0 var(--sp-md) var(--sp-xl);
+            }
+
+            .ak-analytics-scatter-dot {
+                position: absolute;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                transform: translate(-50%, 50%);
+                border: 2px solid rgba(255,255,255,0.6);
+                cursor: default;
+                transition: transform 0.2s;
+            }
+
+            .ak-analytics-scatter-dot:hover { transform: translate(-50%, 50%) scale(1.5); z-index: 2; }
+
+            .ak-analytics-scatter-dot-prev {
+                width: 10px;
+                height: 10px;
+                opacity: 0.4;
+                border-style: dashed;
+            }
+
+            .ak-analytics-scatter-x-labels {
+                display: flex;
+                justify-content: space-between;
+                margin-left: var(--sp-xl);
+                margin-top: var(--sp-xs);
+                font-size: 0.6rem;
+                color: var(--text-faint);
+            }
+
+            .ak-analytics-scatter-y-labels {
+                position: absolute;
+                left: -3.2rem;
+                top: 0;
+                bottom: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                font-size: 0.6rem;
+                color: var(--text-faint);
+            }
+
+            .ak-analytics-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: var(--sp-md);
+                font-size: 0.8rem;
+                color: var(--text-sec);
+                margin-top: var(--sp-sm);
+            }
+
+            .ak-analytics-legend-item { display: inline-flex; align-items: center; gap: var(--sp-xs); }
+            .ak-analytics-legend-swatch { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; }
+
+            .ak-analytics-matrix-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+            .ak-analytics-matrix-table th, .ak-analytics-matrix-table td { padding: var(--sp-sm); text-align: center; border: 1px solid var(--border-sub); }
+            .ak-analytics-matrix-table th { background: var(--bg-subtle); color: var(--text-sec); font-size: 0.75rem; font-weight: 600; }
+
+            .ak-analytics-correlation-high { background: var(--status-success-bg); color: var(--status-success); font-weight: 700; }
+            .ak-analytics-correlation-mid { background: var(--accent-gold-light); color: var(--accent-gold); font-weight: 600; }
+            .ak-analytics-correlation-low { background: var(--bg-field); color: var(--text-muted); }
+            .ak-analytics-correlation-self { background: var(--bg-subtle); color: var(--text-faint); }
+
+            .ak-analytics-recommend-card {
+                border-left: 3px solid var(--accent-gold);
+                padding: var(--sp-md);
+                background: var(--accent-gold-light);
+                border-radius: 0 var(--radius-md) var(--radius-md) 0;
+                margin-top: var(--sp-md);
+            }
+
+            .ak-analytics-recommend-card h4 { color: var(--accent-gold-hover); margin-bottom: var(--sp-xs); }
+
+            .ak-analytics-risk-bar {
+                display: flex;
+                align-items: center;
+                gap: var(--sp-sm);
+                margin-bottom: var(--sp-sm);
+            }
+
+            .ak-analytics-risk-bar-label { font-size: 0.8rem; color: var(--text-sec); min-width: 6rem; text-align: right; }
+            .ak-analytics-risk-bar-track { flex: 1; height: 1.2rem; background: var(--bg-field); border-radius: var(--radius-sm); overflow: hidden; }
+            .ak-analytics-risk-bar-fill { height: 100%; border-radius: var(--radius-sm); transition: width 0.4s ease; }
+
+            .ak-analytics-line-chart {
+                display: flex;
+                align-items: flex-end;
+                gap: 1px;
+                height: 120px;
+                padding-top: var(--sp-sm);
+                border-bottom: 1px solid var(--border-sub);
+            }
+
+            .ak-analytics-line-point {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+                height: 100%;
+            }
+
+            .ak-analytics-line-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--status-error);
+                position: relative;
+            }
+
+            .ak-analytics-line-stem {
+                width: 2px;
+                background: linear-gradient(to top, var(--status-error), transparent);
+            }
+
+            .ak-analytics-persona-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+            .ak-analytics-persona-table th {
+                text-align: left;
+                padding: var(--sp-sm) var(--sp-md);
+                border-bottom: 2px solid var(--border);
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--text-muted);
+                font-weight: 600;
+            }
+            .ak-analytics-persona-table td {
+                padding: var(--sp-sm) var(--sp-md);
+            }
+            .ak-analytics-persona-table tr { border-bottom: 1px solid var(--border-sub); }
+
+            .ak-analytics-platform-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.15rem 0.55rem;
+                border-radius: var(--radius-sm);
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                margin-right: 0.25rem;
+                margin-bottom: 0.25rem;
+                border: 1px solid;
+            }
+
+            .ak-analytics-platform-badge-twitter { background: #E8F4FD; color: #1a8cd8; border-color: #B8DDF5; }
+            .ak-analytics-platform-badge-bluesky { background: #E5F0FF; color: #0070E0; border-color: #B0D4FF; }
+            .ak-analytics-platform-badge-mastodon { background: #EDEDFF; color: #595AFF; border-color: #C8C8FF; }
+            .ak-analytics-platform-badge-threads { background: #F0F0F0; color: #333; border-color: #D0D0D0; }
+            .ak-analytics-platform-badge-instagram { background: #FDE8ED; color: #C13584; border-color: #F5C0D0; }
+            .ak-analytics-platform-badge-reddit { background: #FFEEE8; color: #D93A00; border-color: #FFDACC; }
+            .ak-analytics-platform-badge-telegram { background: #E8F4FD; color: #0088CC; border-color: #B8DDF5; }
+            .ak-analytics-platform-badge-default { background: var(--bg-elevated); color: var(--text-sec); border-color: var(--border-lt); }
+
+            .ak-analytics-status-badge {
+                display: inline-block;
+                padding: 0.15rem 0.55rem;
+                border-radius: var(--radius-sm);
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
+            .ak-analytics-status-published { background: var(--status-success-bg); color: var(--status-success); }
+            .ak-analytics-status-scheduled { background: var(--status-info-bg); color: var(--status-info); }
+            .ak-analytics-status-failed { background: var(--status-error-bg); color: var(--status-error); }
+            .ak-analytics-status-draft { background: var(--bg-field); color: var(--text-muted); }
+            .ak-analytics-status-pending { background: var(--status-warning-bg); color: var(--status-warning); }
+
+            .ak-analytics-timeline-row {
+                display: flex;
+                align-items: flex-end;
+                gap: 1px;
+                height: 80px;
+                padding-top: var(--sp-sm);
+                border-bottom: 1px solid var(--border-sub);
+                margin-bottom: var(--sp-sm);
+            }
+
+            .ak-analytics-timeline-bar {
+                flex: 1;
+                border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+                transition: height 0.4s ease;
+                min-height: 2px;
+            }
+
+            @media (max-width: 640px) {
+                .ak-analytics-scatter-area { height: 200px; }
+                .ak-analytics-tab-bar { gap: 0; }
             }
         </style>
     </main>
 </div>
 
 <script>
+    var PLATFORM_COLORS = {
+        TWITTER: '#FEDFE1',
+        BLUESKY: '#C4A3BF',
+        MASTODON: '#AAD159',
+        INSTAGRAM: '#5B9BD5',
+        REDDIT: '#D13438',
+        THREADS: '#D0A040',
+        TELEGRAM: '#0088CC',
+        VK: '#4C75A3',
+        PINTEREST: '#E60023',
+        MIXI2: '#F97316',
+        NOTE: '#41C9B4',
+        NICONICO: '#252525',
+        TIKTOK: '#69C9D0'
+    };
+
+    var AGENT_COLORS = {
+        DIRECTOR: 'var(--accent-gold)',
+        ANALYST: 'var(--status-info)',
+        COMPOSER: 'var(--status-success)',
+        TRANSFORMER: '#C4A3BF',
+        SCHEDULER: 'var(--status-warning)',
+        SENTINEL: 'var(--status-error)',
+        COMPLIANCE: '#D0A040'
+    };
+
+    var RISK_CATEGORY_LABELS = {
+        EXPRESSION_RISK: '{msg:analytics_risk_expression}',
+        COPYRIGHT: '{msg:analytics_risk_copyright}',
+        PHARMACEUTICAL: '{msg:analytics_risk_pharmaceutical}',
+        PREMIUMS_ACT: '{msg:analytics_risk_premiums_act}',
+        PRIVACY: '{msg:analytics_risk_privacy}',
+        OTHER: '{msg:analytics_risk_other}'
+    };
+
+    var STATUS_LABELS = {
+        DRAFT: '{msg:analytics_status_draft}',
+        SCHEDULED: '{msg:analytics_status_scheduled}',
+        PUBLISHING: '{msg:analytics_status_publishing}',
+        PUBLISHED: '{msg:analytics_status_published}',
+        FAILED: '{msg:analytics_status_failed}',
+        PENDING_APPROVAL: '{msg:analytics_status_pending}',
+        APPROVED: '{msg:analytics_status_approved}',
+        REJECTED: '{msg:analytics_status_rejected}',
+        RETURNED: '{msg:analytics_status_returned}'
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         loadAnalytics();
         loadGrowthAccounts();
+        loadAgentPerformance();
+        loadCrossPlatformHeatmap();
+        loadSeasonalAnalysis();
+        loadTrendTimeline();
+        loadPlatformCorrelation();
+        loadRiskAnalysis();
     });
 
-    async function loadAnalytics() {
+    function getToken() {
         var token = localStorage.getItem('accessToken');
         if (!token) {
             window.location.href = '/';
-            return;
+            return null;
         }
+        return token;
+    }
 
+    async function apiFetch(path) {
+        var token = getToken();
+        if (!token) return null;
+        var response = await fetch(path, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (response.status === 401) {
+            window.location.href = '/';
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(response.statusText);
+        }
+        return response.json();
+    }
+
+    async function loadAnalytics() {
         try {
-            var response = await fetch('/api/v1/dashboard/summary', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
-            }
-
-            if (response.ok) {
-                var data = await response.json();
-                renderSummary(data);
-                renderPlatformChart(data.platformCounts || {});
-            }
+            var data = await apiFetch('/api/v1/dashboard/summary');
+            if (!data) return;
+            renderSummary(data);
+            renderPlatformChart(data.platformCounts || {});
         } catch (err) {
             document.getElementById('platform-chart').innerHTML =
-                '<p style="color: var(--ak-primary);">アナリティクスデータの読み込みに失敗しました。</p>';
+                '<p style="color: var(--status-error);">{msg:analytics_load_error}</p>';
         }
     }
 
     function renderSummary(data) {
         var container = document.getElementById('analytics-summary');
         container.innerHTML =
-            '<div class="ak-card ak-stat"><h3>' + (data.totalPosts || 0) + '</h3><p>総投稿数</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + (data.publishedPosts || 0) + '</h3><p>公開済み</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + (data.scheduledPosts || 0) + '</h3><p>予約済み</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + (data.failedPosts || 0) + '</h3><p>失敗</p></div>';
+            '<div class="ak-card ak-stat"><h3>' + (data.totalPosts || 0) + '</h3><p>{msg:analytics_total_posts}</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.publishedPosts || 0) + '</h3><p>{msg:analytics_published}</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.scheduledPosts || 0) + '</h3><p>{msg:analytics_scheduled}</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + (data.failedPosts || 0) + '</h3><p>{msg:analytics_failed}</p></div>';
     }
 
     function renderPlatformChart(platformCounts) {
@@ -144,7 +542,7 @@
         var entries = Object.entries(platformCounts);
 
         if (entries.length === 0) {
-            container.innerHTML = '<p style="color: var(--ak-text-muted);">プラットフォームデータがまだありません。投稿を作成するとアナリティクスが表示されます。</p>';
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_no_platform_data}</p>';
             return;
         }
 
@@ -157,11 +555,416 @@
             var count = entry[1];
             var pct = Math.round((count / maxCount) * 100);
             html += '<div class="ak-bar-row">' +
-                '<span class="ak-bar-label">' + escapeHtml(platform) + '</span>' +
+                '<span class="ak-bar-label">' + renderPlatformBadge(platform) + '</span>' +
                 '<div class="ak-bar-track"><div class="ak-bar-fill" style="width: ' + pct + '%;"></div></div>' +
                 '<span class="ak-bar-value">' + count + '</span>' +
                 '</div>';
         });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderPlatformBadge(platform) {
+        var cls = 'ak-analytics-platform-badge ak-analytics-platform-badge-' + platform.toLowerCase();
+        return '<span class="' + cls + '">' + escapeHtml(platform) + '</span>';
+    }
+
+    function renderStatusBadge(status) {
+        var label = STATUS_LABELS[status] || status;
+        var cls = 'ak-analytics-status-badge ak-analytics-status-';
+        if (status === 'PUBLISHED') cls += 'published';
+        else if (status === 'SCHEDULED') cls += 'scheduled';
+        else if (status === 'FAILED') cls += 'failed';
+        else if (status === 'DRAFT') cls += 'draft';
+        else cls += 'pending';
+        return '<span class="' + cls + '">' + escapeHtml(label) + '</span>';
+    }
+
+    function showAnalyticsTab(tab) {
+        document.getElementById('tab-agent').style.display = tab === 'agent' ? '' : 'none';
+        document.getElementById('tab-persona').style.display = tab === 'persona' ? '' : 'none';
+        var buttons = document.querySelectorAll('.ak-analytics-tab-bar button');
+        buttons[0].classList.toggle('active', tab === 'agent');
+        buttons[1].classList.toggle('active', tab === 'persona');
+
+        if (tab === 'persona') {
+            loadPersonaPerformance();
+        }
+    }
+
+    async function loadAgentPerformance() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/agent-performance');
+            if (!data) return;
+            renderAgentChart(data);
+            renderAgentStats(data);
+        } catch (err) {
+            document.getElementById('agent-chart').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_agent_no_data}</p>';
+        }
+    }
+
+    function renderAgentChart(agents) {
+        var container = document.getElementById('agent-chart');
+        if (!agents || agents.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_agent_no_data}</p>';
+            return;
+        }
+
+        var maxRate = Math.max.apply(null, agents.map(function(a) { return a.successRate; }));
+        if (maxRate === 0) maxRate = 1;
+
+        var html = '<div class="ak-analytics-bar-chart" style="height: 200px;">';
+        agents.forEach(function(agent) {
+            var heightPct = Math.round(agent.successRate / maxRate * 100);
+            var color = AGENT_COLORS[agent.agentType] || 'var(--accent-gold)';
+            html += '<div class="ak-analytics-bar-item">' +
+                '<div class="ak-analytics-bar-value">' + Math.round(agent.successRate) + '</div>' +
+                '<div class="ak-analytics-bar-fill" style="height: ' + heightPct + '%; background: ' + color + ';"></div>' +
+                '<div class="ak-analytics-bar-label">' + escapeHtml(agent.agentType) + '</div>' +
+                '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderAgentStats(agents) {
+        var container = document.getElementById('agent-stats');
+        if (!agents || agents.length === 0) { container.innerHTML = ''; return; }
+
+        var totalTasks = agents.reduce(function(sum, a) { return sum + a.totalTasks; }, 0);
+        var totalCompleted = agents.reduce(function(sum, a) { return sum + a.completedTasks; }, 0);
+        var avgRate = totalTasks > 0 ? (totalCompleted / totalTasks * 100) : 0;
+        var avgDuration = agents.reduce(function(sum, a) { return sum + a.avgDurationMs; }, 0) / Math.max(agents.length, 1);
+        var avgScore = agents.reduce(function(sum, a) { return sum + a.successRate; }, 0) / Math.max(agents.length, 1);
+
+        container.innerHTML =
+            '<div class="ak-card ak-card--plain ak-stat"><h3>' + avgScore.toFixed(1) + '</h3><p>{msg:analytics_agent_avg_score}</p></div>' +
+            '<div class="ak-card ak-card--plain ak-stat"><h3>' + totalTasks.toLocaleString() + '</h3><p>{msg:analytics_agent_total_tasks}</p></div>' +
+            '<div class="ak-card ak-card--plain ak-stat"><h3>' + avgRate.toFixed(1) + '%</h3><p>{msg:analytics_agent_success_rate}</p></div>' +
+            '<div class="ak-card ak-card--plain ak-stat"><h3>' + (avgDuration / 1000).toFixed(1) + 's</h3><p>{msg:analytics_agent_avg_time}</p></div>';
+    }
+
+    async function loadPersonaPerformance() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/persona-performance');
+            if (!data) return;
+            renderPersonaTable(data);
+        } catch (err) {
+            document.getElementById('persona-table').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_persona_no_data}</p>';
+        }
+    }
+
+    function renderPersonaTable(personas) {
+        var container = document.getElementById('persona-table');
+        if (!personas || personas.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_persona_no_data}</p>';
+            return;
+        }
+
+        var html = '<table class="ak-analytics-persona-table"><thead><tr>' +
+            '<th style="text-align: left;">{msg:analytics_persona_col_name}</th>' +
+            '<th style="text-align: center;">{msg:analytics_persona_col_posts}</th>' +
+            '<th style="text-align: left;">{msg:analytics_persona_col_engagement}</th>' +
+            '<th style="text-align: center;">{msg:analytics_persona_col_trend}</th>' +
+            '</tr></thead><tbody>';
+
+        personas.forEach(function(p) {
+            var engPct = Math.round(p.avgEngagementRate);
+            var barColor = engPct >= 75 ? 'var(--accent-gold)' : engPct >= 50 ? 'var(--status-success)' : engPct >= 25 ? 'var(--status-info)' : 'var(--status-warning)';
+            var trendLabel, trendColor;
+            if (p.trend === 'up') { trendLabel = '&#9650; {msg:analytics_persona_trend_up}'; trendColor = 'var(--status-success)'; }
+            else if (p.trend === 'down') { trendLabel = '&#9660; {msg:analytics_persona_trend_down}'; trendColor = 'var(--status-error)'; }
+            else { trendLabel = '&#9644; {msg:analytics_persona_trend_stable}'; trendColor = 'var(--text-muted)'; }
+
+            html += '<tr>' +
+                '<td style="font-weight: 500;">' + escapeHtml(p.personaName) + '</td>' +
+                '<td style="text-align: center;">' + p.postCount + '</td>' +
+                '<td><div style="display: flex; align-items: center; gap: var(--sp-sm);">' +
+                '<div style="flex: 1; height: 0.5rem; background: var(--bg-field); border-radius: var(--radius-sm); overflow: hidden;">' +
+                '<div style="width: ' + engPct + '%; height: 100%; background: ' + barColor + '; border-radius: var(--radius-sm);"></div>' +
+                '</div><span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">' + engPct + '%</span>' +
+                '</div></td>' +
+                '<td style="text-align: center; color: ' + trendColor + ';">' + trendLabel + '</td>' +
+                '</tr>';
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    async function loadCrossPlatformHeatmap() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/cross-platform-heatmap');
+            if (!data) return;
+            renderHeatmap(data);
+        } catch (err) {
+            document.getElementById('heatmap-chart').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_heatmap_no_data}</p>';
+        }
+    }
+
+    function renderHeatmap(data) {
+        var container = document.getElementById('heatmap-chart');
+        if (!data.themes || data.themes.length === 0 || !data.platforms || data.platforms.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_heatmap_no_data}</p>';
+            return;
+        }
+
+        var colCount = data.platforms.length + 1;
+        var html = '<div class="ak-analytics-heatmap-grid" style="grid-template-columns: 8rem repeat(' + data.platforms.length + ', 1fr);">';
+
+        html += '<div class="ak-analytics-heatmap-header"></div>';
+        data.platforms.forEach(function(p) {
+            html += '<div class="ak-analytics-heatmap-header">' + renderPlatformBadge(p) + '</div>';
+        });
+
+        var cellMap = {};
+        data.cells.forEach(function(cell) {
+            cellMap[cell.theme + '|' + cell.platform] = cell.score;
+        });
+
+        data.themes.forEach(function(theme) {
+            html += '<div class="ak-analytics-heatmap-header" style="justify-content: flex-end; padding-right: var(--sp-sm);">' + escapeHtml(theme) + '</div>';
+            data.platforms.forEach(function(platform) {
+                var score = cellMap[theme + '|' + platform] || 0;
+                var bg = getHeatmapColor(score);
+                html += '<div class="ak-analytics-heatmap-cell" style="background: ' + bg + ';">' + score + '</div>';
+            });
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function getHeatmapColor(score) {
+        if (score >= 85) return 'var(--status-success-bg)';
+        if (score >= 60) return 'var(--accent-gold-light)';
+        return 'var(--bg-field)';
+    }
+
+    async function loadSeasonalAnalysis() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/seasonal-analysis');
+            if (!data) return;
+            renderSeasonalChart(data);
+        } catch (err) {
+            document.getElementById('seasonal-chart').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_seasonal_no_data}</p>';
+        }
+    }
+
+    function renderSeasonalChart(data) {
+        var container = document.getElementById('seasonal-chart');
+        if (!data.dataPoints || data.dataPoints.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_seasonal_no_data}</p>';
+            return;
+        }
+
+        var maxRate = Math.max.apply(null, data.dataPoints.map(function(d) { return d.engagementRate; }));
+        if (maxRate === 0) maxRate = 10;
+
+        var months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+        var html = '<div style="position: relative;">' +
+            '<div class="ak-analytics-scatter-area">' +
+            '<div class="ak-analytics-scatter-y-labels">' +
+            '<span>' + maxRate.toFixed(1) + '%</span>' +
+            '<span>' + (maxRate * 0.75).toFixed(1) + '%</span>' +
+            '<span>' + (maxRate * 0.5).toFixed(1) + '%</span>' +
+            '<span>' + (maxRate * 0.25).toFixed(1) + '%</span>' +
+            '<span>0%</span></div>';
+
+        data.dataPoints.forEach(function(point) {
+            var leftPct = ((point.month - 1) / 11 * 90 + 5);
+            var bottomPct = (point.engagementRate / maxRate * 100);
+            var color = PLATFORM_COLORS[point.platform] || 'var(--accent-gold)';
+            var prevClass = point.isPreviousYear ? ' ak-analytics-scatter-dot-prev' : '';
+            var title = point.platform + ' ' + months[point.month - 1] + ' ' + point.engagementRate.toFixed(1) + '%';
+            if (point.isPreviousYear) title += ' (前年)';
+
+            html += '<div class="ak-analytics-scatter-dot' + prevClass + '" ' +
+                'style="left: ' + leftPct + '%; bottom: ' + bottomPct + '%; background: ' + color + ';" ' +
+                'title="' + escapeHtml(title) + '"></div>';
+        });
+
+        html += '</div>';
+        html += '<div class="ak-analytics-scatter-x-labels">';
+        months.forEach(function(m) { html += '<span>' + m + '</span>'; });
+        html += '</div></div>';
+
+        html += '<div class="ak-analytics-legend" style="margin-top: var(--sp-md);">';
+        data.platforms.forEach(function(platform) {
+            var color = PLATFORM_COLORS[platform] || 'var(--accent-gold)';
+            html += '<div class="ak-analytics-legend-item">' +
+                '<div class="ak-analytics-legend-swatch" style="background: ' + color + ';"></div>' +
+                escapeHtml(platform) + '</div>';
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+    }
+
+    async function loadTrendTimeline() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/trend-timeline?days=30');
+            if (!data) return;
+            renderTrendTimeline(data);
+        } catch (err) {
+            document.getElementById('trend-timeline').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_timeline_no_data}</p>';
+        }
+    }
+
+    function renderTrendTimeline(platforms) {
+        var container = document.getElementById('trend-timeline');
+        if (!platforms || platforms.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_timeline_no_data}</p>';
+            return;
+        }
+
+        var html = '';
+        platforms.forEach(function(platform) {
+            var color = PLATFORM_COLORS[platform.platform] || 'var(--accent-gold)';
+            html += '<div style="margin-bottom: var(--sp-lg);">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-sm);">';
+            html += '<span>' + renderPlatformBadge(platform.platform) + '</span>';
+            html += '<span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">' + platform.overallRate.toFixed(1) + '%</span>';
+            html += '</div>';
+            html += '<div class="ak-analytics-timeline-row">';
+
+            if (platform.dailyRates) {
+                platform.dailyRates.forEach(function(day) {
+                    var heightPct = Math.max(day.rate, 2);
+                    html += '<div class="ak-analytics-timeline-bar" style="height: ' + heightPct + '%; background: ' + color + ';"></div>';
+                });
+            }
+
+            html += '</div></div>';
+        });
+
+        container.innerHTML = html;
+    }
+
+    async function loadPlatformCorrelation() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/platform-correlation');
+            if (!data) return;
+            renderCorrelation(data);
+        } catch (err) {
+            document.getElementById('correlation-matrix').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_correlation_no_data}</p>';
+        }
+    }
+
+    function renderCorrelation(data) {
+        var container = document.getElementById('correlation-matrix');
+        if (!data.platforms || data.platforms.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_correlation_no_data}</p>';
+            return;
+        }
+
+        var cellMap = {};
+        data.cells.forEach(function(c) {
+            cellMap[c.platformA + '|' + c.platformB] = c;
+        });
+
+        var html = '<div style="overflow-x: auto;">';
+        html += '<table class="ak-analytics-matrix-table"><thead><tr><th></th>';
+        data.platforms.forEach(function(p) { html += '<th>' + escapeHtml(p) + '</th>'; });
+        html += '</tr></thead><tbody>';
+
+        data.platforms.forEach(function(row) {
+            html += '<tr><td style="font-weight: 600; text-align: left; background: var(--bg-subtle);">' + escapeHtml(row) + '</td>';
+            data.platforms.forEach(function(col) {
+                var cell = cellMap[row + '|' + col];
+                if (!cell) {
+                    html += '<td>—</td>';
+                    return;
+                }
+                var cls = 'ak-analytics-correlation-' + cell.level;
+                var display = cell.level === 'self' ? '—' : cell.correlation.toFixed(2);
+                html += '<td class="' + cls + '">' + display + '</td>';
+            });
+            html += '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+
+        if (data.recommendations && data.recommendations.length > 0) {
+            data.recommendations.forEach(function(rec) {
+                html += '<div class="ak-analytics-recommend-card">';
+                html += '<h4>{msg:analytics_correlation_recommend}: ' + escapeHtml(rec.platform) + '</h4>';
+                html += '<p style="font-size: 0.85rem; color: var(--text-body); margin-bottom: var(--sp-xs);">' + escapeHtml(rec.reason) + '</p>';
+                html += '<p style="font-size: 0.8rem; color: var(--text-sec); margin: 0;">' + escapeHtml(rec.evidence) + '</p>';
+                html += '</div>';
+            });
+        }
+
+        container.innerHTML = html;
+    }
+
+    async function loadRiskAnalysis() {
+        try {
+            var data = await apiFetch('/api/v1/dashboard/risk-analysis');
+            if (!data) return;
+            renderRiskAnalysis(data);
+        } catch (err) {
+            document.getElementById('risk-analysis').innerHTML =
+                '<p style="color: var(--text-muted);">{msg:analytics_risk_no_data}</p>';
+        }
+    }
+
+    function renderRiskAnalysis(data) {
+        var container = document.getElementById('risk-analysis');
+        if ((!data.trendPoints || data.trendPoints.length === 0) &&
+            (!data.categoryRanking || data.categoryRanking.length === 0)) {
+            container.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_risk_no_data}</p>';
+            return;
+        }
+
+        var html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp-lg);">';
+
+        html += '<div class="ak-card ak-card--plain">';
+        html += '<div class="ak-card-header"><h3 style="font-size: 0.95rem;">{msg:analytics_risk_trend_title}</h3><small>{msg:analytics_risk_trend_period}</small></div>';
+        if (data.trendPoints && data.trendPoints.length > 0) {
+            var maxDetection = Math.max.apply(null, data.trendPoints.map(function(p) { return p.detectionRate; }));
+            if (maxDetection === 0) maxDetection = 1;
+
+            html += '<div class="ak-analytics-line-chart">';
+            data.trendPoints.forEach(function(point) {
+                var heightPct = Math.round(point.detectionRate / maxDetection * 100);
+                var dotColor = 'var(--status-error)';
+                var stemColor = 'var(--status-error)';
+                if (point.severity === 'warning') { dotColor = 'var(--status-warning)'; stemColor = 'var(--status-warning)'; }
+                if (point.severity === 'success') { dotColor = 'var(--status-success)'; stemColor = 'var(--status-success)'; }
+
+                html += '<div class="ak-analytics-line-point">' +
+                    '<div class="ak-analytics-line-dot" style="background: ' + dotColor + ';"></div>' +
+                    '<div class="ak-analytics-line-stem" style="height: ' + heightPct + '%; background: linear-gradient(to top, ' + stemColor + ', transparent);"></div>' +
+                    '<span class="ak-analytics-bar-label">' + escapeHtml(point.month) + '</span>' +
+                    '</div>';
+            });
+            html += '</div>';
+        }
+        html += '</div>';
+
+        html += '<div class="ak-card ak-card--plain">';
+        html += '<div class="ak-card-header"><h3 style="font-size: 0.95rem;">{msg:analytics_risk_category_title}</h3><small>{msg:analytics_risk_category_period}</small></div>';
+        if (data.categoryRanking && data.categoryRanking.length > 0) {
+            data.categoryRanking.forEach(function(cat) {
+                var label = RISK_CATEGORY_LABELS[cat.category] || cat.category;
+                var barColor = cat.percentage >= 60 ? 'var(--status-error)' : cat.percentage >= 30 ? 'var(--status-warning)' : 'var(--status-info)';
+                html += '<div class="ak-analytics-risk-bar">' +
+                    '<div class="ak-analytics-risk-bar-label">' + escapeHtml(label) + '</div>' +
+                    '<div class="ak-analytics-risk-bar-track"><div class="ak-analytics-risk-bar-fill" style="width: ' + cat.percentage + '%; background: ' + barColor + ';"></div></div>' +
+                    '<span style="font-size: 0.8rem; font-weight: 600; min-width: 2.5rem; text-align: right;">' + cat.count + '件</span>' +
+                    '</div>';
+            });
+        }
+        html += '</div>';
+
         html += '</div>';
         container.innerHTML = html;
     }
@@ -178,23 +981,13 @@
         window.location.href = '/';
     }
 
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
-    }
-
     async function loadGrowthAccounts() {
-        var token = localStorage.getItem('accessToken');
+        var token = getToken();
         if (!token) return;
 
         try {
-            var response = await fetch('/api/v1/accounts', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (!response.ok) return;
-
-            var accounts = await response.json();
+            var accounts = await apiFetch('/api/v1/accounts');
+            if (!accounts) return;
             var select = document.getElementById('growth-account-select');
             accounts.forEach(function(account) {
                 var option = document.createElement('option');
@@ -203,55 +996,36 @@
                 select.appendChild(option);
             });
         } catch (err) {
+            showToast('error', '{msg:analytics_error_accounts}');
         }
     }
 
     async function loadGrowthAdvice() {
-        var token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/';
-            return;
-        }
-
         var accountId = document.getElementById('growth-account-select').value;
         var resultDiv = document.getElementById('growth-result');
 
         if (!accountId) {
-            resultDiv.innerHTML = '<p style="color: var(--ak-primary);">アカウントを選択してください。</p>';
+            resultDiv.innerHTML = '<p style="color: var(--accent-gold);">{msg:analytics_growth_select_account}</p>';
             return;
         }
 
-        resultDiv.innerHTML = '<p style="color: var(--ak-text-muted);">グロース戦略を分析中...</p>';
+        resultDiv.innerHTML = '<p style="color: var(--text-muted);">{msg:analytics_growth_analyzing}</p>';
 
         try {
-            var response = await fetch('/api/v1/dashboard/growth?accountId=' + encodeURIComponent(accountId), {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
-            }
-
-            if (!response.ok) {
-                var error = await response.json();
-                resultDiv.innerHTML = '<p style="color: var(--ak-primary);">' + escapeHtml(error.message || 'グロース戦略の取得に失敗しました。') + '</p>';
-                return;
-            }
-
-            var data = await response.json();
+            var data = await apiFetch('/api/v1/dashboard/growth?accountId=' + encodeURIComponent(accountId));
+            if (!data) return;
             renderGrowthAdvice(data);
         } catch (err) {
-            resultDiv.innerHTML = '<p style="color: var(--ak-primary);">グロース戦略の取得に失敗しました。</p>';
+            resultDiv.innerHTML = '<p style="color: var(--status-error);">{msg:analytics_growth_error}</p>';
         }
     }
 
     function renderGrowthAdvice(data) {
         var resultDiv = document.getElementById('growth-result');
-        var html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">' +
-            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.platform) + '</h3><p>プラットフォーム</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.currentFollowers) + '</h3><p>現在のフォロワー数</p></div>' +
-            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.projectedGrowth) + '</h3><p>成長予測</p></div>' +
+        var html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-md); margin-bottom: var(--sp-md);">' +
+            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.platform) + '</h3><p>{msg:analytics_growth_platform}</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.currentFollowers) + '</h3><p>{msg:analytics_growth_followers}</p></div>' +
+            '<div class="ak-card ak-stat"><h3>' + escapeHtml(data.projectedGrowth) + '</h3><p>{msg:analytics_growth_projection}</p></div>' +
             '</div>';
         html += '<div class="ak-card" style="white-space: pre-wrap;">' + escapeHtml(data.advice) + '</div>';
         resultDiv.innerHTML = html;

@@ -1,10 +1,12 @@
 package com.akazukin.adapter.reddit;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 import com.akazukin.sdk.reddit.RedditClient;
 import com.akazukin.sdk.reddit.RedditConfig;
@@ -23,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.Optional;
 
 public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
@@ -312,8 +315,92 @@ public class RedditAdapter extends AbstractSnsAdapter implements AutoCloseable {
     }
 
     @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/api/info?id=" + encode(platformPostId)))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("User-Agent", userAgent)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            JsonNode children = json.path("data").path("children");
+            if (!children.isArray() || children.isEmpty()) {
+                return Optional.empty();
+            }
+            JsonNode postData = children.get(0).path("data");
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.REDDIT,
+                postData.path("ups").asInt(0),
+                postData.path("num_comments").asInt(0),
+                0,
+                postData.path("view_count").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("RedditAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/api/v1/me"))
+                .header("Authorization", "Bearer " + accessToken)
+                .header("User-Agent", userAgent)
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            int totalKarma = json.path("link_karma").asInt(0) + json.path("comment_karma").asInt(0);
+            return Optional.of(new AccountStats(
+                SnsPlatform.REDDIT,
+                json.path("name").asText(),
+                totalKarma,
+                0,
+                0,
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("RedditAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

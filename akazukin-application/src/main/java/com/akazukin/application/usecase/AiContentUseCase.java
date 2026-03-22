@@ -1,9 +1,14 @@
 package com.akazukin.application.usecase;
 
+import com.akazukin.application.dto.AiCompareColumnDto;
+import com.akazukin.application.dto.AiCompareRequestDto;
+import com.akazukin.application.dto.AiCompareResultDto;
 import com.akazukin.application.dto.AiGenerateRequestDto;
 import com.akazukin.application.dto.AiGenerateResponseDto;
 import com.akazukin.application.dto.AiPersonaDto;
 import com.akazukin.application.dto.AiPersonaRequestDto;
+import com.akazukin.application.dto.AiTryoutRequestDto;
+import com.akazukin.application.dto.AiTryoutResponseDto;
 import com.akazukin.domain.exception.DomainException;
 import com.akazukin.domain.model.AiPersona;
 import com.akazukin.domain.model.AiPrompt;
@@ -15,6 +20,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -198,6 +204,95 @@ public class AiContentUseCase {
                 LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"AiContentUseCase.deletePersona", perfMs});
             } else {
                 LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"AiContentUseCase.deletePersona", perfMs});
+            }
+        }
+    }
+
+    public AiCompareResultDto compareGenerate(UUID userId, AiCompareRequestDto request) {
+        long perfStart = System.nanoTime();
+        try {
+            if (request.prompt() == null || request.prompt().isBlank()) {
+                throw new DomainException("INVALID_INPUT", "Prompt is required");
+            }
+            if (request.personaIds() == null || request.personaIds().size() < 2 || request.personaIds().size() > 4) {
+                throw new DomainException("INVALID_INPUT", "Select 2 to 4 personas");
+            }
+
+            List<AiCompareColumnDto> columns = new ArrayList<>();
+            for (UUID personaId : request.personaIds()) {
+                AiPersona persona = aiPersonaRepository.findById(personaId)
+                        .orElseThrow(() -> new DomainException("PERSONA_NOT_FOUND",
+                                "AI persona not found: " + personaId));
+                if (!persona.getUserId().equals(userId)) {
+                    throw new DomainException("FORBIDDEN", "You do not own this persona");
+                }
+
+                AiResponse response = aiTextGenerator.generateWithPersona(persona, request.prompt());
+
+                columns.add(new AiCompareColumnDto(
+                        persona.getId(),
+                        persona.getName(),
+                        persona.getTone().name(),
+                        persona.getLanguage(),
+                        response.generatedText(),
+                        response.tokensUsed(),
+                        response.durationMs(),
+                        response.modelName()
+                ));
+            }
+
+            LOG.log(Level.INFO, "Compare generation completed for user {0}, {1} personas",
+                    new Object[]{userId, columns.size()});
+            return new AiCompareResultDto(columns);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms",
+                        new Object[]{"AiContentUseCase.compareGenerate", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms",
+                        new Object[]{"AiContentUseCase.compareGenerate", perfMs});
+            }
+        }
+    }
+
+    public AiTryoutResponseDto tryout(UUID userId, AiTryoutRequestDto request) {
+        long perfStart = System.nanoTime();
+        try {
+            if (request.text() == null || request.text().isBlank()) {
+                throw new DomainException("INVALID_INPUT", "Text is required");
+            }
+            if (request.personaId() == null) {
+                throw new DomainException("INVALID_INPUT", "Persona ID is required");
+            }
+
+            AiPersona persona = aiPersonaRepository.findById(request.personaId())
+                    .orElseThrow(() -> new DomainException("PERSONA_NOT_FOUND",
+                            "AI persona not found: " + request.personaId()));
+            if (!persona.getUserId().equals(userId)) {
+                throw new DomainException("FORBIDDEN", "You do not own this persona");
+            }
+
+            AiResponse response = aiTextGenerator.generateWithPersona(persona, request.text());
+
+            LOG.log(Level.INFO, "Tryout completed for user {0}, persona {1}",
+                    new Object[]{userId, persona.getName()});
+
+            return new AiTryoutResponseDto(
+                    persona.getId(),
+                    request.text(),
+                    response.generatedText(),
+                    response.tokensUsed(),
+                    response.durationMs()
+            );
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms",
+                        new Object[]{"AiContentUseCase.tryout", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms",
+                        new Object[]{"AiContentUseCase.tryout", perfMs});
             }
         }
     }

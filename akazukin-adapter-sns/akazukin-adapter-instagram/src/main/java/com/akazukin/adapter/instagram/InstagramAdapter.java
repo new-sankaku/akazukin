@@ -1,10 +1,12 @@
 package com.akazukin.adapter.instagram;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -20,6 +22,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 public class InstagramAdapter extends AbstractSnsAdapter implements AutoCloseable {
 
@@ -297,8 +300,90 @@ public class InstagramAdapter extends AbstractSnsAdapter implements AutoCloseabl
     }
 
     @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String url = GRAPH_API_BASE + "/" + platformPostId
+                + "?fields=like_count,comments_count,impressions"
+                + "&access_token=" + encode(accessToken);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.INSTAGRAM,
+                json.path("like_count").asInt(0),
+                json.path("comments_count").asInt(0),
+                0,
+                json.path("impressions").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("InstagramAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String url = GRAPH_API_BASE + "/me"
+                + "?fields=id,username,followers_count,follows_count,media_count"
+                + "&access_token=" + encode(accessToken);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new AccountStats(
+                SnsPlatform.INSTAGRAM,
+                json.path("username").asText(),
+                json.path("followers_count").asInt(0),
+                json.path("follows_count").asInt(0),
+                json.path("media_count").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("InstagramAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

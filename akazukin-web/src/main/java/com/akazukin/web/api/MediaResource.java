@@ -13,8 +13,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import jakarta.ws.rs.core.SecurityContext;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jboss.resteasy.reactive.RestForm;
 
@@ -30,14 +31,15 @@ public class MediaResource {
     @Inject
     MediaUseCase mediaUseCase;
 
-    @Inject
-    JsonWebToken jwt;
+    @Context
+    SecurityContext securityContext;
+
 
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public Response upload(@RestForm("file") FileUpload file) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         byte[] data;
         try {
             data = Files.readAllBytes(file.filePath());
@@ -52,7 +54,7 @@ public class MediaResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response list(@QueryParam("page") @DefaultValue("0") int page,
                          @QueryParam("size") @DefaultValue("20") int size) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var mediaList = mediaUseCase.listAssets(userId, page, size);
         return Response.ok(mediaList).build();
     }
@@ -60,7 +62,7 @@ public class MediaResource {
     @DELETE
     @Path("/{id}")
     public Response delete(@PathParam("id") UUID id) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         mediaUseCase.deleteAsset(id, userId);
         return Response.noContent().build();
     }

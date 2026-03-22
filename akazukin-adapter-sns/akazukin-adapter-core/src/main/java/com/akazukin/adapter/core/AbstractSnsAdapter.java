@@ -5,7 +5,12 @@ import com.akazukin.domain.port.AdapterMetricsCollector;
 import com.akazukin.domain.port.CircuitBreakerRegistry;
 import com.akazukin.domain.port.ExternalApiAuditPort;
 import com.akazukin.domain.port.SnsAdapter;
+import com.akazukin.domain.port.SnsAnalyticsAdapter;
+import com.akazukin.domain.port.SnsGraphAdapter;
+import com.akazukin.domain.port.SnsInteractionAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.SnsAuthToken;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
@@ -15,13 +20,15 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class AbstractSnsAdapter implements SnsAdapter {
+public abstract class AbstractSnsAdapter implements SnsAdapter, SnsInteractionAdapter, SnsGraphAdapter, SnsAnalyticsAdapter {
 
     private static final Logger LOG = Logger.getLogger(AbstractSnsAdapter.class.getName());
 
@@ -175,6 +182,36 @@ public abstract class AbstractSnsAdapter implements SnsAdapter {
     @Override
     public int getMaxContentLength() {
         return DEFAULT_MAX_LENGTH;
+    }
+
+    @Override
+    public void reply(String accessToken, String postId, String content) {
+        throw new UnsupportedOperationException(platform() + " does not support reply");
+    }
+
+    @Override
+    public void mention(String accessToken, String userId, String content) {
+        throw new UnsupportedOperationException(platform() + " does not support mention");
+    }
+
+    @Override
+    public List<SnsProfile> getFollowers(String accessToken, int limit) {
+        throw new UnsupportedOperationException(platform() + " does not support getFollowers");
+    }
+
+    @Override
+    public List<SnsProfile> getFollowing(String accessToken, int limit) {
+        throw new UnsupportedOperationException(platform() + " does not support getFollowing");
+    }
+
+    @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        return Optional.empty();
     }
 
     protected void perfLog(String methodName, long startNanos) {

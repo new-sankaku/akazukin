@@ -1,5 +1,5 @@
 {#include base}
-{#title}アカウント管理 - Akazukin{/title}
+{#title}{msg:account_list_page_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -8,7 +8,7 @@
 
     <main class="ak-main">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">連携アカウント一覧</h2>
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">{msg:account_list_heading}</h2>
             <a href="/accounts/connect" role="button" style="
                 background-color: var(--accent-gold, #C8964A);
                 border-color: var(--accent-gold, #C8964A);
@@ -19,10 +19,9 @@
                 text-decoration: none;
                 letter-spacing: 0.05em;
                 transition: background-color 0.2s ease;
-            " onmouseover="this.style.backgroundColor='var(--accent-gold-hover, #B5853E)'" onmouseout="this.style.backgroundColor='var(--accent-gold, #C8964A)'">新しいアカウントを連携</a>
+            " onmouseover="this.style.backgroundColor='var(--accent-gold-hover, #B5853E)'" onmouseout="this.style.backgroundColor='var(--accent-gold, #C8964A)'">{msg:account_list_connect_new}</a>
         </div>
 
-        <!-- Account Summary -->
         <div id="account-summary" class="ak-card" style="
             background: var(--bg-elevated, #F0EBD8);
             border: 1px solid var(--border-lt, #CCC5AE);
@@ -37,7 +36,6 @@
             </div>
         </div>
 
-        <!-- Account List -->
         <div id="accounts-list">
             <div class="ak-card" style="
                 background: var(--bg-surface, #EDE8D5);
@@ -46,7 +44,7 @@
                 text-align: center;
                 padding: 2rem;
             ">
-                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">{msg:account_list_loading}</p>
             </div>
         </div>
     </main>
@@ -213,6 +211,22 @@
 </style>
 
 <script>
+    var MSG_TOTAL_SUFFIX = '{msg:account_list_total_suffix}';
+    var MSG_CONNECTED_DATE = '{msg:account_list_connected_date}';
+    var MSG_DISCONNECT = '{msg:account_list_disconnect}';
+    var MSG_EMPTY = '{msg:account_list_empty}';
+    var MSG_EMPTY_CONNECT = '{msg:account_list_empty_connect}';
+    var MSG_LOAD_ERROR = '{msg:account_list_load_error}';
+    var MSG_SERVER_ERROR = '{msg:account_list_server_error}';
+    var MSG_LOAD_ERROR_DETAIL = '{msg:account_list_load_error_detail}';
+    var MSG_DISCONNECT_CONFIRM = '{msg:account_list_disconnect_confirm}';
+    var MSG_DISCONNECT_SUCCESS = '{msg:account_list_disconnect_success}';
+    var MSG_DISCONNECT_ERROR = '{msg:account_list_disconnect_error}';
+    var MSG_DISCONNECT_NETWORK = '{msg:account_list_disconnect_network}';
+    var MSG_DATE_YEAR = '{msg:account_list_date_year}';
+    var MSG_DATE_MONTH = '{msg:account_list_date_month}';
+    var MSG_DATE_DAY = '{msg:account_list_date_day}';
+
     var platformColors = {
         'TWITTER': '#1DA1F2',
         'BLUESKY': '#0085FF',
@@ -263,13 +277,13 @@
                 renderSummary(accounts);
                 renderAccounts(accounts);
             } else {
-                await showApiError(response, 'アカウントの読み込みに失敗しました');
+                await showApiError(response, MSG_LOAD_ERROR);
             }
         } catch (err) {
             document.getElementById('accounts-list').innerHTML =
                 '<div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">' +
-                '<p style="color: #C1574B; margin: 0;">サーバーに接続できませんでした</p></div>';
-            showToast('error', 'アカウントの読み込みに失敗しました', 'サーバーに接続できません。ネットワーク接続を確認してください。');
+                '<p style="color: #C1574B; margin: 0;">' + MSG_SERVER_ERROR + '</p></div>';
+            showToast('error', MSG_LOAD_ERROR, MSG_LOAD_ERROR_DETAIL);
         }
     }
 
@@ -300,7 +314,7 @@
         });
 
         countsEl.innerHTML = tagsHtml;
-        totalEl.textContent = '合計 ' + accounts.length + ' アカウント連携済み';
+        totalEl.textContent = MSG_TOTAL_SUFFIX.replace('{0}', accounts.length);
     }
 
     function renderAccounts(accounts) {
@@ -310,8 +324,8 @@
             container.innerHTML =
                 '<div class="empty-state">' +
                 '<div class="empty-state-decoration"></div>' +
-                '<p class="empty-state-message">SNSアカウントがまだ連携されていません</p>' +
-                '<a href="/accounts/connect" class="btn-first-connect">最初のアカウントを連携する</a>' +
+                '<p class="empty-state-message">' + MSG_EMPTY + '</p>' +
+                '<a href="/accounts/connect" class="btn-first-connect">' + MSG_EMPTY_CONNECT + '</a>' +
                 '</div>';
             return;
         }
@@ -322,7 +336,7 @@
             var name = platformNames[platform] || platform;
             var displayName = escapeHtmlGlobal(account.displayName || account.accountIdentifier);
             var identifier = account.displayName ? escapeHtmlGlobal(account.accountIdentifier) : '';
-            var dateStr = formatJapaneseDate(account.connectedAt);
+            var dateStr = formatLocalDate(account.connectedAt);
 
             return '<div class="account-card">' +
                 '<div class="account-card-inner">' +
@@ -331,26 +345,26 @@
                 '<div class="account-details">' +
                 '<div class="account-display-name">' + displayName + '</div>' +
                 (identifier ? '<div class="account-identifier">' + identifier + '</div>' : '') +
-                '<div class="account-date">連携日: ' + dateStr + '</div>' +
+                '<div class="account-date">' + MSG_CONNECTED_DATE + ': ' + dateStr + '</div>' +
                 '</div>' +
                 '</div>' +
-                '<button class="btn-disconnect" onclick="deleteAccount(\'' + account.id + '\')">連携解除</button>' +
+                '<button class="btn-disconnect" onclick="deleteAccount(\'' + account.id + '\')">' + MSG_DISCONNECT + '</button>' +
                 '</div></div>';
         }).join('');
     }
 
-    function formatJapaneseDate(dateStr) {
+    function formatLocalDate(dateStr) {
         if (!dateStr) return '--';
         var d = new Date(dateStr);
         if (isNaN(d.getTime())) return '--';
         var year = d.getFullYear();
         var month = d.getMonth() + 1;
         var day = d.getDate();
-        return year + '年' + month + '月' + day + '日';
+        return year + MSG_DATE_YEAR + month + MSG_DATE_MONTH + day + MSG_DATE_DAY;
     }
 
     async function deleteAccount(id) {
-        if (!confirm('このアカウントの連携を解除してもよろしいですか？')) return;
+        if (!confirm(MSG_DISCONNECT_CONFIRM)) return;
 
         var token = localStorage.getItem('accessToken');
         try {
@@ -360,13 +374,13 @@
             });
 
             if (response.ok || response.status === 204) {
-                showToast('success', 'アカウントの連携を解除しました');
+                showToast('success', MSG_DISCONNECT_SUCCESS);
                 loadAccounts();
             } else {
-                await showApiError(response, 'アカウントの連携解除に失敗しました');
+                await showApiError(response, MSG_DISCONNECT_ERROR);
             }
         } catch (err) {
-            showToast('error', 'アカウントの連携解除に失敗しました', 'サーバーに接続できません。もう一度お試しください。');
+            showToast('error', MSG_DISCONNECT_ERROR, MSG_DISCONNECT_NETWORK);
         }
     }
 
@@ -374,11 +388,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

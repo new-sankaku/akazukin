@@ -1,10 +1,12 @@
 package com.akazukin.adapter.threads;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -20,8 +22,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ThreadsAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final int THREADS_MAX_LENGTH = 500;
 
     private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
         .connectTimeout(CONNECTION_TIMEOUT)
@@ -67,6 +72,11 @@ public class ThreadsAdapter extends AbstractSnsAdapter implements AutoCloseable 
     @Override
     public SnsPlatform platform() {
         return SnsPlatform.THREADS;
+    }
+
+    @Override
+    public int getMaxContentLength() {
+        return THREADS_MAX_LENGTH;
     }
 
     @Override
@@ -304,8 +314,90 @@ public class ThreadsAdapter extends AbstractSnsAdapter implements AutoCloseable 
     }
 
     @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String url = GRAPH_API_BASE + "/" + platformPostId
+                + "?fields=likes,replies,reposts,views"
+                + "&access_token=" + encode(accessToken);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.THREADS,
+                json.path("likes").asInt(0),
+                json.path("replies").asInt(0),
+                json.path("reposts").asInt(0),
+                json.path("views").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("ThreadsAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String url = GRAPH_API_BASE + "/me"
+                + "?fields=id,username,followers_count"
+                + "&access_token=" + encode(accessToken);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .GET()
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            recordApiCall();
+
+            return Optional.of(new AccountStats(
+                SnsPlatform.THREADS,
+                json.path("username").asText(),
+                json.path("followers_count").asInt(0),
+                0,
+                0,
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("ThreadsAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

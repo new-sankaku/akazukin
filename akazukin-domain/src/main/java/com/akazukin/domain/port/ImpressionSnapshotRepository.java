@@ -16,4 +16,6 @@ public interface ImpressionSnapshotRepository {
     ImpressionSnapshot save(ImpressionSnapshot snapshot);
 
     Optional<ImpressionSnapshot> getLatestBySnsAccountId(UUID snsAccountId);
+
+    List<ImpressionSnapshot> findRecentByAccountIds(List<UUID> snsAccountIds, int limit);
 }

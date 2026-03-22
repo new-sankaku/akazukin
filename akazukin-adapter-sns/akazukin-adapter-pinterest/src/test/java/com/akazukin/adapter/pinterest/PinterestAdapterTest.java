@@ -42,9 +42,9 @@ class PinterestAdapterTest {
     class MaxContentLengthTests {
 
         @Test
-        @DisplayName("returns default 2200")
+        @DisplayName("returns 500")
         void returnsDefault() {
-            assertEquals(2200, adapter.getMaxContentLength());
+            assertEquals(500, adapter.getMaxContentLength());
         }
     }
 

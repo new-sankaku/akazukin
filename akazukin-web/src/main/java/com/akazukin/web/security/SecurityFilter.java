@@ -19,8 +19,6 @@ public class SecurityFilter implements ContainerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private static final List<String> PUBLIC_PATH_PREFIXES = List.of(
-            "/",
-            "/register",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
             "/api/v1/auth/refresh",
@@ -34,6 +32,20 @@ public class SecurityFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
         if (isPublicPath(path)) {
+            return;
+        }
+
+        if (requestContext.getSecurityContext().getUserPrincipal() != null) {
+            try {
+                if (jwt.getRawToken() != null) {
+                    String tokenType = jwt.getClaim("type");
+                    if ("refresh".equals(tokenType)) {
+                        abortUnauthorized(requestContext, "Refresh tokens cannot be used for API access");
+                        return;
+                    }
+                }
+            } catch (IllegalStateException ignored) {
+            }
             return;
         }
 
@@ -57,16 +69,23 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     private boolean isPublicPath(String path) {
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        if (normalizedPath.length() > 1 && normalizedPath.endsWith("/")) {
+            normalizedPath = normalizedPath.substring(0, normalizedPath.length() - 1);
+        }
 
         for (String publicPath : PUBLIC_PATH_PREFIXES) {
-            if (publicPath.endsWith("/")) {
-                if (normalizedPath.startsWith(publicPath)
-                        || normalizedPath.equals(
-                                publicPath.substring(0, publicPath.length() - 1))) {
+            String normalizedPublic = publicPath;
+            if (normalizedPublic.length() > 1 && normalizedPublic.endsWith("/")) {
+                normalizedPublic = normalizedPublic.substring(0, normalizedPublic.length() - 1);
+            }
+
+            if (normalizedPublic.endsWith("/")) {
+                if (normalizedPath.startsWith(normalizedPublic)) {
                     return true;
                 }
             } else {
-                if (normalizedPath.equals(publicPath)) {
+                if (normalizedPath.equals(normalizedPublic)
+                        || normalizedPath.startsWith(normalizedPublic + "/")) {
                     return true;
                 }
             }
@@ -74,7 +93,9 @@ public class SecurityFilter implements ContainerRequestFilter {
 
         if (normalizedPath.endsWith(".js") || normalizedPath.endsWith(".css")
                 || normalizedPath.endsWith(".png") || normalizedPath.endsWith(".ico")
-                || normalizedPath.endsWith(".svg") || normalizedPath.endsWith(".woff2")) {
+                || normalizedPath.endsWith(".svg") || normalizedPath.endsWith(".webp")
+                || normalizedPath.endsWith(".woff") || normalizedPath.endsWith(".woff2")
+                || normalizedPath.endsWith(".ttf") || normalizedPath.endsWith(".eot")) {
             return true;
         }
 

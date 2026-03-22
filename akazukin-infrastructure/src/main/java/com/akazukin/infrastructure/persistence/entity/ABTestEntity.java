@@ -29,8 +29,14 @@ public class ABTestEntity extends PanacheEntityBase {
     @Column(name = "variant_b", nullable = false, columnDefinition = "TEXT")
     public String variantB;
 
+    @Column(name = "variant_c", columnDefinition = "TEXT")
+    public String variantC;
+
     @Column(nullable = false, length = 20)
     public String status;
+
+    @Column(name = "platforms", length = 500)
+    public String platforms;
 
     @Column(name = "started_at")
     public Instant startedAt;

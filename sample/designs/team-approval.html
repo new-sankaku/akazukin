@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akazukin - チーム管理・承認</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg-deep:#C4BDA6;--bg-main:#DAD4BE;--bg-surface:#EDE8D5;--bg-elevated:#F0EBD8;--bg-subtle:#E4DECC;--bg-field:#DDD6BB;
+--border:#B8B19C;--border-lt:#CCC5AE;--border-sub:#DDD6BB;
+--text-heading:#3D3A32;--text-primary:#4D493E;--text-body:#5A5548;--text-sec:#7A7464;--text-muted:#7A7464;--text-faint:#8A8470;
+--accent-gold:#C8964A;--accent-gold-light:#F2E6D0;--accent-gold-hover:#B5853E;
+--status-success:#6B8B4A;--status-warning:#C8A96E;--status-error:#B04040;--status-info:#5A8BA0;
+--status-success-hover:#5A7A3A;--status-error-hover:#9A3030;
+--font-sans:'Noto Sans JP','Segoe UI','Meiryo','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+--font-mono:'Courier New',monospace;
+--sp-xs:0.25rem;--sp-sm:0.5rem;--sp-md:1rem;--sp-lg:1.5rem;--sp-xl:2rem;--sp-2xl:3rem;
+--radius-sm:0.2rem;--radius-md:0.4rem;--radius-lg:0.6rem;
+--shadow-sm:0 1px 4px rgba(75,65,50,0.10);--shadow-md:0 2px 8px rgba(75,65,50,0.15);--shadow-lg:0 4px 16px rgba(75,65,50,0.18);
+--transition:0.2s ease;
+}
+html{font-size:16px}
+body{font-family:var(--font-sans);background:var(--bg-main);color:var(--text-body);line-height:1.7;min-height:100vh}
+h1,h2,h3,h4{color:var(--text-heading);font-weight:500;line-height:1.4}
+a{color:var(--accent-gold);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.page-wrap{max-width:72rem;margin:0 auto;padding:var(--sp-lg)}
+
+.section-nav{display:flex;gap:var(--sp-sm);margin-bottom:var(--sp-xl);border-bottom:2px solid var(--border);padding-bottom:0}
+.section-nav button{
+background:none;border:none;font-family:inherit;font-size:.95rem;padding:.7rem 1.2rem;
+color:var(--text-sec);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all var(--transition);
+}
+.section-nav button:hover{color:var(--text-heading)}
+.section-nav button.active{color:var(--accent-gold);border-bottom-color:var(--accent-gold);font-weight:500}
+
+.section{display:none}
+.section.visible{display:block}
+
+.card{background:var(--bg-surface);border:1px solid var(--border-lt);border-radius:var(--radius-lg);padding:var(--sp-lg);margin-bottom:var(--sp-lg);position:relative}
+.card::before,.card::after{content:'';position:absolute;width:0.5rem;height:0.5rem;border-color:var(--accent-gold);pointer-events:none}
+.card::before{top:0.4rem;left:0.4rem;border-top:2px solid;border-left:2px solid}
+.card::after{bottom:0.4rem;right:0.4rem;border-bottom:2px solid;border-right:2px solid}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-md);gap:var(--sp-md);flex-wrap:wrap}
+.card-header h3{font-size:1.1rem}
+.card-label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
+
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:var(--sp-md);margin-bottom:var(--sp-xl)}
+.summary-card{
+background:var(--bg-elevated);border:1px solid var(--border-lt);border-radius:var(--radius-lg);
+padding:1.2rem;text-align:center;position:relative;overflow:hidden;
+}
+.summary-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.summary-card.gold::before{background:var(--accent-gold)}
+.summary-card.success::before{background:var(--status-success)}
+.summary-card.error::before{background:var(--status-error)}
+.summary-card.info::before{background:var(--status-info)}
+.summary-card.warning::before{background:var(--status-warning)}
+.summary-val{font-size:2rem;font-weight:700;color:var(--text-heading);line-height:1.2}
+.summary-val.gold{color:var(--accent-gold)}
+.summary-val.success{color:var(--status-success)}
+.summary-val.error{color:var(--status-error)}
+.summary-val.info{color:var(--status-info)}
+.summary-val.warning{color:var(--status-warning)}
+.summary-label{font-size:.82rem;color:var(--text-sec);margin-top:.3rem}
+
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:.65rem .8rem;border-bottom:1px solid var(--border-sub)}
+th{font-size:.82rem;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em;background:var(--bg-subtle)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-elevated)}
+.table-wrap{overflow-x:auto;border:1px solid var(--border-lt);border-radius:var(--radius-md)}
+
+.toggle{position:relative;display:inline-block;width:2.8rem;height:1.5rem;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{
+position:absolute;inset:0;background:var(--border);border-radius:1rem;cursor:pointer;transition:background .25s;
+}
+.toggle-track::after{
+content:'';position:absolute;width:1.1rem;height:1.1rem;left:.2rem;top:.2rem;
+background:var(--bg-elevated);border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+.toggle input:checked+.toggle-track{background:var(--accent-gold)}
+.toggle input:checked+.toggle-track::after{transform:translateX(1.3rem)}
+
+.badge{
+display:inline-flex;align-items:center;gap:.3rem;
+font-size:.75rem;padding:.2rem .55rem;border-radius:var(--radius-sm);font-weight:500;white-space:nowrap;
+}
+.badge-admin{background:#D4C4A0;color:#5A4B28}
+.badge-user{background:#C5D5B8;color:#3B5228}
+.badge-viewer{background:#B8CDD6;color:#2A4A56}
+.badge-high{background:#E8C4C4;color:#6B2020}
+.badge-medium{background:#E8DCC0;color:#6B5828}
+.badge-low{background:#C8D8C0;color:#3B5228}
+.badge-pending{background:var(--accent-gold-light);color:#8B6A2A}
+.badge-approved{background:#C8DEB8;color:#3B5228}
+.badge-rejected{background:#E8C4C4;color:#6B2020}
+
+.btn{
+display:inline-flex;align-items:center;gap:.4rem;
+font-family:inherit;font-size:.85rem;padding:var(--sp-sm) var(--sp-md);border:1px solid var(--border);
+border-radius:var(--radius-md);background:var(--bg-elevated);color:var(--text-primary);cursor:pointer;
+transition:all var(--transition);white-space:nowrap;
+}
+.btn:hover{background:var(--bg-subtle);border-color:var(--border)}
+.btn-primary{background:var(--accent-gold);color:#fff;border-color:var(--accent-gold)}
+.btn-primary:hover{background:var(--accent-gold-hover)}
+.btn-sm{font-size:.78rem;padding:.35rem .7rem}
+.btn-approve{background:var(--status-success);color:#fff;border-color:var(--status-success)}
+.btn-approve:hover{background:var(--status-success-hover)}
+.btn-reject{background:var(--status-error);color:#fff;border-color:var(--status-error)}
+.btn-reject:hover{background:var(--status-error-hover)}
+
+.num-input{
+width:4rem;padding:.35rem .5rem;border:1px solid var(--border);border-radius:var(--radius-md);
+background:var(--bg-field);color:var(--text-primary);font-family:inherit;font-size:.9rem;text-align:center;
+}
+.num-input:focus{outline:none;border-color:var(--accent-gold);box-shadow:0 0 0 2px var(--accent-gold-light)}
+
+select{
+padding:.4rem .7rem;border:1px solid var(--border);border-radius:var(--radius-md);
+background:var(--bg-field);color:var(--text-primary);font-family:inherit;font-size:.85rem;cursor:pointer;
+}
+select:focus{outline:none;border-color:var(--accent-gold)}
+
+.rule-row{
+display:grid;grid-template-columns:1fr auto auto auto;gap:var(--sp-md);align-items:center;
+padding:.8rem 0;border-bottom:1px solid var(--border-sub);
+}
+.rule-row:last-child{border-bottom:none}
+.rule-name{font-weight:500;color:var(--text-primary)}
+.rule-desc{font-size:.8rem;color:var(--text-sec);margin-top:.15rem}
+
+.risk-flow{display:flex;flex-direction:column;gap:.8rem;margin-top:var(--sp-md)}
+.risk-level{
+display:grid;grid-template-columns:6rem 1fr;gap:var(--sp-md);align-items:center;
+padding:.8rem var(--sp-md);background:var(--bg-elevated);border-radius:var(--radius-md);border-left:4px solid;
+}
+.risk-level.risk-high{border-left-color:var(--status-error)}
+.risk-level.risk-medium{border-left-color:var(--status-warning)}
+.risk-level.risk-low{border-left-color:var(--status-success)}
+.risk-config{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;font-size:.88rem}
+
+.team-tab-group{display:flex;gap:.3rem;margin-bottom:var(--sp-md)}
+.team-tab{
+font-family:inherit;font-size:.85rem;padding:.45rem var(--sp-md);border:1px solid var(--border);
+border-radius:var(--radius-md) var(--radius-md) 0 0;background:var(--bg-subtle);color:var(--text-sec);cursor:pointer;
+border-bottom:none;margin-bottom:-1px;position:relative;z-index:1;
+}
+.team-tab.active{background:var(--bg-surface);color:var(--accent-gold);font-weight:500;z-index:2}
+
+.trend-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.trend-bar-label{font-size:.82rem;color:var(--text-sec);min-width:8rem}
+.trend-bar-track{flex:1;height:.5rem;background:var(--border-sub);border-radius:var(--radius-sm);overflow:hidden}
+.trend-bar-fill{height:100%;border-radius:var(--radius-sm);transition:width .3s}
+.trend-bar-val{font-size:.82rem;color:var(--text-primary);min-width:2.5rem;text-align:right}
+
+.review-post{
+background:var(--bg-elevated);border:1px solid var(--border-lt);border-radius:var(--radius-md);
+padding:1.2rem;margin-bottom:var(--sp-md);
+}
+.review-meta{display:flex;gap:var(--sp-md);align-items:center;margin-bottom:.8rem;flex-wrap:wrap}
+.review-author{font-weight:500;color:var(--text-heading)}
+.review-time{font-size:.82rem;color:var(--text-muted)}
+.review-content{line-height:1.8;margin-bottom:.6rem}
+.review-images{display:flex;gap:var(--sp-sm);flex-wrap:wrap}
+.review-img-placeholder{
+width:5rem;height:5rem;background:var(--bg-subtle);border:1px dashed var(--border);
+border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;
+font-size:.7rem;color:var(--text-muted);
+}
+
+.ai-report{
+background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+padding:1.2rem;margin-bottom:var(--sp-md);
+}
+.ai-report-header{display:flex;align-items:center;gap:.6rem;margin-bottom:var(--sp-md)}
+.ai-icon{
+width:1.8rem;height:1.8rem;background:var(--accent-gold-light);border-radius:50%;
+display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;
+}
+.ai-report-title{font-weight:500;color:var(--text-heading);font-size:1rem}
+.ai-score{
+margin-left:auto;font-size:.85rem;padding:.3rem .7rem;border-radius:var(--radius-md);font-weight:500;
+}
+.ai-score.pass{background:#C8DEB8;color:#3B5228}
+.ai-score.warn{background:#E8DCC0;color:#6B5828}
+.ai-score.fail{background:#E8C4C4;color:#6B2020}
+
+.finding{
+border:1px solid var(--border-lt);border-radius:var(--radius-md);margin-bottom:.6rem;overflow:hidden;
+background:var(--bg-elevated);
+}
+.finding-header{
+display:flex;align-items:center;gap:.6rem;padding:.7rem var(--sp-md);cursor:pointer;
+transition:background var(--transition);
+}
+.finding-header:hover{background:var(--bg-subtle)}
+.severity-icon{
+width:1.4rem;height:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;
+font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0;
+}
+.severity-icon.critical{background:var(--status-error)}
+.severity-icon.warning{background:var(--status-warning)}
+.severity-icon.info{background:var(--status-info)}
+.finding-title{font-size:.88rem;color:var(--text-primary);flex:1}
+.finding-chevron{font-size:.7rem;color:var(--text-muted);transition:transform var(--transition)}
+.finding.open .finding-chevron{transform:rotate(90deg)}
+.finding-detail{
+display:none;padding:.8rem var(--sp-md);border-top:1px solid var(--border-sub);
+font-size:.85rem;color:var(--text-body);background:var(--bg-surface);
+}
+.finding.open .finding-detail{display:block}
+.finding-law{
+display:inline-flex;align-items:center;gap:.3rem;
+background:var(--accent-gold-light);color:#8B6A2A;
+font-size:.78rem;padding:.2rem .5rem;border-radius:var(--radius-sm);margin-right:.5rem;margin-bottom:.3rem;
+}
+.finding-case{
+margin-top:.5rem;padding:.6rem;background:var(--bg-elevated);border-radius:var(--radius-md);
+border-left:3px solid var(--border);font-size:.82rem;color:var(--text-sec);
+}
+
+.actions-bar{display:flex;gap:.6rem;flex-wrap:wrap;padding-top:var(--sp-md);border-top:1px solid var(--border-sub)}
+
+.empty-state{text-align:center;padding:var(--sp-2xl) var(--sp-md);color:var(--text-muted)}
+.empty-state-icon{font-size:2.5rem;margin-bottom:.5rem;opacity:.5}
+
+.filter-bar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:var(--sp-md)}
+
+.queue-item{
+display:grid;grid-template-columns:1fr auto;gap:var(--sp-md);align-items:start;
+padding:var(--sp-md);border-bottom:1px solid var(--border-sub);
+}
+.queue-item:last-child{border-bottom:none}
+.queue-item:hover{background:var(--bg-elevated)}
+.queue-title{font-weight:500;color:var(--text-heading);margin-bottom:.2rem}
+.queue-snippet{font-size:.85rem;color:var(--text-sec);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.queue-info{display:flex;gap:.8rem;margin-top:.4rem;font-size:.78rem;color:var(--text-muted);flex-wrap:wrap}
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+
+@media(max-width:640px){
+.rule-row{grid-template-columns:1fr;gap:.5rem}
+.risk-level{grid-template-columns:1fr}
+.summary-grid{grid-template-columns:repeat(2,1fr)}
+.review-meta{flex-direction:column;align-items:flex-start;gap:.3rem}
+.dashboard-grid{grid-template-columns:1fr}
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+<div class="page-wrap">
+<h1 style="margin-bottom:.3rem">チーム管理・承認</h1>
+<p style="color:var(--text-sec);margin-bottom:1.5rem;font-size:.9rem">チームの承認ルール設定、承認状況の確認、AI検閲付きレビューを行います</p>
+
+<nav class="section-nav">
+<button class="active" onclick="switchSection('rules',this)">承認ルール設定</button>
+<button onclick="switchSection('dashboard',this)">承認ダッシュボード</button>
+<button onclick="switchSection('review',this)">AI検閲レビュー</button>
+</nav>
+
+<div id="sec-rules" class="section visible">
+
+<div class="team-tab-group">
+<button class="team-tab active" onclick="switchTeam(this)">マーケティング部</button>
+<button class="team-tab" onclick="switchTeam(this)">広報部</button>
+<button class="team-tab" onclick="switchTeam(this)">営業部</button>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>権限別 承認要否</h3>
+<span class="badge badge-admin">現在のチーム: マーケティング部</span>
+</div>
+<p class="card-label">権限ごとに投稿承認の要否を設定します</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>権限</th><th>投稿時に承認が必要</th><th>スケジュール投稿に承認が必要</th><th>メディア添付に承認が必要</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="badge badge-admin">ADMIN</span></td>
+<td><label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label></td>
+<td><label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label></td>
+<td><label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label></td>
+</tr>
+<tr>
+<td><span class="badge badge-user">USER</span></td>
+<td><label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label></td>
+<td><label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label></td>
+<td><label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label></td>
+</tr>
+<tr>
+<td><span class="badge badge-viewer">VIEWER</span></td>
+<td colspan="3" style="color:var(--text-muted);font-size:.85rem">VIEWERは投稿権限がありません</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>AIチェック設定</h3>
+</div>
+
+<div class="rule-row">
+<div>
+<div class="rule-name">AIチェック必須</div>
+<div class="rule-desc">投稿前にAIによる自動検閲を実行します</div>
+</div>
+<label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+</div>
+
+<div class="rule-row">
+<div>
+<div class="rule-name">AIチェック不合格時の自動却下</div>
+<div class="rule-desc">重大な指摘がある場合に承認フローを自動で却下します</div>
+</div>
+<label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+</div>
+
+<div class="rule-row">
+<div>
+<div class="rule-name">承認者の最低人数</div>
+<div class="rule-desc">承認に必要な最低人数を設定します</div>
+</div>
+<input type="number" class="num-input" value="2" min="1" max="10">
+<span style="font-size:.85rem;color:var(--text-sec)">人</span>
+</div>
+
+<div class="rule-row">
+<div>
+<div class="rule-name">承認期限</div>
+<div class="rule-desc">期限を過ぎた承認待ちはエスカレーションされます</div>
+</div>
+<input type="number" class="num-input" value="24" min="1" max="168">
+<span style="font-size:.85rem;color:var(--text-sec)">時間</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>リスクレベル別 承認フロー</h3>
+<span style="font-size:.82rem;color:var(--text-sec)">Sentinel / Compliance 連携</span>
+</div>
+<p class="card-label">リスク判定結果に応じて承認フローを自動で切り替えます</p>
+
+<div class="risk-flow">
+<div class="risk-level risk-high">
+<span class="badge badge-high">高リスク</span>
+<div class="risk-config">
+<span>承認者</span>
+<input type="number" class="num-input" value="3" min="1" max="10">
+<span>人</span>
+<span style="margin:0 .3rem;color:var(--border)">|</span>
+<label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+<span>管理者承認必須</span>
+<span style="margin:0 .3rem;color:var(--border)">|</span>
+<label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+<span>法務確認必須</span>
+</div>
+</div>
+
+<div class="risk-level risk-medium">
+<span class="badge badge-medium">中リスク</span>
+<div class="risk-config">
+<span>承認者</span>
+<input type="number" class="num-input" value="2" min="1" max="10">
+<span>人</span>
+<span style="margin:0 .3rem;color:var(--border)">|</span>
+<label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+<span>管理者承認必須</span>
+<span style="margin:0 .3rem;color:var(--border)">|</span>
+<label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+<span>法務確認必須</span>
+</div>
+</div>
+
+<div class="risk-level risk-low">
+<span class="badge badge-low">低リスク</span>
+<div class="risk-config">
+<span>承認者</span>
+<input type="number" class="num-input" value="1" min="1" max="10">
+<span>人</span>
+<span style="margin:0 .3rem;color:var(--border)">|</span>
+<label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+<span>管理者承認必須</span>
+<span style="margin:0 .3rem;color:var(--border)">|</span>
+<label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+<span>法務確認必須</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;justify-content:flex-end;gap:.6rem">
+<button class="btn">変更を破棄</button>
+<button class="btn btn-primary">設定を保存</button>
+</div>
+</div>
+
+<div id="sec-dashboard" class="section">
+
+<div class="summary-grid">
+<div class="summary-card gold">
+<div class="summary-val gold">12</div>
+<div class="summary-label">承認待ち</div>
+</div>
+<div class="summary-card success">
+<div class="summary-val success">34</div>
+<div class="summary-label">本日承認済み</div>
+</div>
+<div class="summary-card error">
+<div class="summary-val error">5</div>
+<div class="summary-label">却下</div>
+</div>
+<div class="summary-card info">
+<div class="summary-val info">8.2%</div>
+<div class="summary-label">AIチェック不合格率</div>
+</div>
+</div>
+
+<div class="dashboard-grid">
+
+<div class="card">
+<div class="card-header">
+<h3>却下傾向分析</h3>
+<span style="font-size:.78rem;color:var(--text-muted)">Analyst レポート</span>
+</div>
+<p class="card-label">過去30日間の却下理由の内訳</p>
+
+<div style="margin-top:.8rem">
+<div class="trend-bar">
+<span class="trend-bar-label">表現の不適切さ</span>
+<div class="trend-bar-track"><div class="trend-bar-fill" style="width:65%;background:var(--status-error)"></div></div>
+<span class="trend-bar-val">38%</span>
+</div>
+<div class="trend-bar">
+<span class="trend-bar-label">法令違反の恐れ</span>
+<div class="trend-bar-track"><div class="trend-bar-fill" style="width:42%;background:var(--status-warning)"></div></div>
+<span class="trend-bar-val">24%</span>
+</div>
+<div class="trend-bar">
+<span class="trend-bar-label">ブランド基準逸脱</span>
+<div class="trend-bar-track"><div class="trend-bar-fill" style="width:30%;background:var(--status-info)"></div></div>
+<span class="trend-bar-val">18%</span>
+</div>
+<div class="trend-bar">
+<span class="trend-bar-label">情報の正確性</span>
+<div class="trend-bar-track"><div class="trend-bar-fill" style="width:20%;background:var(--accent-gold)"></div></div>
+<span class="trend-bar-val">12%</span>
+</div>
+<div class="trend-bar">
+<span class="trend-bar-label">その他</span>
+<div class="trend-bar-track"><div class="trend-bar-fill" style="width:14%;background:var(--text-muted)"></div></div>
+<span class="trend-bar-val">8%</span>
+</div>
+</div>
+<p style="font-size:.8rem;color:var(--text-sec);margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--border-sub)">
+傾向: 表現の不適切さに関する却下が先月比で12%増加しています。SNSガイドラインの再周知を推奨します。
+</p>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>チーム別承認状況</h3>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>チーム</th><th>承認待ち</th><th>承認済み</th><th>却下</th><th>不合格率</th></tr></thead>
+<tbody>
+<tr><td>マーケティング部</td><td>5</td><td>18</td><td>2</td><td>6.5%</td></tr>
+<tr><td>広報部</td><td>4</td><td>12</td><td>1</td><td>4.2%</td></tr>
+<tr><td>営業部</td><td>3</td><td>4</td><td>2</td><td>18.3%</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>承認待ち一覧</h3>
+<div class="filter-bar" style="margin-bottom:0">
+<select>
+<option>全チーム</option>
+<option>マーケティング部</option>
+<option>広報部</option>
+<option>営業部</option>
+</select>
+<select>
+<option>全リスクレベル</option>
+<option>高リスク</option>
+<option>中リスク</option>
+<option>低リスク</option>
+</select>
+</div>
+</div>
+
+<div class="queue-item">
+<div>
+<div class="queue-title">新製品キャンペーン告知</div>
+<div class="queue-snippet">春の新製品ラインナップをご紹介！今なら期間限定で20%OFFキャンペーン実施中。お見逃しなく...</div>
+<div class="queue-info">
+<span>マーケティング部 / 田中太郎</span>
+<span>X, Instagram</span>
+<span>2時間前</span>
+<span class="badge badge-medium">中リスク</span>
+<span class="badge badge-pending">承認待ち (1/2)</span>
+</div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="switchSection('review',document.querySelectorAll('.section-nav button')[2])">レビュー</button>
+</div>
+
+<div class="queue-item">
+<div>
+<div class="queue-title">お客様の声 リポスト</div>
+<div class="queue-snippet">@user_abc 様からいただいた素敵なレビューをシェアさせていただきます。ありがとうございます！</div>
+<div class="queue-info">
+<span>広報部 / 鈴木花子</span>
+<span>X, Bluesky</span>
+<span>3時間前</span>
+<span class="badge badge-low">低リスク</span>
+<span class="badge badge-pending">承認待ち (0/1)</span>
+</div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="switchSection('review',document.querySelectorAll('.section-nav button')[2])">レビュー</button>
+</div>
+
+<div class="queue-item">
+<div>
+<div class="queue-title">法改正に関する注意喚起</div>
+<div class="queue-snippet">2026年4月施行の改正個人情報保護法について、お客様への影響と当社の対応をご案内いたします...</div>
+<div class="queue-info">
+<span>広報部 / 佐藤次郎</span>
+<span>X, Bluesky, Mastodon</span>
+<span>5時間前</span>
+<span class="badge badge-high">高リスク</span>
+<span class="badge badge-pending">承認待ち (1/3)</span>
+</div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="switchSection('review',document.querySelectorAll('.section-nav button')[2])">レビュー</button>
+</div>
+
+<div class="queue-item">
+<div>
+<div class="queue-title">週末セール告知</div>
+<div class="queue-snippet">今週末限定！全品10%OFF。さらにアプリ会員様は追加5%OFFクーポンをプレゼント！</div>
+<div class="queue-info">
+<span>営業部 / 山田三郎</span>
+<span>X, Instagram, Pinterest</span>
+<span>6時間前</span>
+<span class="badge badge-medium">中リスク</span>
+<span class="badge badge-pending">承認待ち (0/2)</span>
+</div>
+</div>
+<button class="btn btn-sm btn-primary" onclick="switchSection('review',document.querySelectorAll('.section-nav button')[2])">レビュー</button>
+</div>
+</div>
+</div>
+
+<div id="sec-review" class="section">
+
+<div class="card" style="margin-bottom:1rem;padding:1rem 1.5rem">
+<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+<span style="font-size:.85rem;color:var(--text-sec)">レビュー対象:</span>
+<select style="flex:1;min-width:15rem">
+<option>新製品キャンペーン告知 - 田中太郎 (マーケティング部)</option>
+<option>お客様の声 リポスト - 鈴木花子 (広報部)</option>
+<option>法改正に関する注意喚起 - 佐藤次郎 (広報部)</option>
+<option>週末セール告知 - 山田三郎 (営業部)</option>
+</select>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>投稿内容</h3>
+<div style="display:flex;gap:.5rem">
+<span class="badge badge-medium">中リスク</span>
+<span class="badge badge-pending">承認待ち (1/2)</span>
+</div>
+</div>
+
+<div class="review-post">
+<div class="review-meta">
+<span class="review-author">田中太郎</span>
+<span class="badge badge-user">USER</span>
+<span>マーケティング部</span>
+<span class="review-time">2026-03-21 10:30</span>
+</div>
+<div class="review-content">
+<p>春の新製品ラインナップをご紹介！</p>
+<p>今なら期間限定で20%OFFキャンペーン実施中。</p>
+<p>お見逃しなく！ #新製品 #春キャンペーン #限定セール</p>
+</div>
+<div class="review-images">
+<div class="review-img-placeholder">画像1</div>
+<div class="review-img-placeholder">画像2</div>
+</div>
+<div style="margin-top:.8rem;font-size:.82rem;color:var(--text-sec)">
+投稿先: X, Instagram
+</div>
+</div>
+</div>
+
+<div class="ai-report">
+<div class="ai-report-header">
+<div class="ai-icon">AI</div>
+<span class="ai-report-title">AI検閲レポート</span>
+<span class="ai-score warn">注意あり (スコア: 72/100)</span>
+</div>
+
+<div class="finding open">
+<div class="finding-header" onclick="toggleFinding(this)">
+<div class="severity-icon warning">!</div>
+<span class="finding-title">景品表示法に抵触する可能性のある表現</span>
+<span class="finding-chevron">&#9654;</span>
+</div>
+<div class="finding-detail">
+<p>「20%OFF」の表記について、割引の基準価格（通常価格）が明示されていません。二重価格表示に該当する可能性があります。</p>
+<div style="margin-top:.6rem">
+<span class="finding-law">景品表示法 第5条第2号</span>
+<span class="finding-law">不当景品類及び不当表示防止法</span>
+</div>
+<div class="finding-case">
+<strong>過去事例:</strong> 2025年8月、同チームの投稿「最大50%OFF」が消費者庁の指導対象となり、投稿を取り下げた事例があります。基準価格の併記で解決しました。
+</div>
+</div>
+</div>
+
+<div class="finding">
+<div class="finding-header" onclick="toggleFinding(this)">
+<div class="severity-icon warning">!</div>
+<span class="finding-title">「期間限定」の期間が未指定</span>
+<span class="finding-chevron">&#9654;</span>
+</div>
+<div class="finding-detail">
+<p>「期間限定」と記載がありますが、具体的な開始日・終了日が明示されていません。有利誤認表示に該当する恐れがあります。</p>
+<div style="margin-top:.6rem">
+<span class="finding-law">景品表示法 第5条第2号</span>
+</div>
+<div class="finding-case">
+<strong>過去事例:</strong> 2025年11月、「期間限定」表記に対し期日を追記するよう社内ガイドラインが改定されました。
+</div>
+</div>
+</div>
+
+<div class="finding">
+<div class="finding-header" onclick="toggleFinding(this)">
+<div class="severity-icon info">i</div>
+<span class="finding-title">ハッシュタグのブランドガイドライン確認</span>
+<span class="finding-chevron">&#9654;</span>
+</div>
+<div class="finding-detail">
+<p>「#限定セール」は公式ハッシュタグ一覧に含まれていません。ブランドガイドラインでは公式タグの使用が推奨されています。</p>
+<div style="margin-top:.6rem">
+<span class="finding-law">社内SNSガイドライン v3.2</span>
+</div>
+<div class="finding-case">
+<strong>推奨:</strong> 公式タグ「#(ブランド名)セール」の使用を検討してください。
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h3>承認履歴</h3>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>承認者</th><th>判定</th><th>日時</th><th>コメント</th></tr></thead>
+<tbody>
+<tr>
+<td>木村管理者</td>
+<td><span class="badge badge-approved">承認</span></td>
+<td>2026-03-21 11:45</td>
+<td>内容は問題なし。AIの指摘を反映してから公開してください。</td>
+</tr>
+<tr>
+<td style="color:var(--text-muted)">（2人目 未承認）</td>
+<td><span class="badge badge-pending">待ち</span></td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="actions-bar">
+<button class="btn btn-approve">承認する</button>
+<button class="btn btn-reject">却下する</button>
+<button class="btn">差し戻す</button>
+<div style="flex:1"></div>
+<button class="btn">AIチェック再実行</button>
+</div>
+</div>
+
+</div>
+
+<script>
+function switchSection(id,btn){
+document.querySelectorAll('.section').forEach(function(s){s.classList.remove('visible')});
+document.getElementById('sec-'+id).classList.add('visible');
+document.querySelectorAll('.section-nav button').forEach(function(b){b.classList.remove('active')});
+btn.classList.add('active');
+}
+function switchTeam(btn){
+document.querySelectorAll('.team-tab').forEach(function(t){t.classList.remove('active')});
+btn.classList.add('active');
+}
+function toggleFinding(header){
+header.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>

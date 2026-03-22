@@ -9,7 +9,6 @@ import com.akazukin.application.usecase.AuthUseCase;
 import com.akazukin.domain.model.User;
 import com.akazukin.domain.port.UserRepository;
 import com.akazukin.web.security.JwtTokenService;
-import com.akazukin.web.security.JwtTokenService.InvalidRefreshTokenException;
 import com.akazukin.web.security.PasswordHasher;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -18,7 +17,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @Path("/api/v1/auth")
@@ -38,6 +39,9 @@ public class AuthResource {
     @Inject
     UserRepository userRepository;
 
+    @ConfigProperty(name = "akazukin.jwt.access-token-duration", defaultValue = "PT15M")
+    Duration accessTokenDuration;
+
     @POST
     @Path("/register")
     public Response register(RegisterRequestDto request) {
@@ -50,7 +54,7 @@ public class AuthResource {
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);
         return Response.status(Response.Status.CREATED)
-                .entity(new LoginResponseDto(accessToken, refreshToken, 900))
+                .entity(new LoginResponseDto(accessToken, refreshToken, accessTokenDuration.toSeconds()))
                 .build();
     }
 
@@ -65,7 +69,7 @@ public class AuthResource {
         User user = authUseCase.authenticate(request.username(), request.password());
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);
-        return Response.ok(new LoginResponseDto(accessToken, refreshToken, 900))
+        return Response.ok(new LoginResponseDto(accessToken, refreshToken, accessTokenDuration.toSeconds()))
                 .build();
     }
 
@@ -81,17 +85,7 @@ public class AuthResource {
                     .build();
         }
 
-        UUID userId;
-        try {
-            userId = jwtTokenService.parseRefreshToken(request.refreshToken());
-        } catch (InvalidRefreshTokenException e) {
-            return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(ErrorResponseDto.of(
-                            "INVALID_REFRESH_TOKEN",
-                            e.getMessage(),
-                            null))
-                    .build();
-        }
+        UUID userId = jwtTokenService.parseRefreshToken(request.refreshToken());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new com.akazukin.domain.exception.AccountNotFoundException(userId));
@@ -99,7 +93,7 @@ public class AuthResource {
 
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);
-        return Response.ok(new LoginResponseDto(accessToken, refreshToken, 900))
+        return Response.ok(new LoginResponseDto(accessToken, refreshToken, accessTokenDuration.toSeconds()))
                 .build();
     }
 }

@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投稿詳細</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-sans: 'Noto Sans JP', 'Segoe UI', 'Meiryo', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  --sp-xs: 0.25rem;
+  --sp-sm: 0.5rem;
+  --sp-md: 1rem;
+  --sp-lg: 1.5rem;
+  --sp-xl: 2rem;
+  --sp-2xl: 3rem;
+
+  --bg-deep: #C4BDA6;
+  --bg-main: #DAD4BE;
+  --bg-surface: #EDE8D5;
+  --bg-elevated: #F0EBD8;
+  --bg-subtle: #E4DECC;
+  --bg-field: #DDD6BB;
+
+  --border: #B8B19C;
+  --border-lt: #CCC5AE;
+  --border-sub: #DDD6BB;
+
+  --text-heading: #3D3A32;
+  --text-primary: #4D493E;
+  --text-body: #5A5548;
+  --text-sec: #7A7464;
+  --text-muted: #7A7464;
+  --text-faint: #8A8470;
+
+  --accent-gold: #C8964A;
+  --accent-gold-hover: #B5853E;
+  --accent-gold-light: #F2E6D0;
+
+  --status-success: #6B8B4A;
+  --status-success-bg: #D5DDCA;
+  --status-warning: #C8A96E;
+  --status-warning-bg: #F0E6D0;
+  --status-error: #B04040;
+  --status-error-bg: #EEDCDC;
+  --status-info: #5A8BA0;
+  --status-info-bg: #D8E8F0;
+
+  --radius-sm: 0.2rem;
+  --radius-md: 0.4rem;
+  --radius-lg: 0.6rem;
+
+  --shadow-sm: 0 1px 4px rgba(75, 65, 50, 0.10);
+  --shadow-md: 0 2px 8px rgba(75, 65, 50, 0.15);
+  --shadow-lg: 0 4px 16px rgba(75, 65, 50, 0.18);
+
+  --transition: 0.2s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  font-family: var(--font-sans);
+  background: var(--bg-main);
+  color: var(--text-primary);
+}
+
+body {
+  background-color: var(--bg-main);
+  padding: var(--sp-xl);
+  min-height: 100vh;
+}
+
+.page-layout {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-lg);
+}
+
+.ak-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: box-shadow var(--transition);
+}
+
+.ak-card:hover { box-shadow: var(--shadow-md); }
+
+.ak-card::before,
+.ak-card::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--border);
+  border-style: solid;
+  pointer-events: none;
+}
+
+.ak-card::before { top: 4px; left: 4px; border-width: 1px 0 0 1px; }
+.ak-card::after { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
+
+.ak-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-md) var(--sp-lg);
+  border-bottom: 1px solid var(--border-lt);
+}
+
+.ak-card-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  letter-spacing: 0.04em;
+}
+
+.ak-card-body {
+  padding: var(--sp-lg);
+}
+
+.post-content {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-body);
+  white-space: pre-wrap;
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-sm);
+  margin-top: var(--sp-md);
+  padding-top: var(--sp-md);
+  border-top: 1px solid var(--border-sub);
+}
+
+.post-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-xs);
+}
+
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--radius-sm);
+  color: var(--text-sec);
+}
+
+.platform-badge .dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--status-success);
+}
+
+.platform-badge.twitter { background: #E8F4FD; color: #1a8cd8; border-color: #B8DDF5; }
+.platform-badge.bluesky { background: #E5F0FF; color: #0070E0; border-color: #B0D4FF; }
+.platform-badge.mastodon { background: #EDEDFF; color: #595AFF; border-color: #C8C8FF; }
+.platform-badge.instagram { background: #FDE8ED; color: #C13584; border-color: #F5C0D0; }
+.platform-badge.facebook { background: #E8EEF8; color: #1877F2; border-color: #B8D0F0; }
+.platform-badge.linkedin { background: #E4F0F8; color: #0A66C2; border-color: #B0D4ED; }
+.platform-badge.tiktok { background: #F0E8F0; color: #010101; border-color: #D0C0D0; }
+.platform-badge.pinterest { background: #FDE8E8; color: #BD081C; border-color: #F5C0C0; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
+}
+
+.status-badge--published {
+  background: var(--status-success-bg);
+  color: #3A5A2A;
+  border: 1px solid var(--status-success);
+}
+
+.status-badge--draft {
+  background: var(--status-warning-bg);
+  color: #7A6545;
+  border: 1px solid var(--status-warning);
+}
+
+.engagement-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-lg);
+  margin-top: var(--sp-sm);
+}
+
+.engagement-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  font-size: 0.85rem;
+  color: var(--text-sec);
+}
+
+.engagement-item .num {
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+}
+
+.btn-primary {
+  background: var(--accent-gold);
+  color: #F0EBD8;
+  border-color: var(--accent-gold-hover);
+}
+
+.btn-primary:hover {
+  background: var(--accent-gold-hover);
+}
+
+.btn-sm {
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: 0.8rem;
+}
+
+.section-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-lg);
+}
+
+@media (max-width: 64rem) {
+  .section-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.recommend-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.recommend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.recommend-item:hover {
+  background: var(--accent-gold-light);
+  border-color: var(--accent-gold);
+}
+
+.recommend-item-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.recommend-platform {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-heading);
+}
+
+.recommend-reason {
+  font-size: 0.78rem;
+  color: var(--text-sec);
+  margin-top: 0.15rem;
+}
+
+.score-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  min-width: 7rem;
+}
+
+.score-bar {
+  flex: 1;
+  height: 0.4rem;
+  background: var(--bg-field);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width var(--transition);
+}
+
+.score-bar-fill--high {
+  background: var(--status-success);
+}
+
+.score-bar-fill--mid {
+  background: var(--status-warning);
+}
+
+.score-bar-fill--low {
+  background: var(--status-error);
+}
+
+.score-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  min-width: 2.2rem;
+  text-align: right;
+}
+
+.recommend-arrow {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-left: var(--sp-sm);
+}
+
+.reply-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.reply-item {
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--radius-md);
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-xs);
+}
+
+.reply-user {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.reply-avatar {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--bg-field);
+  border: 1px solid var(--border-lt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-sec);
+}
+
+.reply-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-heading);
+}
+
+.reply-source {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.reply-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.reply-body {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  margin-bottom: var(--sp-sm);
+}
+
+.reply-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.persona-selector {
+  display: none;
+  margin-top: var(--sp-sm);
+  padding: var(--sp-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--radius-md);
+}
+
+.persona-selector.is-open {
+  display: block;
+}
+
+.persona-selector-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-sec);
+  margin-bottom: var(--sp-sm);
+}
+
+.persona-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-xs);
+}
+
+.persona-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: var(--sp-xs) var(--sp-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.persona-chip:hover {
+  background: var(--accent-gold-light);
+  border-color: var(--accent-gold);
+}
+
+.persona-chip.is-selected {
+  background: var(--accent-gold);
+  color: #F0EBD8;
+  border-color: var(--accent-gold-hover);
+}
+
+.generated-reply {
+  display: none;
+  margin-top: var(--sp-sm);
+  padding: var(--sp-sm);
+  background: var(--accent-gold-light);
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-md);
+}
+
+.generated-reply.is-visible {
+  display: block;
+}
+
+.generated-reply-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-gold-hover);
+  margin-bottom: var(--sp-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.generated-reply-text {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-body);
+}
+
+.generated-reply-actions {
+  display: flex;
+  gap: var(--sp-xs);
+  margin-top: var(--sp-sm);
+}
+
+.compliance-card {
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.compliance-card.all-passed {
+  border-color: var(--status-success);
+  box-shadow: 0 0 0 1px var(--status-success), var(--shadow-md);
+}
+
+.compliance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.compliance-table th {
+  text-align: left;
+  padding: var(--sp-sm) var(--sp-sm);
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: var(--text-sec);
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
+
+.compliance-table td {
+  padding: var(--sp-sm) var(--sp-sm);
+  border-bottom: 1px solid var(--border-sub);
+  vertical-align: middle;
+}
+
+.compliance-table tr:last-child td {
+  border-bottom: none;
+}
+
+.compliance-table tr:hover td {
+  background: var(--bg-elevated);
+}
+
+.check-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.check-status--pass {
+  color: #3A5A2A;
+}
+
+.check-status--fail {
+  color: #7A2020;
+}
+
+.check-status--warn {
+  color: #7A6545;
+}
+
+.check-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.check-icon--pass {
+  background: var(--status-success-bg);
+  color: #3A5A2A;
+  border: 1px solid var(--status-success);
+}
+
+.check-icon--fail {
+  background: var(--status-error-bg);
+  color: #7A2020;
+  border: 1px solid var(--status-error);
+}
+
+.check-icon--warn {
+  background: var(--status-warning-bg);
+  color: #7A6545;
+  border: 1px solid var(--status-warning);
+}
+
+.compliance-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-lt);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  font-size: 0.85rem;
+}
+
+.compliance-summary-pass {
+  color: #3A5A2A;
+  font-weight: 600;
+}
+
+.compliance-summary-count {
+  color: var(--text-sec);
+}
+
+.section-title-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-xs);
+}
+
+.tag-converted {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.1rem 0.4rem;
+  background: var(--status-info-bg);
+  color: #2A5A6A;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--status-info);
+}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-gold);outline-offset:2px}</style>
+</head>
+<body>
+
+<div class="page-layout">
+
+  <div class="ak-card">
+    <div class="ak-card-header">
+      <h2>投稿詳細</h2>
+      <span class="status-badge status-badge--published">公開済み</span>
+    </div>
+    <div class="ak-card-body">
+      <div class="post-content">春の新作コレクションが入荷しました。
+今シーズンは「光と影」をテーマに、自然素材を活かしたナチュラルなラインナップをご用意しています。
+オンラインストアでは先行予約を受付中。お早めにチェックしてください。</div>
+      <div class="post-meta">
+        <div class="post-targets">
+          <span class="platform-badge"><span class="dot"></span>X (Twitter)</span>
+          <span class="platform-badge"><span class="dot"></span>Instagram</span>
+        </div>
+        <span style="color: var(--text-muted); font-size: 0.8rem;">2026年3月20日 14:30</span>
+      </div>
+      <div class="engagement-row">
+        <span class="engagement-item"><span class="num">1,284</span> いいね</span>
+        <span class="engagement-item"><span class="num">342</span> リポスト</span>
+        <span class="engagement-item"><span class="num">89</span> 返信</span>
+        <span class="engagement-item"><span class="num">15,420</span> インプレッション</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-columns">
+
+    <div class="ak-card">
+      <div class="ak-card-header">
+        <h2 class="section-title-icon">横展開レコメンド</h2>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">未投稿SNS</span>
+      </div>
+      <div class="ak-card-body" style="padding: var(--sp-sm) var(--sp-lg);">
+        <div class="recommend-list">
+
+          <a class="recommend-item" href="#" onclick="return false;">
+            <div class="recommend-item-left">
+              <div>
+                <div class="recommend-platform">Facebook <span class="tag-converted">変換済み</span></div>
+                <div class="recommend-reason">30代以上の層にリーチ拡大が見込める</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--sp-sm);">
+              <div class="score-bar-wrap">
+                <div class="score-bar"><div class="score-bar-fill score-bar-fill--high" style="width:92%;"></div></div>
+                <span class="score-label">92</span>
+              </div>
+              <span class="recommend-arrow">&rsaquo;</span>
+            </div>
+          </a>
+
+          <a class="recommend-item" href="#" onclick="return false;">
+            <div class="recommend-item-left">
+              <div>
+                <div class="recommend-platform">LinkedIn <span class="tag-converted">変換済み</span></div>
+                <div class="recommend-reason">ビジネス層への認知拡大に効果的</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--sp-sm);">
+              <div class="score-bar-wrap">
+                <div class="score-bar"><div class="score-bar-fill score-bar-fill--mid" style="width:71%;"></div></div>
+                <span class="score-label">71</span>
+              </div>
+              <span class="recommend-arrow">&rsaquo;</span>
+            </div>
+          </a>
+
+          <a class="recommend-item" href="#" onclick="return false;">
+            <div class="recommend-item-left">
+              <div>
+                <div class="recommend-platform">TikTok</div>
+                <div class="recommend-reason">若年層の関心は低め、動画素材が必要</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--sp-sm);">
+              <div class="score-bar-wrap">
+                <div class="score-bar"><div class="score-bar-fill score-bar-fill--low" style="width:34%;"></div></div>
+                <span class="score-label">34</span>
+              </div>
+              <span class="recommend-arrow">&rsaquo;</span>
+            </div>
+          </a>
+
+          <a class="recommend-item" href="#" onclick="return false;">
+            <div class="recommend-item-left">
+              <div>
+                <div class="recommend-platform">Pinterest <span class="tag-converted">変換済み</span></div>
+                <div class="recommend-reason">ビジュアル訴求で購買意欲を喚起</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--sp-sm);">
+              <div class="score-bar-wrap">
+                <div class="score-bar"><div class="score-bar-fill score-bar-fill--high" style="width:85%;"></div></div>
+                <span class="score-label">85</span>
+              </div>
+              <span class="recommend-arrow">&rsaquo;</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="ak-card compliance-card all-passed" id="complianceCard">
+      <div class="ak-card-header">
+        <h2 class="section-title-icon">コンプライアンスチェック</h2>
+        <span class="status-badge status-badge--published" style="font-size:0.72rem;">全項目合格</span>
+      </div>
+      <div class="ak-card-body" style="padding: 0;">
+        <table class="compliance-table">
+          <thead>
+            <tr>
+              <th>法令・規則</th>
+              <th>チェック項目</th>
+              <th>結果</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>景品表示法</td>
+              <td>優良誤認・有利誤認の表現</td>
+              <td><span class="check-status check-status--pass"><span class="check-icon check-icon--pass">&check;</span> 合格</span></td>
+            </tr>
+            <tr>
+              <td>特定商取引法</td>
+              <td>広告表示義務事項</td>
+              <td><span class="check-status check-status--pass"><span class="check-icon check-icon--pass">&check;</span> 合格</span></td>
+            </tr>
+            <tr>
+              <td>著作権法</td>
+              <td>引用・転載の適法性</td>
+              <td><span class="check-status check-status--pass"><span class="check-icon check-icon--pass">&check;</span> 合格</span></td>
+            </tr>
+            <tr>
+              <td>薬機法</td>
+              <td>効果効能の誇大表現</td>
+              <td><span class="check-status check-status--pass"><span class="check-icon check-icon--pass">&check;</span> 合格</span></td>
+            </tr>
+            <tr>
+              <td>個人情報保護法</td>
+              <td>個人情報の含有</td>
+              <td><span class="check-status check-status--pass"><span class="check-icon check-icon--pass">&check;</span> 合格</span></td>
+            </tr>
+            <tr>
+              <td>プラットフォーム規約</td>
+              <td>各SNSのガイドライン準拠</td>
+              <td><span class="check-status check-status--pass"><span class="check-icon check-icon--pass">&check;</span> 合格</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="compliance-summary">
+          <span class="compliance-summary-pass">6 / 6 合格</span>
+          <span class="compliance-summary-count">&#8212; 違反項目なし</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ak-card">
+    <div class="ak-card-header">
+      <h2 class="section-title-icon">返信・コメント</h2>
+      <span style="font-size: 0.78rem; color: var(--text-muted);">89件</span>
+    </div>
+    <div class="ak-card-body">
+      <div class="reply-list">
+
+        <div class="reply-item" id="reply1">
+          <div class="reply-header">
+            <div class="reply-user">
+              <span class="reply-avatar">田</span>
+              <span class="reply-name">田中 花子</span>
+              <span class="reply-source">X (Twitter)</span>
+            </div>
+            <span class="reply-time">3時間前</span>
+          </div>
+          <div class="reply-body">素敵なコレクションですね！ナチュラル素材の服を探していたのでとても嬉しいです。サイズ展開はどこまでありますか？</div>
+          <div class="reply-actions">
+            <button class="btn btn-sm btn-primary" onclick="togglePersona('reply1')">返信を提案</button>
+            <button class="btn btn-sm">返信を書く</button>
+          </div>
+          <div class="persona-selector" id="reply1-persona">
+            <div class="persona-selector-label">ペルソナを選択してください</div>
+            <div class="persona-options">
+              <span class="persona-chip" onclick="generateReply('reply1', this, 'フレンドリー')">フレンドリー</span>
+              <span class="persona-chip" onclick="generateReply('reply1', this, 'プロフェッショナル')">プロフェッショナル</span>
+              <span class="persona-chip" onclick="generateReply('reply1', this, 'カジュアル')">カジュアル</span>
+            </div>
+          </div>
+          <div class="generated-reply" id="reply1-generated">
+            <div class="generated-reply-label">提案された返信</div>
+            <div class="generated-reply-text" id="reply1-text"></div>
+            <div class="generated-reply-actions">
+              <button class="btn btn-sm btn-primary">この内容で返信</button>
+              <button class="btn btn-sm">再生成</button>
+              <button class="btn btn-sm">編集して返信</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="reply-item" id="reply2">
+          <div class="reply-header">
+            <div class="reply-user">
+              <span class="reply-avatar">佐</span>
+              <span class="reply-name">佐藤 健太</span>
+              <span class="reply-source">Instagram</span>
+            </div>
+            <span class="reply-time">5時間前</span>
+          </div>
+          <div class="reply-body">先行予約しました！「光と影」のテーマ、すごく気になります。店頭での展示はいつ頃からですか？</div>
+          <div class="reply-actions">
+            <button class="btn btn-sm btn-primary" onclick="togglePersona('reply2')">返信を提案</button>
+            <button class="btn btn-sm">返信を書く</button>
+          </div>
+          <div class="persona-selector" id="reply2-persona">
+            <div class="persona-selector-label">ペルソナを選択してください</div>
+            <div class="persona-options">
+              <span class="persona-chip" onclick="generateReply('reply2', this, 'フレンドリー')">フレンドリー</span>
+              <span class="persona-chip" onclick="generateReply('reply2', this, 'プロフェッショナル')">プロフェッショナル</span>
+              <span class="persona-chip" onclick="generateReply('reply2', this, 'カジュアル')">カジュアル</span>
+            </div>
+          </div>
+          <div class="generated-reply" id="reply2-generated">
+            <div class="generated-reply-label">提案された返信</div>
+            <div class="generated-reply-text" id="reply2-text"></div>
+            <div class="generated-reply-actions">
+              <button class="btn btn-sm btn-primary">この内容で返信</button>
+              <button class="btn btn-sm">再生成</button>
+              <button class="btn btn-sm">編集して返信</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="reply-item" id="reply3">
+          <div class="reply-header">
+            <div class="reply-user">
+              <span class="reply-avatar">鈴</span>
+              <span class="reply-name">鈴木 美咲</span>
+              <span class="reply-source">X (Twitter)</span>
+            </div>
+            <span class="reply-time">8時間前</span>
+          </div>
+          <div class="reply-body">毎シーズン楽しみにしています。オンライン限定のアイテムはありますか？</div>
+          <div class="reply-actions">
+            <button class="btn btn-sm btn-primary" onclick="togglePersona('reply3')">返信を提案</button>
+            <button class="btn btn-sm">返信を書く</button>
+          </div>
+          <div class="persona-selector" id="reply3-persona">
+            <div class="persona-selector-label">ペルソナを選択してください</div>
+            <div class="persona-options">
+              <span class="persona-chip" onclick="generateReply('reply3', this, 'フレンドリー')">フレンドリー</span>
+              <span class="persona-chip" onclick="generateReply('reply3', this, 'プロフェッショナル')">プロフェッショナル</span>
+              <span class="persona-chip" onclick="generateReply('reply3', this, 'カジュアル')">カジュアル</span>
+            </div>
+          </div>
+          <div class="generated-reply" id="reply3-generated">
+            <div class="generated-reply-label">提案された返信</div>
+            <div class="generated-reply-text" id="reply3-text"></div>
+            <div class="generated-reply-actions">
+              <button class="btn btn-sm btn-primary">この内容で返信</button>
+              <button class="btn btn-sm">再生成</button>
+              <button class="btn btn-sm">編集して返信</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var replies = {
+  reply1: {
+    'フレンドリー': '田中さん、コメントありがとうございます！今シーズンはS〜3Lまで幅広くご用意しております。詳しいサイズチャートはオンラインストアの各商品ページからご確認いただけますので、ぜひご覧くださいね！',
+    'プロフェッショナル': '田中様、お問い合わせいただきありがとうございます。サイズ展開はS・M・L・XL・2L・3Lの6サイズをご用意しております。詳細はオンラインストアにてご確認ください。',
+    'カジュアル': '田中さんありがとう！サイズはS〜3Lまであるよ！オンラインストアで詳しく見れるからチェックしてみてね〜'
+  },
+  reply2: {
+    'フレンドリー': '佐藤さん、先行予約ありがとうございます！店頭展示は4月5日からの予定です。「光と影」のテーマを体感できるディスプレイもご用意していますので、ぜひお立ち寄りください！',
+    'プロフェッショナル': '佐藤様、ご予約いただきありがとうございます。店頭展示は4月5日より全国の直営店にて開始いたします。ご来店をお待ちしております。',
+    'カジュアル': '佐藤さん予約ありがとう！店頭は4月5日からだよ〜。実物もめちゃくちゃいい感じだから楽しみにしてて！'
+  },
+  reply3: {
+    'フレンドリー': '鈴木さん、いつもご愛顧いただきありがとうございます！今回はオンライン限定カラーを3アイテムご用意しています。来週の公開をお楽しみに！',
+    'プロフェッショナル': '鈴木様、日頃よりご愛顧賜りありがとうございます。オンライン限定アイテムとして3点の限定カラーをご用意しております。来週の公開をお待ちください。',
+    'カジュアル': '鈴木さんいつもありがとう！オンライン限定カラーが3つあるよ！来週公開だからお楽しみに〜'
+  }
+};
+
+function togglePersona(replyId) {
+  var el = document.getElementById(replyId + '-persona');
+  el.classList.toggle('is-open');
+  if (!el.classList.contains('is-open')) {
+    document.getElementById(replyId + '-generated').classList.remove('is-visible');
+    var chips = el.querySelectorAll('.persona-chip');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.remove('is-selected');
+    }
+  }
+}
+
+function generateReply(replyId, chip, persona) {
+  var container = chip.parentElement;
+  var chips = container.querySelectorAll('.persona-chip');
+  for (var i = 0; i < chips.length; i++) {
+    chips[i].classList.remove('is-selected');
+  }
+  chip.classList.add('is-selected');
+
+  var text = replies[replyId][persona];
+  document.getElementById(replyId + '-text').textContent = text;
+  document.getElementById(replyId + '-generated').classList.add('is-visible');
+}
+</script>
+
+</body>
+</html>

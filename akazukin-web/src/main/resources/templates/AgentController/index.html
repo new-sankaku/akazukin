@@ -1,5 +1,5 @@
 {#include base}
-{#title}AI エージェント パイプライン - Akazukin{/title}
+{#title}{msg:agent_page_title} - {msg:app_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,168 +7,367 @@
     {#sidebar active="agents" /}
 
     <main class="ak-main">
-        <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">AI エージェント パイプライン</h2>
+        <h2 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.08em; margin-bottom: 1.5rem;">{msg:agent_page_title}</h2>
 
-        <form id="pipeline-form" onsubmit="return handlePipeline(event)">
-            <!-- トピック入力 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <label for="topic" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">トピック</label>
-                <textarea id="topic" name="topic" rows="3"
-                    placeholder="投稿したいトピックやテーマを入力してください..."
-                    required
-                    style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body, var(--ak-text)); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
-            </div>
+        <div class="agent-tabs" role="tablist">
+            <button class="agent-tab-btn active" role="tab" data-tab="tab-pipeline">{msg:agent_tab_pipeline}</button>
+            <button class="agent-tab-btn" role="tab" data-tab="tab-agents">{msg:agent_tab_agents}</button>
+            <button class="agent-tab-btn" role="tab" data-tab="tab-board">{msg:agent_tab_board}</button>
+            <button class="agent-tab-btn" role="tab" data-tab="tab-timeline">{msg:agent_tab_timeline}</button>
+            <button class="agent-tab-btn" role="tab" data-tab="tab-review">{msg:agent_tab_review}</button>
+            <button class="agent-tab-btn" role="tab" data-tab="tab-dashboard">{msg:agent_tab_dashboard}</button>
+            <button class="agent-tab-btn" role="tab" data-tab="tab-activity">{msg:agent_tab_activity}</button>
+        </div>
 
-            <!-- プラットフォーム選択 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <label style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.75rem; letter-spacing: 0.05em;">対象プラットフォーム</label>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem;">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="TWITTER"> X (Twitter)
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="BLUESKY"> Bluesky
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="MASTODON"> Mastodon
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="THREADS"> Threads
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="INSTAGRAM"> Instagram
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="REDDIT"> Reddit
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="TELEGRAM"> Telegram
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="VK"> VK
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body, var(--ak-text));">
-                        <input type="checkbox" name="platforms" value="PINTEREST"> Pinterest
-                    </label>
+        <div id="tab-pipeline" class="agent-tab-panel active" role="tabpanel">
+            <form id="pipeline-form" onsubmit="return handlePipeline(event)">
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <label for="topic" style="display: block; font-weight: 600; color: var(--text-heading); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:agent_topic_label}</label>
+                    <textarea id="topic" name="topic" rows="3"
+                        placeholder="{msg:agent_topic_placeholder}"
+                        required
+                        style="width: 100%; background: var(--bg-field); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem; font-size: 1rem; color: var(--text-body); resize: vertical; font-family: inherit; line-height: 1.6;"></textarea>
+                </div>
+
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <label style="display: block; font-weight: 600; color: var(--text-heading); margin-bottom: 0.75rem; letter-spacing: 0.05em;">{msg:agent_platform_label}</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="TWITTER"> X (Twitter)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="BLUESKY"> Bluesky
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="MASTODON"> Mastodon
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="THREADS"> Threads
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="INSTAGRAM"> Instagram
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="REDDIT"> Reddit
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="TELEGRAM"> Telegram
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="VK"> VK
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-body);">
+                            <input type="checkbox" name="platforms" value="PINTEREST"> Pinterest
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" id="pipeline-btn"
+                    style="background: var(--accent-gold); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
+                    onmouseover="this.style.background='var(--accent-gold-hover)'"
+                    onmouseout="this.style.background='var(--accent-gold)'">
+                    {msg:agent_execute_btn}
+                </button>
+            </form>
+
+            <div id="pipeline-results" style="display: none; margin-top: 2rem;">
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_result_analysis}</h3>
+                    <div id="result-analysis" style="color: var(--text-body); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+                </div>
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_result_content}</h3>
+                    <div id="result-content" style="color: var(--text-body); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+                </div>
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_result_platforms}</h3>
+                    <div id="result-platforms" style="color: var(--text-body); font-size: 0.95rem; line-height: 1.8;"></div>
+                </div>
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_result_risk}</h3>
+                    <div id="result-risk" style="color: var(--text-body); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+                </div>
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_result_compliance}</h3>
+                    <div id="result-compliance" style="color: var(--text-body); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+                </div>
+                <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                    <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_result_schedule}</h3>
+                    <div id="result-schedule" style="color: var(--text-body); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
                 </div>
             </div>
 
-            <!-- 実行ボタン -->
-            <button type="submit" id="pipeline-btn"
-                style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.75rem 2rem; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; transition: background 0.2s, opacity 0.2s;"
-                onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
-                onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">
-                パイプライン実行
-            </button>
-        </form>
-
-        <!-- 結果表示 -->
-        <div id="pipeline-results" style="display: none; margin-top: 2rem;">
-            <!-- 分析結果 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">分析結果 (Analyst)</h3>
-                <div id="result-analysis" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
-            </div>
-
-            <!-- 生成コンテンツ -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">生成コンテンツ (Composer)</h3>
-                <div id="result-content" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
-            </div>
-
-            <!-- プラットフォーム別コンテンツ -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">プラットフォーム別 (Transformer)</h3>
-                <div id="result-platforms" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8;"></div>
-            </div>
-
-            <!-- リスク評価 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">リスク評価 (Sentinel)</h3>
-                <div id="result-risk" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
-            </div>
-
-            <!-- コンプライアンス -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">コンプライアンス (Compliance)</h3>
-                <div id="result-compliance" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
-            </div>
-
-            <!-- スケジュール提案 -->
-            <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border));">
-                <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">投稿スケジュール (Scheduler)</h3>
-                <div id="result-schedule" style="color: var(--text-body, var(--ak-text)); font-size: 0.95rem; line-height: 1.8; white-space: pre-wrap; word-break: break-word;"></div>
+            <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt); margin-top: 2rem;">
+                <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_task_history}</h3>
+                <div id="task-history" style="color: var(--text-body); font-size: 0.9rem;"></div>
             </div>
         </div>
 
-        <!-- タスク履歴 -->
-        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-top: 2rem;">
-            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">タスク履歴</h3>
-            <div id="task-history" style="color: var(--text-body, var(--ak-text)); font-size: 0.9rem;"></div>
+        <div id="tab-agents" class="agent-tab-panel" role="tabpanel">
+            <div class="section-title-agent">
+                <span class="geo-diamond"></span>
+                {msg:agent_tab_agents}
+                <span class="sub">A0 __ AGENT ROSTER</span>
+            </div>
+            <div class="geo-line"></div>
+            <div class="agent-pool" id="agentRoster"></div>
+        </div>
+
+        <div id="tab-board" class="agent-tab-panel" role="tabpanel">
+            <div class="section-title-agent">
+                <span class="geo-diamond"></span>
+                {msg:agent_tab_board}
+                <span class="sub">A1 __ PIPELINE BUILDER</span>
+            </div>
+            <div class="geo-line"></div>
+
+            <div class="board">
+                <div class="board-bg-pattern"></div>
+                <div class="agent-pool-label">AGENT POOL <span class="geo-diamond" style="margin-left:0.3rem"></span> {msg:agent_pool_label}</div>
+                <div class="agent-pool" id="agentPool"></div>
+
+                <div class="pipeline-area" id="pipelineArea">
+                    <div class="pipeline-area-label">
+                        <span class="geo-diamond"></span>
+                        EXECUTION PIPELINE
+                        <span style="margin-left: auto; font-size: 0.6rem; color: var(--text-muted);">{msg:agent_pipeline_reorder}</span>
+                    </div>
+                    <div class="pipeline-drop-hint" id="dropHint">{msg:agent_pipeline_drop_hint}</div>
+                    <div class="pipeline-flow" id="pipelineFlow"></div>
+                    <div class="pipeline-controls">
+                        <button class="btn-secondary" type="button" id="btnBoardReset">{msg:agent_pipeline_reset}</button>
+                        <button class="btn-primary" type="button" id="btnBoardExecute">{msg:agent_pipeline_execute}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-timeline" class="agent-tab-panel" role="tabpanel">
+            <div class="section-title-agent">
+                <span class="geo-diamond"></span>
+                {msg:agent_tab_timeline}
+                <span class="sub">A2 __ GANTT CHART</span>
+            </div>
+            <div class="geo-line"></div>
+            <div class="timeline-area" id="timelineChart">
+                <div class="tl-header" id="tlHeader"></div>
+                <div class="tl-chart" id="tlChart"></div>
+                <div class="tl-legend" id="tlLegend"></div>
+            </div>
+        </div>
+
+        <div id="tab-review" class="agent-tab-panel" role="tabpanel">
+            <div class="section-title-agent">
+                <span class="geo-diamond"></span>
+                {msg:agent_tab_review}
+                <span class="sub">A3 __ STEP DETAIL</span>
+            </div>
+            <div class="geo-line"></div>
+            <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                <label for="review-task-select" style="font-weight: 600; color: var(--text-heading); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:agent_task_history}</label>
+                <select id="review-task-select" style="margin-bottom: var(--sp-md);"></select>
+            </div>
+            <div class="tl-io-detail" id="reviewDetail">
+                <div class="io-title">STEP DETAIL <span class="geo-diamond" style="margin-left:0.3rem"></span></div>
+                <table class="io-table">
+                    <thead>
+                        <tr>
+                            <th>{msg:agent_review_col_step}</th>
+                            <th>{msg:agent_col_agent}</th>
+                            <th>{msg:agent_review_col_input}</th>
+                            <th>{msg:agent_review_col_output}</th>
+                            <th>{msg:agent_review_col_duration}</th>
+                            <th>{msg:agent_col_status}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">{msg:agent_select_task}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-dashboard" class="agent-tab-panel" role="tabpanel">
+            <div class="section-title-agent">
+                <span class="geo-diamond"></span>
+                {msg:agent_tab_dashboard}
+                <span class="sub">A4 __ STATISTICS</span>
+            </div>
+            <div class="geo-line"></div>
+            <div class="agent-stats-strip" id="statsStrip">
+                <div class="agent-stat-cell">
+                    <span class="stat-val" id="statTotal">-</span>
+                    <span class="stat-label">{msg:agent_stats_total}</span>
+                </div>
+                <div class="agent-stat-cell">
+                    <span class="stat-val" id="statAvg">-</span>
+                    <span class="stat-label">{msg:agent_stats_avg_time}</span>
+                </div>
+                <div class="agent-stat-cell">
+                    <span class="stat-val" id="statActive">-</span>
+                    <span class="stat-label">{msg:agent_stats_active}</span>
+                </div>
+                <div class="agent-stat-cell">
+                    <span class="stat-val" id="statSuccess">-</span>
+                    <span class="stat-label">{msg:agent_stats_success_rate}</span>
+                </div>
+            </div>
+            <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                <h3 style="color: var(--text-heading); font-weight: 400; letter-spacing: 0.05em; margin-top: 0;">{msg:agent_task_history}</h3>
+                <div id="dashboard-task-history" style="color: var(--text-body); font-size: 0.9rem;"></div>
+            </div>
+        </div>
+
+        <div id="tab-activity" class="agent-tab-panel" role="tabpanel">
+            <div class="section-title-agent">
+                <span class="geo-diamond"></span>
+                {msg:agent_tab_activity}
+                <span class="sub">A5 __ ACTIVITY TIMELINE</span>
+            </div>
+            <div class="geo-line"></div>
+            <div class="tl-legend" id="activityLegend" style="margin-bottom: var(--sp-md);"></div>
+            <div class="ak-card" style="background: var(--bg-surface); border-color: var(--border-lt);">
+                <div id="activityTimeline"></div>
+            </div>
         </div>
     </main>
 </div>
 
 <script>
+    var AGENTS = [
+        { type: 'DIRECTOR',    key: 'director',    id: 'AG-01', name: 'Director',    role: '{msg:agent_director_role}',    icon: 'fas fa-chess-king' },
+        { type: 'ANALYST',     key: 'analyst',     id: 'AG-02', name: 'Analyst',     role: '{msg:agent_analyst_role}',     icon: 'fas fa-chart-line' },
+        { type: 'COMPOSER',    key: 'composer',    id: 'AG-03', name: 'Composer',    role: '{msg:agent_composer_role}',    icon: 'fas fa-pen-fancy' },
+        { type: 'TRANSFORMER', key: 'transformer', id: 'AG-04', name: 'Transformer', role: '{msg:agent_transformer_role}', icon: 'fas fa-exchange-alt' },
+        { type: 'SCHEDULER',   key: 'scheduler',   id: 'AG-05', name: 'Scheduler',   role: '{msg:agent_scheduler_role}',   icon: 'fas fa-clock' },
+        { type: 'SENTINEL',    key: 'sentinel',    id: 'AG-06', name: 'Sentinel',    role: '{msg:agent_sentinel_role}',    icon: 'fas fa-shield-alt' },
+        { type: 'COMPLIANCE',  key: 'compliance',  id: 'AG-07', name: 'Compliance',  role: '{msg:agent_compliance_role}',  icon: 'fas fa-gavel' }
+    ];
+
+    function agentByType(type) {
+        return AGENTS.find(function(a) { return a.type === type; });
+    }
+
+    function agentByKey(key) {
+        return AGENTS.find(function(a) { return a.key === key; });
+    }
+
+    function createAgentCardHtml(agent, draggable) {
+        return '<div class="agent-card ' + agent.key + '"' + (draggable ? ' draggable="true" data-agent="' + agent.key + '"' : '') + '>' +
+            '<div class="card-accent"></div>' +
+            '<i class="' + agent.icon + ' card-icon"></i>' +
+            '<span class="card-id">' + agent.id + '</span>' +
+            '<span class="card-name">' + agent.name + '</span>' +
+            '<span class="card-role">' + agent.role + '</span>' +
+            '<div class="card-dot"></div>' +
+            '</div>';
+    }
+
+    function getToken() {
+        return localStorage.getItem('accessToken');
+    }
+
+    function authHeaders() {
+        return { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' };
+    }
+
+    function statusColor(status) {
+        if (status === 'COMPLETED') return 'var(--status-success)';
+        if (status === 'FAILED') return 'var(--status-error)';
+        if (status === 'RUNNING') return 'var(--accent-gold)';
+        return 'var(--text-muted)';
+    }
+
+    function durationText(createdAt, completedAt) {
+        if (!createdAt || !completedAt) return '-';
+        var ms = new Date(completedAt).getTime() - new Date(createdAt).getTime();
+        if (ms < 1000) return ms + 'ms';
+        return (ms / 1000).toFixed(1) + 's';
+    }
+
+    function truncate(str, len) {
+        if (!str) return '';
+        return str.length > len ? str.substring(0, len) + '...' : str;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        initTabs();
         loadTaskHistory();
+        initAgentRoster();
+        initBoard();
     });
+
+    function initTabs() {
+        var btns = document.querySelectorAll('.agent-tab-btn');
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                btns.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                document.querySelectorAll('.agent-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+                var panel = document.getElementById(btn.getAttribute('data-tab'));
+                panel.classList.add('active');
+
+                var tabId = btn.getAttribute('data-tab');
+                if (tabId === 'tab-timeline') loadTimeline();
+                if (tabId === 'tab-review') loadReviewTasks();
+                if (tabId === 'tab-dashboard') loadDashboard();
+                if (tabId === 'tab-activity') loadActivity();
+            });
+        });
+    }
+
+    function initAgentRoster() {
+        var roster = document.getElementById('agentRoster');
+        var html = '';
+        AGENTS.forEach(function(a) {
+            html += createAgentCardHtml(a, false);
+        });
+        roster.innerHTML = html;
+    }
 
     async function handlePipeline(event) {
         event.preventDefault();
-        var token = localStorage.getItem('accessToken');
-        if (!token) {
-            window.location.href = '/';
-            return false;
-        }
+        var token = getToken();
+        if (!token) { window.location.href = '/'; return false; }
 
         var topic = document.getElementById('topic').value;
         var checkboxes = document.querySelectorAll('input[name="platforms"]:checked');
         var platforms = Array.from(checkboxes).map(function(cb) { return cb.value; });
 
         if (platforms.length === 0) {
-            showToast('warning', 'プラットフォームを1つ以上選択してください');
+            showToast('warning', '{msg:agent_platform_required}');
             return false;
         }
 
         var btn = document.getElementById('pipeline-btn');
         btn.disabled = true;
         btn.setAttribute('aria-busy', 'true');
-        btn.textContent = '実行中...';
+        btn.textContent = '{msg:agent_executing}';
 
         try {
             var response = await fetch('/api/v1/agents/pipeline', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({
-                    topic: topic,
-                    targetPlatforms: platforms
-                })
+                headers: authHeaders(),
+                body: JSON.stringify({ topic: topic, targetPlatforms: platforms })
             });
 
-            if (response.status === 401) {
-                window.location.href = '/';
-                return false;
-            }
+            if (response.status === 401) { window.location.href = '/'; return false; }
 
             if (!response.ok) {
-                await showApiError(response, 'パイプラインの実行に失敗しました');
+                await showApiError(response, '{msg:agent_pipeline_error}');
                 return false;
             }
 
             var result = await response.json();
             displayResults(result);
-            showToast('success', 'パイプラインが正常に完了しました');
+            showToast('success', '{msg:agent_pipeline_success}');
             loadTaskHistory();
         } catch (err) {
-            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。接続状態を確認してください。');
+            showToast('error', '{msg:agent_network_error}');
         } finally {
             btn.disabled = false;
             btn.removeAttribute('aria-busy');
-            btn.textContent = 'パイプライン実行';
+            btn.textContent = '{msg:agent_execute_btn}';
         }
         return false;
     }
@@ -188,21 +387,14 @@
         if (result.platformContent) {
             result.platformContent.forEach(function(pc) {
                 var block = document.createElement('div');
-                block.style.marginBottom = '1rem';
-                block.style.padding = '0.75rem';
-                block.style.borderLeft = '3px solid var(--accent-gold, var(--ak-primary))';
-                block.style.background = 'var(--bg-field, var(--ak-bg))';
-                block.style.borderRadius = '0 4px 4px 0';
+                block.style.cssText = 'margin-bottom: 1rem; padding: 0.75rem; border-left: 3px solid var(--accent-gold); background: var(--bg-field); border-radius: 0 4px 4px 0;';
 
                 var label = document.createElement('strong');
                 label.textContent = pc.platform;
-                label.style.display = 'block';
-                label.style.marginBottom = '0.5rem';
-                label.style.color = 'var(--accent-gold, var(--ak-primary))';
+                label.style.cssText = 'display: block; margin-bottom: 0.5rem; color: var(--accent-gold);';
 
                 var content = document.createElement('div');
-                content.style.whiteSpace = 'pre-wrap';
-                content.style.wordBreak = 'break-word';
+                content.style.cssText = 'white-space: pre-wrap; word-break: break-word;';
                 content.textContent = pc.adaptedContent || '';
 
                 block.appendChild(label);
@@ -213,37 +405,31 @@
     }
 
     async function loadTaskHistory() {
-        var token = localStorage.getItem('accessToken');
+        var token = getToken();
         if (!token) return;
 
         try {
-            var response = await fetch('/api/v1/agents/tasks?limit=10', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+            var response = await fetch('/api/v1/agents/tasks?limit=10', { headers: { 'Authorization': 'Bearer ' + token } });
             if (!response.ok) return;
             var tasks = await response.json();
             var historyDiv = document.getElementById('task-history');
 
             if (tasks.length === 0) {
-                historyDiv.innerHTML = '<p style="color: var(--text-muted, var(--ak-text-muted));">まだタスクはありません。</p>';
+                historyDiv.innerHTML = '<p style="color: var(--text-muted);">{msg:agent_no_tasks}</p>';
                 return;
             }
 
             var html = '<table style="width: 100%; border-collapse: collapse;">';
-            html += '<thead><tr style="border-bottom: 1px solid var(--border, var(--ak-border));">';
-            html += '<th style="text-align: left; padding: 0.5rem;">エージェント</th>';
-            html += '<th style="text-align: left; padding: 0.5rem;">ステータス</th>';
-            html += '<th style="text-align: left; padding: 0.5rem;">作成日時</th>';
+            html += '<thead><tr style="border-bottom: 1px solid var(--border);">';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_col_agent}</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_col_status}</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_col_created}</th>';
             html += '</tr></thead><tbody>';
 
             tasks.forEach(function(task) {
-                var statusColor = task.status === 'COMPLETED' ? 'var(--status-success, #408040)' :
-                                  task.status === 'FAILED' ? 'var(--status-error, #B04040)' :
-                                  task.status === 'RUNNING' ? 'var(--accent-gold, var(--ak-primary))' :
-                                  'var(--text-muted, var(--ak-text-muted))';
-                html += '<tr style="border-bottom: 1px solid var(--border-lt, var(--ak-border));">';
+                html += '<tr style="border-bottom: 1px solid var(--border-lt);">';
                 html += '<td style="padding: 0.5rem;">' + escapeHtmlGlobal(task.agentType) + '</td>';
-                html += '<td style="padding: 0.5rem; color: ' + statusColor + ';">' + escapeHtmlGlobal(task.status) + '</td>';
+                html += '<td style="padding: 0.5rem; color: ' + statusColor(task.status) + ';">' + escapeHtmlGlobal(task.status) + '</td>';
                 html += '<td style="padding: 0.5rem;">' + new Date(task.createdAt).toLocaleString('ja-JP') + '</td>';
                 html += '</tr>';
             });
@@ -251,7 +437,485 @@
             html += '</tbody></table>';
             historyDiv.innerHTML = html;
         } catch (err) {
-            // task history load failed silently
+            showToast('error', '{msg:agent_pipeline_error}');
+        }
+    }
+
+    function initBoard() {
+        var pool = document.getElementById('agentPool');
+        var html = '';
+        AGENTS.forEach(function(a) {
+            html += createAgentCardHtml(a, true);
+        });
+        pool.innerHTML = html;
+
+        var pipelineArea = document.getElementById('pipelineArea');
+        var pipelineFlow = document.getElementById('pipelineFlow');
+        var dropHint = document.getElementById('dropHint');
+        var dragSrc = null;
+        var dragFromPool = false;
+
+        pool.addEventListener('dragstart', function(e) {
+            var card = e.target.closest('.agent-card');
+            if (!card) return;
+            dragFromPool = true;
+            dragSrc = card;
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', card.getAttribute('data-agent'));
+        });
+
+        pipelineArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = dragFromPool ? 'copy' : 'move';
+            pipelineArea.classList.add('drag-over');
+
+            if (!dragFromPool) {
+                var node = e.target.closest('.pipeline-node');
+                if (node && node !== dragSrc) {
+                    getNodes().forEach(function(n) { n.classList.remove('drag-over'); });
+                    node.classList.add('drag-over');
+                }
+            }
+        });
+
+        pipelineArea.addEventListener('dragleave', function(e) {
+            if (!pipelineArea.contains(e.relatedTarget)) {
+                pipelineArea.classList.remove('drag-over');
+            }
+            var node = e.target.closest('.pipeline-node');
+            if (node) node.classList.remove('drag-over');
+        });
+
+        pipelineArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            pipelineArea.classList.remove('drag-over');
+
+            if (dragFromPool) {
+                var agentKey = e.dataTransfer.getData('text/plain');
+                var agent = agentByKey(agentKey);
+                if (agent) {
+                    addPipelineNode(agent);
+                }
+            } else {
+                var target = e.target.closest('.pipeline-node');
+                if (!target || !dragSrc || target === dragSrc) return;
+                target.classList.remove('drag-over');
+
+                var nodes = getNodes();
+                var srcIdx = nodes.indexOf(dragSrc);
+                var tgtIdx = nodes.indexOf(target);
+
+                var items = [];
+                nodes.forEach(function(n, i) {
+                    items.push(n);
+                });
+
+                var moved = items.splice(srcIdx, 1)[0];
+                items.splice(tgtIdx, 0, moved);
+
+                rebuildPipeline(items);
+            }
+
+            dragFromPool = false;
+            dragSrc = null;
+        });
+
+        pipelineFlow.addEventListener('dragstart', function(e) {
+            var node = e.target.closest('.pipeline-node');
+            if (!node) return;
+            dragFromPool = false;
+            dragSrc = node;
+            node.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        pipelineFlow.addEventListener('dragend', function(e) {
+            var node = e.target.closest('.pipeline-node');
+            if (node) node.classList.remove('dragging');
+            getNodes().forEach(function(n) { n.classList.remove('drag-over'); });
+            dragSrc = null;
+        });
+
+        document.getElementById('btnBoardReset').addEventListener('click', function() {
+            pipelineFlow.innerHTML = '';
+            updateDropHint();
+        });
+
+        document.getElementById('btnBoardExecute').addEventListener('click', function() {
+            var nodes = getNodes();
+            if (nodes.length === 0) return;
+            var idx = 0;
+            function flash() {
+                if (idx >= nodes.length) return;
+                var card = nodes[idx].querySelector('.pipeline-card');
+                card.style.boxShadow = '0 0 12px rgba(200,150,74,0.5)';
+                card.style.transition = 'box-shadow 0.3s';
+                setTimeout(function() {
+                    card.style.boxShadow = 'none';
+                    idx++;
+                    flash();
+                }, 600);
+            }
+            flash();
+        });
+
+        updateDropHint();
+    }
+
+    function getNodes() {
+        return Array.from(document.getElementById('pipelineFlow').querySelectorAll('.pipeline-node'));
+    }
+
+    function addPipelineNode(agent) {
+        var nodes = getNodes();
+        var stepNum = String(nodes.length + 1).padStart(2, '0');
+
+        var nodeDiv = document.createElement('div');
+        nodeDiv.className = 'pipeline-node';
+        nodeDiv.draggable = true;
+        nodeDiv.setAttribute('data-agent', agent.key);
+
+        nodeDiv.innerHTML =
+            '<div class="pipeline-card ' + agent.key + '">' +
+            '<div class="p-accent"></div>' +
+            '<span class="p-step">STEP ' + stepNum + '</span>' +
+            '<span class="p-name">' + agent.name + '</span>' +
+            '<span class="p-role">' + agent.role + '</span>' +
+            '</div>' +
+            '<button class="pipeline-remove-btn" type="button" onclick="removePipelineNode(this)">&times;</button>';
+
+        var flow = document.getElementById('pipelineFlow');
+
+        if (nodes.length > 0) {
+            var arrow = document.createElement('div');
+            arrow.className = 'pipeline-arrow';
+            arrow.innerHTML = '<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>';
+            flow.appendChild(arrow);
+        }
+
+        flow.appendChild(nodeDiv);
+        updateDropHint();
+    }
+
+    function removePipelineNode(btn) {
+        var node = btn.closest('.pipeline-node');
+        var flow = document.getElementById('pipelineFlow');
+        var prev = node.previousElementSibling;
+        var next = node.nextElementSibling;
+
+        if (prev && prev.classList.contains('pipeline-arrow')) {
+            flow.removeChild(prev);
+        } else if (next && next.classList.contains('pipeline-arrow')) {
+            flow.removeChild(next);
+        }
+
+        flow.removeChild(node);
+        renumberSteps();
+        updateDropHint();
+    }
+
+    function rebuildPipeline(nodes) {
+        var flow = document.getElementById('pipelineFlow');
+        var arrowSvg = '<svg viewBox="0 0 32 24"><line x1="2" y1="12" x2="24" y2="12"/><polyline points="20,7 26,12 20,17"/></svg>';
+        flow.innerHTML = '';
+        nodes.forEach(function(n, i) {
+            var step = n.querySelector('.p-step');
+            if (step) step.textContent = 'STEP ' + String(i + 1).padStart(2, '0');
+            flow.appendChild(n);
+            if (i < nodes.length - 1) {
+                var a = document.createElement('div');
+                a.className = 'pipeline-arrow';
+                a.innerHTML = arrowSvg;
+                flow.appendChild(a);
+            }
+        });
+    }
+
+    function renumberSteps() {
+        var nodes = getNodes();
+        nodes.forEach(function(n, i) {
+            var step = n.querySelector('.p-step');
+            if (step) step.textContent = 'STEP ' + String(i + 1).padStart(2, '0');
+        });
+    }
+
+    function updateDropHint() {
+        var hint = document.getElementById('dropHint');
+        var nodes = getNodes();
+        hint.style.display = nodes.length === 0 ? 'block' : 'none';
+    }
+
+    async function loadTimeline() {
+        var token = getToken();
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/agents/tasks?limit=50', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            var tasks = await response.json();
+
+            if (tasks.length === 0) {
+                document.getElementById('tlHeader').innerHTML = '<div class="tl-stat" style="color: var(--text-muted);">{msg:agent_no_tasks}</div>';
+                document.getElementById('tlChart').innerHTML = '';
+                document.getElementById('tlLegend').innerHTML = '';
+                return;
+            }
+
+            var completedTasks = tasks.filter(function(t) { return t.completedAt && t.createdAt; });
+            var totalMs = 0;
+            completedTasks.forEach(function(t) {
+                totalMs += new Date(t.completedAt).getTime() - new Date(t.createdAt).getTime();
+            });
+
+            var activeAgents = {};
+            tasks.forEach(function(t) { activeAgents[t.agentType] = true; });
+            var activeCount = Object.keys(activeAgents).length;
+
+            var allCompleted = tasks.every(function(t) { return t.status === 'COMPLETED'; });
+            var anyFailed = tasks.some(function(t) { return t.status === 'FAILED'; });
+            var statusText = anyFailed ? '{msg:agent_status_failed}' : (allCompleted ? '{msg:agent_status_completed}' : '{msg:agent_status_running}');
+            var statusColorVal = anyFailed ? 'var(--status-error)' : (allCompleted ? 'var(--status-success)' : 'var(--accent-gold)');
+
+            var headerHtml =
+                '<div class="tl-stat">{msg:agent_timeline_pipeline_time} <span class="val">' + (totalMs / 1000).toFixed(1) + 's</span></div>' +
+                '<div class="tl-stat" style="margin-left: 1.5rem;">{msg:agent_timeline_active_count} <span class="val">' + activeCount + '</span></div>' +
+                '<div class="tl-stat" style="margin-left: 1.5rem;">{msg:agent_timeline_status} <span class="val" style="color: ' + statusColorVal + ';">' + statusText + '</span></div>';
+            document.getElementById('tlHeader').innerHTML = headerHtml;
+
+            var agentTasks = {};
+            tasks.forEach(function(t) {
+                if (!agentTasks[t.agentType]) agentTasks[t.agentType] = [];
+                agentTasks[t.agentType].push(t);
+            });
+
+            var allTimes = [];
+            completedTasks.forEach(function(t) {
+                allTimes.push(new Date(t.createdAt).getTime());
+                allTimes.push(new Date(t.completedAt).getTime());
+            });
+            var minTime = Math.min.apply(null, allTimes);
+            var maxTime = Math.max.apply(null, allTimes);
+            var totalDuration = maxTime - minTime;
+            if (totalDuration === 0) totalDuration = 1;
+
+            var totalSec = Math.ceil(totalDuration / 1000);
+            var axisCount = Math.min(totalSec + 1, 13);
+
+            var chartHtml = '<div class="tl-axis">';
+            for (var i = 0; i < axisCount; i++) {
+                var secVal = Math.round(i * totalSec / (axisCount - 1));
+                chartHtml += '<span>' + secVal + 's</span>';
+            }
+            chartHtml += '</div><div class="tl-rows">';
+
+            AGENTS.forEach(function(agent) {
+                var agentTaskList = agentTasks[agent.type];
+                if (!agentTaskList) return;
+
+                chartHtml += '<div class="tl-row"><div class="tl-row-label">' +
+                    '<span class="tl-name">' + agent.name + '</span>' +
+                    '<span class="tl-sub">' + agent.role + '</span></div>' +
+                    '<div class="tl-bar-track">';
+
+                agentTaskList.forEach(function(t) {
+                    if (!t.completedAt || !t.createdAt) return;
+                    var start = new Date(t.createdAt).getTime() - minTime;
+                    var dur = new Date(t.completedAt).getTime() - new Date(t.createdAt).getTime();
+                    var leftPct = (start / totalDuration * 100).toFixed(1);
+                    var widthPct = Math.max(dur / totalDuration * 100, 2).toFixed(1);
+
+                    chartHtml += '<div class="tl-bar ' + agent.key + '" style="left: ' + leftPct + '%; width: ' + widthPct + '%;">' +
+                        agent.role + '<span class="bar-dur">' + (dur / 1000).toFixed(1) + 's</span></div>';
+                });
+
+                chartHtml += '</div></div>';
+            });
+
+            chartHtml += '</div>';
+            document.getElementById('tlChart').innerHTML = chartHtml;
+
+            var legendHtml = '';
+            AGENTS.forEach(function(a) {
+                legendHtml += '<div class="tl-legend-item"><div class="swatch" style="background: var(--agent-' + a.key + ');"></div>' + a.name + '</div>';
+            });
+            document.getElementById('tlLegend').innerHTML = legendHtml;
+        } catch (err) {
+            showToast('error', '{msg:agent_pipeline_error}');
+        }
+    }
+
+    async function loadReviewTasks() {
+        var token = getToken();
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/agents/tasks?limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            var tasks = await response.json();
+
+            var select = document.getElementById('review-task-select');
+            select.innerHTML = '<option value="">{msg:agent_select_task}</option>';
+            var parentTasks = tasks.filter(function(t) { return !t.parentTaskId; });
+            parentTasks.forEach(function(t) {
+                var opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.agentType + ' - ' + new Date(t.createdAt).toLocaleString('ja-JP') + ' (' + t.status + ')';
+                select.appendChild(opt);
+            });
+
+            if (tasks.length > 0 && parentTasks.length === 0) {
+                tasks.forEach(function(t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.agentType + ' - ' + new Date(t.createdAt).toLocaleString('ja-JP') + ' (' + t.status + ')';
+                    select.appendChild(opt);
+                });
+            }
+
+            select.onchange = function() {
+                if (select.value) loadReviewDetail(select.value);
+            };
+        } catch (err) {
+            showToast('error', '{msg:agent_pipeline_error}');
+        }
+    }
+
+    async function loadReviewDetail(taskId) {
+        var token = getToken();
+        if (!token) return;
+
+        try {
+            var taskResponse = await fetch('/api/v1/agents/tasks/' + taskId, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!taskResponse.ok) return;
+            var parentTask = await taskResponse.json();
+
+            var childrenResponse = await fetch('/api/v1/agents/tasks/' + taskId + '/children', { headers: { 'Authorization': 'Bearer ' + token } });
+            var children = [];
+            if (childrenResponse.ok) {
+                children = await childrenResponse.json();
+            }
+
+            var allTasks = [parentTask].concat(children);
+            var tbody = document.getElementById('reviewTableBody');
+            var html = '';
+
+            allTasks.forEach(function(t, i) {
+                var agent = agentByType(t.agentType);
+                var dur = durationText(t.createdAt, t.completedAt);
+                html += '<tr>' +
+                    '<td class="mono">' + String(i + 1).padStart(2, '0') + '</td>' +
+                    '<td>' + escapeHtmlGlobal(agent ? agent.name : t.agentType) + '</td>' +
+                    '<td class="mono">' + escapeHtmlGlobal(truncate(t.input, 60)) + '</td>' +
+                    '<td class="mono">' + escapeHtmlGlobal(truncate(t.output, 60)) + '</td>' +
+                    '<td class="mono">' + dur + '</td>' +
+                    '<td style="color: ' + statusColor(t.status) + ';">' + escapeHtmlGlobal(t.status) + '</td>' +
+                    '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        } catch (err) {
+            showToast('error', '{msg:agent_pipeline_error}');
+        }
+    }
+
+    async function loadDashboard() {
+        var token = getToken();
+        if (!token) return;
+
+        try {
+            var response = await fetch('/api/v1/agents/stats', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            var stats = await response.json();
+
+            document.getElementById('statTotal').textContent = stats.totalExecutions;
+            document.getElementById('statAvg').textContent = stats.averageDurationMs > 0 ? (stats.averageDurationMs / 1000).toFixed(1) + 's' : '-';
+            document.getElementById('statActive').textContent = stats.activeAgentCount;
+            document.getElementById('statSuccess').textContent = stats.successRate > 0 ? stats.successRate.toFixed(1) + '%' : '-';
+        } catch (err) {
+            showToast('error', '{msg:agent_pipeline_error}');
+        }
+
+        try {
+            var taskResp = await fetch('/api/v1/agents/tasks?limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!taskResp.ok) return;
+            var tasks = await taskResp.json();
+            var historyDiv = document.getElementById('dashboard-task-history');
+
+            if (tasks.length === 0) {
+                historyDiv.innerHTML = '<p style="color: var(--text-muted);">{msg:agent_no_tasks}</p>';
+                return;
+            }
+
+            var html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="border-bottom: 1px solid var(--border);">';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_col_agent}</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_col_status}</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_review_col_duration}</th>';
+            html += '<th style="text-align: left; padding: 0.5rem;">{msg:agent_col_created}</th>';
+            html += '</tr></thead><tbody>';
+
+            tasks.forEach(function(task) {
+                var dur = durationText(task.createdAt, task.completedAt);
+                html += '<tr style="border-bottom: 1px solid var(--border-lt);">';
+                html += '<td style="padding: 0.5rem;">' + escapeHtmlGlobal(task.agentType) + '</td>';
+                html += '<td style="padding: 0.5rem; color: ' + statusColor(task.status) + ';">' + escapeHtmlGlobal(task.status) + '</td>';
+                html += '<td style="padding: 0.5rem;">' + dur + '</td>';
+                html += '<td style="padding: 0.5rem;">' + new Date(task.createdAt).toLocaleString('ja-JP') + '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            historyDiv.innerHTML = html;
+        } catch (err) {
+            showToast('error', '{msg:agent_pipeline_error}');
+        }
+    }
+
+    async function loadActivity() {
+        var token = getToken();
+        if (!token) return;
+
+        var legendHtml = '';
+        AGENTS.forEach(function(a) {
+            legendHtml += '<div class="tl-legend-item"><div class="swatch" style="background: var(--agent-' + a.key + ');"></div>' + a.name + '</div>';
+        });
+        document.getElementById('activityLegend').innerHTML = legendHtml;
+
+        try {
+            var response = await fetch('/api/v1/agents/tasks?limit=50', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (!response.ok) return;
+            var tasks = await response.json();
+
+            var timeline = document.getElementById('activityTimeline');
+
+            if (tasks.length === 0) {
+                timeline.innerHTML = '<p style="color: var(--text-muted);">{msg:agent_no_tasks}</p>';
+                return;
+            }
+
+            var sortedTasks = tasks.slice().sort(function(a, b) {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            var html = '';
+            sortedTasks.forEach(function(t) {
+                var agent = agentByType(t.agentType);
+                var dotColor = agent ? 'var(--agent-' + agent.key + ')' : 'var(--text-muted)';
+
+                html += '<div class="activity-event">' +
+                    '<div class="event-dot" style="background: ' + dotColor + ';"></div>' +
+                    '<div class="event-content">' +
+                    '<div class="event-agent">' + escapeHtmlGlobal(agent ? agent.name : t.agentType) +
+                    ' <span style="color: ' + statusColor(t.status) + '; font-size: 0.75rem;">' + escapeHtmlGlobal(t.status) + '</span></div>' +
+                    '<div class="event-detail">' + escapeHtmlGlobal(truncate(t.input, 80)) + '</div>' +
+                    '</div>' +
+                    '<div class="event-time">' + new Date(t.createdAt).toLocaleString('ja-JP') + '</div>' +
+                    '</div>';
+            });
+
+            timeline.innerHTML = html;
+        } catch (err) {
+            showToast('error', '{msg:agent_pipeline_error}');
         }
     }
 
@@ -259,11 +923,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

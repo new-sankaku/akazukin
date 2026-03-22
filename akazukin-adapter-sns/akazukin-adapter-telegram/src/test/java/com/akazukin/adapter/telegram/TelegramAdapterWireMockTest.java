@@ -74,9 +74,9 @@ class TelegramAdapterWireMockTest {
     class MaxContentLengthTests {
 
         @Test
-        @DisplayName("returns default 2200")
+        @DisplayName("returns 4096")
         void returnsDefault() {
-            assertEquals(2200, adapter.getMaxContentLength());
+            assertEquals(4096, adapter.getMaxContentLength());
         }
     }
 

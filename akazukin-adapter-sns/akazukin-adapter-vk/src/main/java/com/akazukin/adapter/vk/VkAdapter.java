@@ -1,10 +1,12 @@
 package com.akazukin.adapter.vk;
 
 import com.akazukin.adapter.core.AbstractSnsAdapter;
+import com.akazukin.domain.model.AccountStats;
 import com.akazukin.domain.model.PostRequest;
 import com.akazukin.domain.model.PostResult;
 import com.akazukin.domain.model.SnsAuthToken;
 import com.akazukin.domain.model.SnsPlatform;
+import com.akazukin.domain.model.SnsPostStats;
 import com.akazukin.domain.model.SnsProfile;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -20,8 +22,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
+
+    private static final int VK_MAX_LENGTH = 15895;
 
     private static final HttpClient SHARED_HTTP_CLIENT = HttpClient.newBuilder()
         .connectTimeout(CONNECTION_TIMEOUT)
@@ -68,6 +73,11 @@ public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
     @Override
     public SnsPlatform platform() {
         return SnsPlatform.VK;
+    }
+
+    @Override
+    public int getMaxContentLength() {
+        return VK_MAX_LENGTH;
     }
 
     @Override
@@ -298,8 +308,112 @@ public class VkAdapter extends AbstractSnsAdapter implements AutoCloseable {
     }
 
     @Override
+    public Optional<SnsPostStats> getPostStats(String accessToken, String platformPostId) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String ownerId = getUserId(accessToken);
+            String body = "access_token=" + encode(accessToken)
+                + "&posts=" + encode(ownerId + "_" + platformPostId)
+                + "&v=" + API_VERSION;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/wall.getById"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getPostStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            checkVkError(json, "getPostStats");
+            recordApiCall();
+
+            JsonNode items = json.path("response").path("items");
+            if (!items.isArray() || items.isEmpty()) {
+                return Optional.empty();
+            }
+            JsonNode post = items.get(0);
+            JsonNode likes = post.path("likes");
+            JsonNode comments = post.path("comments");
+            JsonNode reposts = post.path("reposts");
+            JsonNode views = post.path("views");
+
+            return Optional.of(new SnsPostStats(
+                platformPostId,
+                SnsPlatform.VK,
+                likes.path("count").asInt(0),
+                comments.path("count").asInt(0),
+                reposts.path("count").asInt(0),
+                views.path("count").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getPostStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getPostStats", e);
+        } finally {
+            perfLog("VkAdapter.getPostStats", perfStart);
+        }
+    }
+
+    @Override
+    public Optional<AccountStats> getAccountStats(String accessToken) {
+        long perfStart = System.nanoTime();
+        try {
+            checkRateLimit();
+            String body = "access_token=" + encode(accessToken)
+                + "&fields=" + encode("counters")
+                + "&v=" + API_VERSION;
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/users.get"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(READ_TIMEOUT)
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            checkResponseStatus(response, "getAccountStats");
+            JsonNode json = objectMapper.readTree(response.body());
+            checkVkError(json, "getAccountStats");
+            recordApiCall();
+
+            JsonNode users = json.path("response");
+            if (!users.isArray() || users.isEmpty()) {
+                return Optional.empty();
+            }
+            JsonNode user = users.get(0);
+            JsonNode counters = user.path("counters");
+
+            return Optional.of(new AccountStats(
+                SnsPlatform.VK,
+                String.valueOf(user.path("id").asLong()),
+                counters.path("followers").asInt(0),
+                counters.path("friends").asInt(0),
+                counters.path("posts").asInt(0),
+                Instant.now()
+            ));
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw wrapException("getAccountStats", e);
+        } catch (RuntimeException e) {
+            throw wrapException("getAccountStats", e);
+        } finally {
+            perfLog("VkAdapter.getAccountStats", perfStart);
+        }
+    }
+
+    @Override
     public void close() {
-        // Resources are shared statics, no cleanup needed per instance
     }
 
     private static String encode(String value) {

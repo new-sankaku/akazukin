@@ -1,5 +1,5 @@
 {#include base}
-{#title}ペルソナ管理 - Akazukin{/title}
+{#title}{msg:persona_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -8,53 +8,79 @@
 
     <main class="ak-main">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">ペルソナ管理</h2>
-            <a href="/ai" role="button"
-                style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">AI 生成に戻る</a>
+            <h2 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.08em; margin: 0;">{msg:persona_heading}</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="/ai" role="button"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:persona_back_to_ai}</a>
+                <a href="/ai/settings" role="button"
+                    style="background: transparent; color: var(--accent-gold, var(--ak-primary)); border: 1px solid var(--accent-gold, var(--ak-primary)); padding: 0.5rem 1.2rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; text-decoration: none; letter-spacing: 0.05em; display: inline-block;">{msg:settings_ai_title}</a>
+            </div>
         </div>
 
-        <!-- 新規ペルソナ作成 -->
         <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem;">
-            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">新規ペルソナ作成</h3>
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">{msg:persona_compare_heading}</h3>
+
+            <div style="margin-bottom: 1rem;">
+                <label for="compare-prompt" style="display: block; font-size: 0.85rem; color: var(--text-sec, var(--ak-text-muted)); margin-bottom: 0.25rem; letter-spacing: 0.04em;">{msg:persona_compare_prompt_label}</label>
+                <textarea id="compare-prompt"
+                    style="width: 100%; padding: 0.75rem; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border-lt, var(--ak-border)); color: var(--text-primary, var(--ak-text)); font-family: inherit; font-size: 0.95rem; resize: vertical; min-height: 4.5rem; outline: none; transition: border-color 0.2s ease; border-radius: 4px;"
+                    placeholder="{msg:persona_compare_prompt_placeholder}"></textarea>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.85rem; color: var(--text-sec, var(--ak-text-muted)); margin-bottom: 0.5rem; letter-spacing: 0.04em;">{msg:persona_compare_select_label}</label>
+                <div id="persona-selector" style="display: flex; flex-wrap: wrap; gap: 0.75rem;"></div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                <button id="btn-compare-generate"
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;"
+                    onclick="handleCompareGenerate()">{msg:persona_compare_generate_btn}</button>
+                <span id="compare-selected-count" style="font-size: 0.8rem; color: var(--text-sec, var(--ak-text-muted)); margin-left: 0.5rem;"></span>
+                <span id="compare-error" style="display: none; color: var(--status-error, #B04040); font-size: 0.85rem;"></span>
+            </div>
+
+            <div id="compare-grid" style="display: none; margin-top: 1.5rem;"></div>
+        </div>
+
+        <div class="ak-card" style="background: var(--bg-surface, var(--ak-bg-secondary)); border-color: var(--border-lt, var(--ak-border)); margin-bottom: 1.5rem;">
+            <h3 style="color: var(--text-heading, var(--ak-text)); font-weight: 400; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem;">{msg:persona_create_heading}</h3>
             <form id="persona-form" onsubmit="return handleCreatePersona(event)">
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
-                        <label for="persona-name" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">名前</label>
-                        <input type="text" id="persona-name" name="name" required placeholder="例: カジュアルライター"
+                        <label for="persona-name" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:persona_field_name}</label>
+                        <input type="text" id="persona-name" name="name" required
                             style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
                     </div>
                     <div>
-                        <label for="persona-tone" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">トーン</label>
+                        <label for="persona-tone" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:persona_field_tone}</label>
                         <select id="persona-tone" name="tone" required
                             style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
-                            <option value="CASUAL">カジュアル</option>
-                            <option value="FORMAL">フォーマル</option>
-                            <option value="HUMOROUS">ユーモラス</option>
-                            <option value="PROFESSIONAL">プロフェッショナル</option>
-                            <option value="FRIENDLY">フレンドリー</option>
+                            <option value="CASUAL">{msg:persona_tone_casual}</option>
+                            <option value="FORMAL">{msg:persona_tone_formal}</option>
+                            <option value="HUMOROUS">{msg:persona_tone_humorous}</option>
+                            <option value="PROFESSIONAL">{msg:persona_tone_professional}</option>
+                            <option value="FRIENDLY">{msg:persona_tone_friendly}</option>
                         </select>
                     </div>
                     <div>
-                        <label for="persona-language" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">言語</label>
-                        <input type="text" id="persona-language" name="language" required placeholder="例: ja"
+                        <label for="persona-language" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:persona_field_language}</label>
+                        <input type="text" id="persona-language" name="language" required placeholder="ja"
                             style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text));">
                     </div>
                 </div>
                 <div style="margin-bottom: 1rem;">
-                    <label for="persona-system-prompt" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">システムプロンプト</label>
-                    <textarea id="persona-system-prompt" name="systemPrompt" required rows="3" placeholder="例: あなたはカジュアルで親しみやすいSNSライターです。"
+                    <label for="persona-system-prompt" style="display: block; font-weight: 600; color: var(--text-heading, var(--ak-text)); margin-bottom: 0.5rem; letter-spacing: 0.05em;">{msg:persona_field_system_prompt}</label>
+                    <textarea id="persona-system-prompt" name="systemPrompt" required rows="3"
                         style="width: 100%; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border, var(--ak-border)); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.95rem; color: var(--text-body, var(--ak-text)); resize: vertical;"></textarea>
                 </div>
                 <button type="submit" id="create-persona-btn"
-                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;"
-                    onmouseover="this.style.background='var(--accent-gold-hover, var(--ak-primary-hover))'"
-                    onmouseout="this.style.background='var(--accent-gold, var(--ak-primary))'">作成</button>
+                    style="background: var(--accent-gold, var(--ak-primary)); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 0.05em;">{msg:persona_create_btn}</button>
             </form>
         </div>
 
-        <!-- ペルソナ一覧 -->
         <div id="personas-list">
-            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">ペルソナを読み込み中...</p>
+            <p style="color: var(--text-muted, var(--ak-text-muted));" aria-busy="true">{msg:persona_loading}</p>
         </div>
     </main>
 </div>
@@ -93,9 +119,94 @@
         gap: 0.5rem;
         margin-top: 0.75rem;
     }
+    .tone-dot {
+        display: inline-block;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        margin-right: 0.25rem;
+        vertical-align: middle;
+    }
+    .tone-dot--CASUAL { background: var(--status-info, #5A8BA0); }
+    .tone-dot--FORMAL { background: var(--text-sec, #7A7464); }
+    .tone-dot--HUMOROUS { background: var(--status-warning, #C8A96E); }
+    .tone-dot--PROFESSIONAL { background: var(--accent-gold, #C8964A); }
+    .tone-dot--FRIENDLY { background: var(--status-success, #6B8B4A); }
+    .persona-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+        border-radius: 4px;
+    }
+    .persona-chip:hover { border-color: var(--accent-gold, var(--ak-primary)); }
+    .persona-chip.selected {
+        background: var(--accent-gold-light, #F2E6D0);
+        border-color: var(--accent-gold, var(--ak-primary));
+    }
+    .persona-chip input[type="checkbox"] {
+        accent-color: var(--accent-gold, var(--ak-primary));
+        width: 1rem;
+        height: 1rem;
+        cursor: pointer;
+    }
+    .compare-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .compare-grid[data-cols="2"] { grid-template-columns: repeat(2, 1fr); }
+    .compare-grid[data-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+    .compare-grid[data-cols="4"] { grid-template-columns: repeat(4, 1fr); }
+    @media(max-width: 1024px) {
+        .compare-grid[data-cols="3"],
+        .compare-grid[data-cols="4"] { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media(max-width: 640px) {
+        .compare-grid[data-cols="2"],
+        .compare-grid[data-cols="3"],
+        .compare-grid[data-cols="4"] { grid-template-columns: 1fr; }
+    }
+    .compare-col {
+        background: var(--bg-surface, var(--ak-bg-secondary));
+        border: 1px solid var(--border-lt, var(--ak-border));
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 0.2s;
+        border-radius: 4px;
+    }
+    .compare-col.chosen {
+        border-color: var(--accent-gold, var(--ak-primary));
+        box-shadow: 0 0 0 1px var(--accent-gold, var(--ak-primary));
+    }
+    .tryout-area {
+        margin-top: 0.75rem;
+        border-top: 1px solid var(--border-sub, var(--ak-border));
+        padding-top: 0.75rem;
+    }
+    .tryout-result {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-sub, var(--ak-border));
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.7;
+        color: var(--text-body, var(--ak-text));
+        display: none;
+        white-space: pre-wrap;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+    .tryout-result.visible { display: block; }
 </style>
 
 <script>
+    var personasData = [];
+
     document.addEventListener('DOMContentLoaded', function() {
         loadPersonas();
     });
@@ -111,40 +222,260 @@
             if (response.status === 401) { window.location.href = '/'; return; }
             if (!response.ok) {
                 document.getElementById('personas-list').innerHTML =
-                    '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">ペルソナの読み込みに失敗しました。</div>';
+                    '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">{msg:persona_load_error}</div>';
                 return;
             }
-            var personas = await response.json();
-            renderPersonas(personas);
+            personasData = await response.json();
+            renderPersonas(personasData);
+            renderPersonaSelector(personasData);
         } catch (err) {
             document.getElementById('personas-list').innerHTML =
-                '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">ペルソナの読み込みに失敗しました。</div>';
-            showToast('error', 'ペルソナの読み込みに失敗しました');
+                '<div class="ak-card" style="color: var(--status-error, var(--ak-primary));">{msg:persona_load_error}</div>';
+            showToast('error', '{msg:persona_load_error}');
         }
+    }
+
+    function getToneDotClass(tone) {
+        return 'tone-dot tone-dot--' + (tone || '').toUpperCase();
+    }
+
+    function renderPersonaSelector(personas) {
+        var container = document.getElementById('persona-selector');
+        if (personas.length === 0) {
+            container.innerHTML = '<span style="color: var(--text-muted, var(--ak-text-muted)); font-size: 0.85rem;">{msg:persona_no_personas}</span>';
+            return;
+        }
+        container.innerHTML = personas.map(function(p) {
+            return '<label class="persona-chip">' +
+                '<input type="checkbox" data-persona-id="' + escapeHtmlGlobal(p.id) + '" onchange="updateCompareCount()">' +
+                '<div>' +
+                    '<div style="font-size: 0.9rem; color: var(--text-primary, var(--ak-text));">' +
+                        '<span class="' + getToneDotClass(p.tone) + '"></span>' +
+                        escapeHtmlGlobal(p.name) +
+                    '</div>' +
+                    '<div style="font-size: 0.7rem; color: var(--text-muted, var(--ak-text-muted)); letter-spacing: 0.06em; text-transform: uppercase;">' +
+                        escapeHtmlGlobal(p.tone || '') + ' / ' + escapeHtmlGlobal(p.language || '') +
+                    '</div>' +
+                '</div>' +
+            '</label>';
+        }).join('');
+        updateCompareCount();
+    }
+
+    function updateCompareCount() {
+        var checked = document.querySelectorAll('#persona-selector input:checked');
+        var countEl = document.getElementById('compare-selected-count');
+        countEl.textContent = checked.length + '{msg:persona_compare_selected_suffix}';
+        document.querySelectorAll('#persona-selector .persona-chip').forEach(function(chip) {
+            var cb = chip.querySelector('input');
+            if (cb.checked) chip.classList.add('selected');
+            else chip.classList.remove('selected');
+        });
+    }
+
+    async function handleCompareGenerate() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var checked = document.querySelectorAll('#persona-selector input:checked');
+        var errEl = document.getElementById('compare-error');
+        if (checked.length < 2 || checked.length > 4) {
+            errEl.textContent = '{msg:persona_compare_select_error}';
+            errEl.style.display = '';
+            setTimeout(function() { errEl.style.display = 'none'; }, 3000);
+            return;
+        }
+        errEl.style.display = 'none';
+
+        var prompt = document.getElementById('compare-prompt').value;
+        if (!prompt.trim()) {
+            errEl.textContent = '{msg:persona_compare_prompt_required}';
+            errEl.style.display = '';
+            setTimeout(function() { errEl.style.display = 'none'; }, 3000);
+            return;
+        }
+
+        var personaIds = [];
+        checked.forEach(function(cb) { personaIds.push(cb.getAttribute('data-persona-id')); });
+
+        var btn = document.getElementById('btn-compare-generate');
+        btn.disabled = true;
+        btn.textContent = '{msg:persona_compare_generating}';
+
+        try {
+            var response = await fetch('/api/v1/ai/compare', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ prompt: prompt, personaIds: personaIds })
+            });
+
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                await showApiError(response, '{msg:persona_compare_error}');
+                return;
+            }
+
+            var result = await response.json();
+            renderCompareGrid(result.columns);
+            showToast('success', '{msg:persona_compare_success}');
+        } catch (err) {
+            showToast('error', '{msg:error_network}');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '{msg:persona_compare_generate_btn}';
+        }
+    }
+
+    function renderCompareGrid(columns) {
+        var grid = document.getElementById('compare-grid');
+        grid.style.display = 'grid';
+        grid.className = 'compare-grid';
+        grid.setAttribute('data-cols', String(columns.length));
+
+        grid.innerHTML = columns.map(function(col, idx) {
+            return '<div class="compare-col' + (idx === 0 ? ' chosen' : '') + '" data-persona-id="' + escapeHtmlGlobal(col.personaId) + '">' +
+                '<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-sub, var(--ak-border));">' +
+                    '<div>' +
+                        '<div style="font-weight: 500; color: var(--text-heading, var(--ak-text)); font-size: 0.95rem;">' +
+                            '<span class="' + getToneDotClass(col.tone) + '"></span>' +
+                            escapeHtmlGlobal(col.personaName) +
+                        '</div>' +
+                        '<div style="font-size: 0.7rem; color: var(--text-muted, var(--ak-text-muted)); letter-spacing: 0.05em; margin-top: 0.25rem;">' +
+                            escapeHtmlGlobal(col.tone) + ' / ' + escapeHtmlGlobal(col.language) +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="flex: 1; font-size: 0.9rem; line-height: 1.75; color: var(--text-body, var(--ak-text)); white-space: pre-wrap;">' +
+                    escapeHtmlGlobal(col.generatedText) +
+                '</div>' +
+                '<div style="margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-sub, var(--ak-border)); display: flex; justify-content: flex-end; gap: 0.5rem;">' +
+                    '<button class="ak-btn-detail" onclick="copyCompareText(this)">{msg:persona_compare_copy_btn}</button>' +
+                    '<button class="' + (idx === 0 ? 'ak-btn-detail' : 'ak-btn-detail') + '" style="' + (idx === 0 ? 'background: var(--accent-gold, var(--ak-primary)); color: white; border-color: var(--accent-gold, var(--ak-primary));' : '') + '" onclick="adoptCompareText(this)">{msg:persona_compare_adopt_btn}</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function copyCompareText(btn) {
+        var body = btn.closest('.compare-col').querySelector('div[style*="white-space"]');
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(body.textContent.trim());
+            btn.textContent = '{msg:persona_compare_copied}';
+            setTimeout(function() { btn.textContent = '{msg:persona_compare_copy_btn}'; }, 1500);
+        }
+    }
+
+    function adoptCompareText(btn) {
+        var allCols = document.querySelectorAll('.compare-col');
+        allCols.forEach(function(c) {
+            c.classList.remove('chosen');
+            var adoptBtn = c.querySelector('div[style*="justify-content: flex-end"] button:last-child');
+            if (adoptBtn) {
+                adoptBtn.style.background = '';
+                adoptBtn.style.color = '';
+                adoptBtn.style.borderColor = '';
+            }
+        });
+        var col = btn.closest('.compare-col');
+        col.classList.add('chosen');
+        btn.style.background = 'var(--accent-gold, var(--ak-primary))';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--accent-gold, var(--ak-primary))';
+
+        var body = col.querySelector('div[style*="white-space"]');
+        sessionStorage.setItem('ai-generated-content', body.textContent.trim());
+        showToast('success', '{msg:persona_compare_adopted}');
     }
 
     function renderPersonas(personas) {
         var container = document.getElementById('personas-list');
         if (personas.length === 0) {
-            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 2rem; color: var(--text-muted, var(--ak-text-muted));">ペルソナがまだありません。上のフォームから作成してください。</div>';
+            container.innerHTML = '<div class="ak-card" style="text-align: center; padding: 2rem; color: var(--text-muted, var(--ak-text-muted));">{msg:persona_no_personas}</div>';
             return;
         }
         container.innerHTML = personas.map(function(p) {
             return '<div class="persona-card">' +
                 '<div class="persona-card-header">' +
-                    '<span class="persona-card-name">' + escapeHtmlGlobal(p.name) + '</span>' +
+                    '<span class="persona-card-name">' +
+                        '<span class="' + getToneDotClass(p.tone) + '"></span>' +
+                        escapeHtmlGlobal(p.name) +
+                    '</span>' +
                 '</div>' +
                 '<div class="persona-card-meta">' +
-                    '<span>トーン: ' + escapeHtmlGlobal(p.tone || '-') + '</span>' +
-                    '<span>言語: ' + escapeHtmlGlobal(p.language || '-') + '</span>' +
+                    '<span>' + escapeHtmlGlobal(p.tone || '-') + '</span>' +
+                    '<span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.55rem; border-radius: 2px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; border: 1px solid; background: #E8F0F8; color: #3A6A8A; border-color: #B0D0E8;">' + escapeHtmlGlobal(p.language || '-') + '</span>' +
                 '</div>' +
                 '<div style="margin-top: 0.5rem; color: var(--text-muted, var(--ak-text-muted)); font-size: 0.85rem; white-space: pre-wrap;">' + escapeHtmlGlobal(p.systemPrompt || '') + '</div>' +
                 '<div class="persona-card-actions">' +
-                    '<button class="ak-btn-detail" onclick="editPersona(\'' + escapeHtmlGlobal(p.id) + '\', \'' + escapeHtmlGlobal(p.name) + '\', \'' + escapeHtmlGlobal(p.systemPrompt || '') + '\', \'' + escapeHtmlGlobal(p.tone || '') + '\', \'' + escapeHtmlGlobal(p.language || '') + '\')">編集</button>' +
-                    '<button class="ak-btn-delete" onclick="deletePersona(\'' + escapeHtmlGlobal(p.id) + '\')">削除</button>' +
+                    '<button class="ak-btn-detail" onclick="toggleTryout(\'' + escapeHtmlGlobal(p.id) + '\', this)">{msg:persona_tryout_btn}</button>' +
+                    '<button class="ak-btn-detail" onclick="editPersona(\'' + escapeHtmlGlobal(p.id) + '\', \'' + escapeHtmlGlobal(p.name) + '\', \'' + escapeHtmlGlobal(p.systemPrompt || '') + '\', \'' + escapeHtmlGlobal(p.tone || '') + '\', \'' + escapeHtmlGlobal(p.language || '') + '\')">{msg:persona_edit_btn}</button>' +
+                    '<button class="ak-btn-delete" onclick="deletePersona(\'' + escapeHtmlGlobal(p.id) + '\')">{msg:persona_delete_btn}</button>' +
+                '</div>' +
+                '<div class="tryout-area" id="tryout-area-' + escapeHtmlGlobal(p.id) + '" style="display: none;">' +
+                    '<div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">' +
+                        '<input type="text" class="tryout-input" id="tryout-input-' + escapeHtmlGlobal(p.id) + '"' +
+                            ' placeholder="{msg:persona_tryout_placeholder}"' +
+                            ' style="flex: 1; padding: 0.5rem 0.75rem; background: var(--bg-field, var(--ak-bg)); border: 1px solid var(--border-lt, var(--ak-border)); color: var(--text-primary, var(--ak-text)); font-family: inherit; font-size: 0.85rem; outline: none; border-radius: 4px;">' +
+                        '<button class="ak-btn-detail" style="background: var(--accent-gold, var(--ak-primary)); color: white; border-color: var(--accent-gold, var(--ak-primary));" onclick="handleTryout(\'' + escapeHtmlGlobal(p.id) + '\')">{msg:persona_tryout_convert_btn}</button>' +
+                    '</div>' +
+                    '<div class="tryout-result" id="tryout-result-' + escapeHtmlGlobal(p.id) + '">' +
+                        '<div style="font-size: 0.7rem; color: var(--text-muted, var(--ak-text-muted)); letter-spacing: 0.06em; margin-bottom: 0.25rem; text-transform: uppercase;">{msg:persona_tryout_result_label}</div>' +
+                        '<div class="tryout-result-text"></div>' +
+                    '</div>' +
                 '</div>' +
             '</div>';
         }).join('');
+    }
+
+    function toggleTryout(personaId, btn) {
+        var area = document.getElementById('tryout-area-' + personaId);
+        if (area.style.display === 'none') {
+            area.style.display = '';
+            btn.textContent = '{msg:persona_tryout_close_btn}';
+        } else {
+            area.style.display = 'none';
+            btn.textContent = '{msg:persona_tryout_btn}';
+        }
+    }
+
+    async function handleTryout(personaId) {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; return; }
+
+        var input = document.getElementById('tryout-input-' + personaId);
+        if (!input.value.trim()) return;
+
+        var resultEl = document.getElementById('tryout-result-' + personaId);
+        var textEl = resultEl.querySelector('.tryout-result-text');
+        textEl.textContent = '{msg:persona_tryout_converting}';
+        resultEl.classList.add('visible');
+
+        try {
+            var response = await fetch('/api/v1/ai/tryout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ personaId: personaId, text: input.value })
+            });
+
+            if (response.status === 401) { window.location.href = '/'; return; }
+            if (!response.ok) {
+                await showApiError(response, '{msg:persona_tryout_error}');
+                resultEl.classList.remove('visible');
+                return;
+            }
+
+            var result = await response.json();
+            textEl.textContent = result.transformedText || '';
+        } catch (err) {
+            showToast('error', '{msg:error_network}');
+            resultEl.classList.remove('visible');
+        }
     }
 
     async function handleCreatePersona(event) {
@@ -154,7 +485,7 @@
 
         var btn = document.getElementById('create-persona-btn');
         btn.disabled = true;
-        btn.textContent = '作成中...';
+        btn.textContent = '{msg:persona_creating}';
 
         try {
             var response = await fetch('/api/v1/ai/personas', {
@@ -173,30 +504,30 @@
 
             if (response.status === 401) { window.location.href = '/'; return false; }
             if (!response.ok) {
-                await showApiError(response, 'ペルソナの作成に失敗しました');
+                await showApiError(response, '{msg:persona_create_error}');
                 return false;
             }
 
-            showToast('success', 'ペルソナを作成しました');
+            showToast('success', '{msg:persona_created}');
             document.getElementById('persona-form').reset();
             loadPersonas();
         } catch (err) {
-            showToast('error', 'ネットワークエラー', 'サーバーに接続できませんでした。');
+            showToast('error', '{msg:error_network}');
         } finally {
             btn.disabled = false;
-            btn.textContent = '作成';
+            btn.textContent = '{msg:persona_create_btn}';
         }
         return false;
     }
 
     function editPersona(id, name, systemPrompt, tone, language) {
-        var newName = prompt('名前:', name);
+        var newName = prompt('{msg:persona_field_name}:', name);
         if (newName === null) return;
-        var newSystemPrompt = prompt('システムプロンプト:', systemPrompt);
+        var newSystemPrompt = prompt('{msg:persona_field_system_prompt}:', systemPrompt);
         if (newSystemPrompt === null) return;
-        var newTone = prompt('トーン:', tone);
+        var newTone = prompt('{msg:persona_field_tone}:', tone);
         if (newTone === null) return;
-        var newLanguage = prompt('言語:', language);
+        var newLanguage = prompt('{msg:persona_field_language}:', language);
         if (newLanguage === null) return;
 
         var token = localStorage.getItem('accessToken');
@@ -211,18 +542,18 @@
             body: JSON.stringify({ name: newName, systemPrompt: newSystemPrompt, tone: newTone, language: newLanguage })
         }).then(function(response) {
             if (!response.ok) {
-                showApiError(response, 'ペルソナの更新に失敗しました');
+                showApiError(response, '{msg:persona_update_error}');
                 return;
             }
-            showToast('success', 'ペルソナを更新しました');
+            showToast('success', '{msg:persona_updated}');
             loadPersonas();
         }).catch(function() {
-            showToast('error', 'ネットワークエラー');
+            showToast('error', '{msg:error_network}');
         });
     }
 
     async function deletePersona(id) {
-        if (!confirm('このペルソナを削除してもよろしいですか？')) return;
+        if (!confirm('{msg:persona_delete_confirm}')) return;
         var token = localStorage.getItem('accessToken');
         try {
             var response = await fetch('/api/v1/ai/personas/' + id, {
@@ -230,13 +561,13 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.ok || response.status === 204) {
-                showToast('success', 'ペルソナを削除しました');
+                showToast('success', '{msg:persona_deleted}');
                 loadPersonas();
             } else {
-                await showApiError(response, 'ペルソナの削除に失敗しました');
+                await showApiError(response, '{msg:persona_delete_error}');
             }
         } catch (err) {
-            showToast('error', 'ネットワークエラー');
+            showToast('error', '{msg:error_network}');
         }
     }
 
@@ -244,11 +575,6 @@
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}

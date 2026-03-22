@@ -1,5 +1,6 @@
 package com.akazukin.infrastructure.persistence.repository;
 
+import com.akazukin.domain.model.ApprovalAction;
 import com.akazukin.domain.model.ApprovalRequest;
 import com.akazukin.domain.port.ApprovalRequestRepository;
 import com.akazukin.infrastructure.persistence.entity.ApprovalRequestEntity;
@@ -9,6 +10,7 @@ import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -125,6 +127,55 @@ public class ApprovalRequestRepositoryImpl implements ApprovalRequestRepository,
                 LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.countPendingByApproverId", perfMs});
             } else {
                 LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.countPendingByApproverId", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public long countByTeamIdAndStatus(UUID teamId, ApprovalAction status) {
+        long perfStart = System.nanoTime();
+        try {
+            return count("teamId = ?1 AND status = ?2", teamId, status.name());
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.countByTeamIdAndStatus", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.countByTeamIdAndStatus", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public long countByTeamIdAndStatusAndDecidedAfter(UUID teamId, ApprovalAction status, Instant after) {
+        long perfStart = System.nanoTime();
+        try {
+            return count("teamId = ?1 AND status = ?2 AND decidedAt >= ?3", teamId, status.name(), after);
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.countByTeamIdAndStatusAndDecidedAfter", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.countByTeamIdAndStatusAndDecidedAfter", perfMs});
+            }
+        }
+    }
+
+    @Override
+    public List<ApprovalRequest> findByTeamIdAndStatus(UUID teamId, ApprovalAction status) {
+        long perfStart = System.nanoTime();
+        try {
+            return find("teamId = ?1 AND status = ?2", teamId, status.name())
+                    .list()
+                    .stream()
+                    .map(ApprovalRequestMapper::toDomain)
+                    .collect(Collectors.toList());
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.findByTeamIdAndStatus", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ApprovalRequestRepositoryImpl.findByTeamIdAndStatus", perfMs});
             }
         }
     }

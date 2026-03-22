@@ -1,9 +1,13 @@
 package com.akazukin.web.api;
 
+import com.akazukin.application.dto.AiCompareRequestDto;
 import com.akazukin.application.dto.AiGenerateRequestDto;
 import com.akazukin.application.dto.AiPersonaRequestDto;
+import com.akazukin.application.dto.AiTaskProviderSettingsRequestDto;
+import com.akazukin.application.dto.AiTryoutRequestDto;
 import com.akazukin.application.dto.ErrorResponseDto;
 import com.akazukin.application.usecase.AiContentUseCase;
+import com.akazukin.application.usecase.AiSettingsUseCase;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -15,8 +19,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
+import jakarta.ws.rs.core.SecurityContext;
 
 import java.util.UUID;
 
@@ -30,7 +35,11 @@ public class AiResource {
     AiContentUseCase aiContentUseCase;
 
     @Inject
-    JsonWebToken jwt;
+    AiSettingsUseCase aiSettingsUseCase;
+
+    @Context
+    SecurityContext securityContext;
+
 
     @POST
     @Path("/generate")
@@ -40,15 +49,41 @@ public class AiResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var result = aiContentUseCase.generate(userId, request);
+        return Response.ok(result).build();
+    }
+
+    @POST
+    @Path("/compare")
+    public Response compareGenerate(AiCompareRequestDto request) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        var result = aiContentUseCase.compareGenerate(userId, request);
+        return Response.ok(result).build();
+    }
+
+    @POST
+    @Path("/tryout")
+    public Response tryout(AiTryoutRequestDto request) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        var result = aiContentUseCase.tryout(userId, request);
         return Response.ok(result).build();
     }
 
     @GET
     @Path("/personas")
     public Response listPersonas() {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var personas = aiContentUseCase.listPersonas(userId);
         return Response.ok(personas).build();
     }
@@ -61,7 +96,7 @@ public class AiResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var persona = aiContentUseCase.createPersona(userId, request);
         return Response.status(Response.Status.CREATED).entity(persona).build();
     }
@@ -74,7 +109,7 @@ public class AiResource {
                     .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
                     .build();
         }
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         var persona = aiContentUseCase.updatePersona(id, userId, request);
         return Response.ok(persona).build();
     }
@@ -82,8 +117,50 @@ public class AiResource {
     @DELETE
     @Path("/personas/{id}")
     public Response deletePersona(@PathParam("id") UUID id) {
-        UUID userId = UUID.fromString(jwt.getSubject());
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
         aiContentUseCase.deletePersona(id, userId);
         return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/settings/ollama/status")
+    public Response getOllamaStatus() {
+        var status = aiSettingsUseCase.getOllamaStatus();
+        return Response.ok(status).build();
+    }
+
+    @POST
+    @Path("/settings/ollama/reconnect")
+    public Response reconnectOllama() {
+        var status = aiSettingsUseCase.reconnectOllama();
+        return Response.ok(status).build();
+    }
+
+    @GET
+    @Path("/settings/task-providers")
+    public Response getTaskProviderSettings() {
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        var settings = aiSettingsUseCase.getTaskProviderSettings(userId);
+        return Response.ok(settings).build();
+    }
+
+    @PUT
+    @Path("/settings/task-providers")
+    public Response saveTaskProviderSettings(AiTaskProviderSettingsRequestDto request) {
+        if (request == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponseDto.of("INVALID_REQUEST", "Request body is required", null))
+                    .build();
+        }
+        UUID userId = UUID.fromString(securityContext.getUserPrincipal().getName());
+        var settings = aiSettingsUseCase.saveTaskProviderSettings(userId, request);
+        return Response.ok(settings).build();
+    }
+
+    @GET
+    @Path("/settings/cost-monitor")
+    public Response getCostMonitor() {
+        var monitor = aiSettingsUseCase.getCostMonitor();
+        return Response.ok(monitor).build();
     }
 }

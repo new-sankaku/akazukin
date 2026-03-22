@@ -84,6 +84,29 @@ public class ImpressionSnapshotRepositoryImpl implements ImpressionSnapshotRepos
     }
 
     @Override
+    public List<ImpressionSnapshot> findRecentByAccountIds(List<UUID> snsAccountIds, int limit) {
+        long perfStart = System.nanoTime();
+        try {
+            if (snsAccountIds == null || snsAccountIds.isEmpty()) {
+                return List.of();
+            }
+            return find("snsAccountId IN ?1 ORDER BY snapshotAt DESC", snsAccountIds)
+                    .page(0, limit)
+                    .list()
+                    .stream()
+                    .map(ImpressionSnapshotMapper::toDomain)
+                    .toList();
+        } finally {
+            long perfMs = (System.nanoTime() - perfStart) / 1_000_000;
+            if (perfMs >= 100) {
+                LOG.log(Level.WARNING, "[PERF] {0} took {1}ms", new Object[]{"ImpressionSnapshotRepositoryImpl.findRecentByAccountIds", perfMs});
+            } else {
+                LOG.log(Level.FINE, "[PERF] {0} took {1}ms", new Object[]{"ImpressionSnapshotRepositoryImpl.findRecentByAccountIds", perfMs});
+            }
+        }
+    }
+
+    @Override
     public Optional<ImpressionSnapshot> getLatestBySnsAccountId(UUID snsAccountId) {
         long perfStart = System.nanoTime();
         try {

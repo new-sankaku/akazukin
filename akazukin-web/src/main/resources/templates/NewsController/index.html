@@ -1,5 +1,5 @@
 {#include base}
-{#title}ニュースソース - Akazukin{/title}
+{#title}{msg:news_page_title}{/title}
 {#body}
 {#appheader /}
 
@@ -7,63 +7,157 @@
     {#sidebar active="news" /}
 
     <main class="ak-main">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">ニュースソース管理</h2>
-            <button onclick="openAddModal()" style="
-                background-color: var(--accent-gold, #C8964A);
-                border: none;
-                color: #fff;
-                font-size: 0.85rem;
-                padding: 0.5rem 1.2rem;
-                border-radius: 2px;
-                cursor: pointer;
-                letter-spacing: 0.05em;
-            ">ソース追加</button>
-        </div>
-
-        <div id="sources-list">
-            <div class="ak-card" style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
-                <p style="color: var(--text-muted, #9B9580); margin: 0;">読み込み中...</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-sm, 0.5rem);">
+            <h2 style="margin: 0; color: var(--text-heading, #3D3A32); font-family: 'EB Garamond', 'Noto Serif JP', serif; font-weight: 400; letter-spacing: 0.08em;">{msg:news_page_heading}</h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="fetchAllArticles()" style="
+                    background-color: var(--bg-elevated, #F0EBD8);
+                    border: 1px solid var(--accent-gold, #C8964A);
+                    color: var(--accent-gold, #C8964A);
+                    font-size: 0.85rem;
+                    padding: 0.5rem 1.2rem;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    letter-spacing: 0.05em;
+                ">{msg:news_fetch_articles}</button>
+                <button onclick="openAddModal()" style="
+                    background-color: var(--accent-gold, #C8964A);
+                    border: none;
+                    color: #fff;
+                    font-size: 0.85rem;
+                    padding: 0.5rem 1.2rem;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    letter-spacing: 0.05em;
+                ">{msg:news_add_source}</button>
             </div>
         </div>
 
-        <!-- Generated Post Preview -->
-        <div id="generated-preview" style="display:none; margin-top:1.5rem;">
-            <h3 style="color: var(--text-heading, #3D3A32); margin-bottom:0.75rem;">AI生成投稿プレビュー</h3>
-            <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; padding: 1.25rem;">
-                <div id="generated-news-title" style="font-weight:600; color:var(--text-heading, #3D3A32); margin-bottom:0.5rem;"></div>
-                <div id="generated-text" style="color:var(--text-primary, #4D493E); white-space:pre-wrap; margin-bottom:0.75rem;"></div>
-                <a id="generated-news-url" href="#" target="_blank" style="font-size:0.85rem; color:var(--accent-gold, #C8964A);">元記事を見る</a>
+        <div id="sources-list" style="margin-bottom: var(--sp-lg, 1.5rem);">
+            <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border-lt, #CCC5AE); border-radius: 2px; text-align: center; padding: 2rem;">
+                <p style="color: var(--text-muted, #9B9580); margin: 0;">{msg:news_loading}</p>
             </div>
+        </div>
+
+        <div id="news-section" style="display: none;">
+            <div class="news-section-title">
+                <h3 style="margin: 0; color: var(--text-heading, #3D3A32); font-size: 1.05rem; font-weight: 500;">{msg:news_articles_title}</h3>
+            </div>
+            <div id="news-articles-list" class="news-card-list"></div>
         </div>
     </main>
 </div>
 
-<!-- Add Source Modal -->
 <div id="source-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
     <div style="background: var(--bg-surface, #EDE8D5); border: 1px solid var(--border, #B8B19C); border-radius: 2px; padding: 2rem; width: 90%; max-width: 500px;">
-        <h3 style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">ニュースソース追加</h3>
+        <h3 style="margin: 0 0 1.5rem 0; color: var(--text-heading, #3D3A32);">{msg:news_add_source_title}</h3>
         <form id="source-form" onsubmit="addSource(event)">
             <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">ソース名</label>
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">{msg:news_source_name}</label>
                 <input type="text" id="source-name" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
             </div>
             <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">RSS URL</label>
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">{msg:news_source_url}</label>
                 <input type="url" id="source-url" required style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);" />
             </div>
             <div style="margin-bottom: 1rem;">
-                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">タイプ</label>
+                <label style="display:block; font-size:0.85rem; color: var(--text-sec, #7A7464); margin-bottom:0.3rem;">{msg:news_source_type}</label>
                 <select id="source-type" style="width:100%; padding:0.5rem; border:1px solid var(--border-lt, #CCC5AE); border-radius:2px; background:var(--bg-base, #F5F0DD);">
                     <option value="RSS">RSS</option>
                     <option value="ATOM">Atom</option>
                 </select>
             </div>
             <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-                <button type="button" onclick="closeModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">キャンセル</button>
-                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">追加</button>
+                <button type="button" onclick="closeSourceModal()" style="padding:0.5rem 1rem; border:1px solid var(--border, #B8B19C); background:transparent; border-radius:2px; cursor:pointer; color: var(--text-sec, #7A7464);">{msg:news_cancel}</button>
+                <button type="submit" style="padding:0.5rem 1rem; background:var(--accent-gold, #C8964A); border:none; color:#fff; border-radius:2px; cursor:pointer;">{msg:news_add_submit}</button>
             </div>
         </form>
+    </div>
+</div>
+
+<div class="news-modal-overlay" id="modalPostIdea">
+    <div class="news-modal" style="max-width: 640px;">
+        <div class="news-modal-header">
+            <h3 style="margin:0;color:var(--text-heading)">{msg:news_post_idea_title}</h3>
+            <button class="news-modal-close" onclick="closeAllModals()">&times;</button>
+        </div>
+        <div class="news-step-indicator">
+            <div class="news-step active" id="stepPersona"><span class="news-step-dot">1</span>{msg:news_step_persona}</div>
+            <span class="news-step-line"></span>
+            <div class="news-step" id="stepGenerate"><span class="news-step-dot">2</span>{msg:news_step_generate}</div>
+            <span class="news-step-line"></span>
+            <div class="news-step" id="stepConfirm"><span class="news-step-dot">3</span>{msg:news_step_confirm}</div>
+        </div>
+        <div id="postIdeaStep1">
+            <p style="font-size:0.78rem;color:var(--text-muted);font-style:italic">{msg:news_select_persona_hint}</p>
+            <div class="news-persona-grid" id="personaGrid"></div>
+            <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+                <button class="news-btn-primary" onclick="goToPostIdeaStep2()" id="btnPostIdeaNext" disabled>{msg:news_generate_post}</button>
+            </div>
+        </div>
+        <div id="postIdeaStep2" style="display:none">
+            <div id="postIdeaPersonaInfo" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.8rem;font-size:0.85rem;color:var(--text-sec)"></div>
+            <div class="news-generated-text" id="postIdeaGenerated"></div>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem">
+                <button class="news-btn" onclick="goToPostIdeaStep1()">{msg:news_retry}</button>
+                <button class="news-btn-primary" onclick="goToPostCreate()">{msg:news_go_compose}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="news-modal-overlay" id="modalMultiAngle">
+    <div class="news-modal" style="max-width: 960px;">
+        <div class="news-modal-header">
+            <h3 style="margin:0;color:var(--text-heading)">{msg:news_multi_angle_title}</h3>
+            <button class="news-modal-close" onclick="closeAllModals()">&times;</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);font-style:italic" id="multiAngleNewsTitle"></p>
+        <div class="news-angle-cards" id="angleCards"></div>
+    </div>
+</div>
+
+<div class="news-modal-overlay" id="modalTemplateMatch">
+    <div class="news-modal" style="max-width: 640px;">
+        <div class="news-modal-header">
+            <h3 style="margin:0;color:var(--text-heading)">{msg:news_template_match_title}</h3>
+            <button class="news-modal-close" onclick="closeAllModals()">&times;</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);font-style:italic" id="templateMatchNewsTitle"></p>
+        <div id="templateList" class="news-template-list"></div>
+    </div>
+</div>
+
+<div class="news-modal-overlay" id="modalABTest">
+    <div class="news-modal" style="max-width: 800px;">
+        <div class="news-modal-header">
+            <h3 style="margin:0;color:var(--text-heading)">{msg:news_abtest_title}</h3>
+            <button class="news-modal-close" onclick="closeAllModals()">&times;</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--text-muted);font-style:italic" id="abTestNewsTitle"></p>
+        <div id="abStep1">
+            <p style="font-size:0.85rem;color:var(--text-sec);margin-bottom:0.8rem">{msg:news_abtest_select_hint}</p>
+            <div class="news-ab-select">
+                <div class="news-ab-side">
+                    <div style="font-size:0.82rem;font-weight:500;color:var(--status-info, #5A8BA0)">A {msg:news_abtest_persona}</div>
+                    <select id="abPersonaA"><option value="">{msg:news_abtest_select}</option></select>
+                </div>
+                <div class="news-ab-side">
+                    <div style="font-size:0.82rem;font-weight:500;color:var(--accent-gold, #C8964A)">B {msg:news_abtest_persona}</div>
+                    <select id="abPersonaB"><option value="">{msg:news_abtest_select}</option></select>
+                </div>
+            </div>
+            <div id="msgABError" class="news-inline-msg" style="display:none"></div>
+            <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+                <button class="news-btn-primary" onclick="generateABTest()">{msg:news_abtest_generate}</button>
+            </div>
+        </div>
+        <div id="abStep2" style="display:none">
+            <div class="news-ab-container" id="abPanels"></div>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem">
+                <button class="news-btn" onclick="resetABTest()">{msg:news_retry}</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -85,14 +179,320 @@
         color: #fff;
         letter-spacing: 0.05em;
     }
+    .news-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.2rem;
+        padding-bottom: var(--sp-sm, 0.5rem);
+        border-bottom: 1px solid var(--border-lt, #CCC5AE);
+    }
+    .news-section-title::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 1.2rem;
+        background: var(--accent-gold, #C8964A);
+        border-radius: 1px;
+    }
+    .news-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+    .news-card {
+        position: relative;
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: 1.2rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-sm, 0.5rem);
+        border-radius: 2px;
+        transition: border-color 0.2s ease;
+    }
+    .news-card:hover { border-color: var(--accent-gold, #C8964A); }
+    .news-card-meta {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-sm, 0.5rem);
+        font-size: 0.8rem;
+        color: var(--text-muted, #9B9580);
+        flex-wrap: wrap;
+    }
+    .news-card-tag {
+        background: var(--bg-field, #DDD6BB);
+        border: 1px solid var(--border-sub, #DDD6BB);
+        padding: 0.1rem var(--sp-sm, 0.5rem);
+        font-size: 0.75rem;
+        color: var(--text-sec, #7A7464);
+        border-radius: 2px;
+    }
+    .news-card-title {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--text-heading, #3D3A32);
+    }
+    .news-card-summary {
+        font-size: 0.88rem;
+        color: var(--text-sec, #7A7464);
+        line-height: 1.6;
+    }
+    .news-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--sp-sm, 0.5rem);
+        margin-top: var(--sp-xs, 0.25rem);
+    }
+    .news-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-xs, 0.25rem);
+        padding: 0.45rem var(--sp-md, 1rem);
+        font-size: 0.82rem;
+        border: 1px solid var(--border, #B8B19C);
+        background: var(--bg-elevated, #F0EBD8);
+        color: var(--text-primary, #4D493E);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        letter-spacing: 0.03em;
+        border-radius: 2px;
+    }
+    .news-btn:hover {
+        border-color: var(--accent-gold, #C8964A);
+        color: var(--accent-gold, #C8964A);
+    }
+    .news-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem var(--sp-md, 1rem);
+        font-size: 0.82rem;
+        background: var(--accent-gold, #C8964A);
+        color: #fff;
+        border: 1px solid var(--accent-gold, #C8964A);
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.2s ease;
+    }
+    .news-btn-primary:hover { background: var(--accent-gold-hover, #B5853E); }
+    .news-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .news-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(60,57,50,0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: var(--sp-md, 1rem);
+    }
+    .news-modal-overlay.active { display: flex; }
+    .news-modal {
+        background: var(--bg-surface, #EDE8D5);
+        border: 1px solid var(--border, #B8B19C);
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 1.8rem var(--sp-xl, 2rem);
+        border-radius: 2px;
+    }
+    .news-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--border-lt, #CCC5AE);
+    }
+    .news-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: var(--text-muted, #9B9580);
+        cursor: pointer;
+        padding: var(--sp-xs, 0.25rem);
+    }
+    .news-modal-close:hover { color: var(--text-heading, #3D3A32); }
+    .news-persona-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: var(--sp-sm, 0.5rem);
+        margin: 1rem 0;
+    }
+    .news-persona-card {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: var(--sp-sm, 0.5rem);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+        border-radius: 2px;
+    }
+    .news-persona-card:hover, .news-persona-card.selected {
+        border-color: var(--accent-gold, #C8964A);
+        background: var(--accent-gold-light, #F2E6D0);
+    }
+    .news-persona-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--bg-field, #DDD6BB);
+        border: 1px solid var(--border-sub, #DDD6BB);
+        margin: 0 auto var(--sp-sm, 0.5rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--text-sec, #7A7464);
+    }
+    .news-generated-text {
+        background: var(--bg-field, #DDD6BB);
+        border: 1px solid var(--border-sub, #DDD6BB);
+        padding: var(--sp-sm, 0.5rem) var(--sp-md, 1rem);
+        font-size: 0.88rem;
+        color: var(--text-body, #5A5548);
+        line-height: 1.65;
+        margin-top: var(--sp-sm, 0.5rem);
+        border-radius: 2px;
+    }
+    .news-step-indicator {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-sm, 0.5rem);
+        margin-bottom: var(--sp-md, 1rem);
+    }
+    .news-step {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-xs, 0.25rem);
+        font-size: 0.78rem;
+        color: var(--text-muted, #9B9580);
+    }
+    .news-step.active {
+        color: var(--accent-gold, #C8964A);
+        font-weight: 500;
+    }
+    .news-step-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border, #B8B19C);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+    }
+    .news-step.active .news-step-dot {
+        border-color: var(--accent-gold, #C8964A);
+        background: var(--accent-gold, #C8964A);
+        color: var(--bg-elevated, #F0EBD8);
+    }
+    .news-step-line { width: 24px; height: 1px; background: var(--border-lt, #CCC5AE); }
+    .news-angle-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--sp-md, 1rem);
+        margin-top: var(--sp-md, 1rem);
+    }
+    .news-angle-card {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        border-radius: 2px;
+        transition: border-color 0.2s ease;
+    }
+    .news-angle-card:hover { border-color: var(--accent-gold, #C8964A); }
+    .news-angle-type {
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--accent-gold, #C8964A);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .news-template-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        margin-top: var(--sp-sm, 0.5rem);
+    }
+    .news-template-item {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-md, 1rem);
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: var(--sp-sm, 0.5rem) var(--sp-md, 1rem);
+        border-radius: 2px;
+        transition: border-color 0.2s ease;
+        flex-wrap: wrap;
+    }
+    .news-template-item:hover { border-color: var(--accent-gold, #C8964A); }
+    .news-ab-select {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--sp-md, 1rem);
+        margin-bottom: var(--sp-md, 1rem);
+    }
+    .news-ab-side {
+        display: flex;
+        flex-direction: column;
+        gap: var(--sp-sm, 0.5rem);
+    }
+    .news-ab-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem;
+        margin-top: var(--sp-md, 1rem);
+    }
+    .news-ab-panel {
+        background: var(--bg-elevated, #F0EBD8);
+        border: 1px solid var(--border-lt, #CCC5AE);
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        border-radius: 2px;
+    }
+    .news-inline-msg {
+        padding: var(--sp-sm, 0.5rem) var(--sp-md, 1rem);
+        font-size: 0.82rem;
+        border: 1px solid var(--status-error, #B04040);
+        color: var(--status-error, #B04040);
+        background: rgba(176,64,64,0.1);
+        border-radius: 2px;
+        margin-top: var(--sp-sm, 0.5rem);
+    }
+    @media(max-width:768px) {
+        .news-angle-cards { grid-template-columns: 1fr; }
+        .news-ab-container { grid-template-columns: 1fr; }
+        .news-ab-select { grid-template-columns: 1fr; }
+    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() { loadSources(); });
+    var articlesCache = [];
+    var personasCache = [];
+    var currentNewsItem = null;
+    var selectedPersonaId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSources();
+        loadArticles();
+        loadPersonas();
+    });
+
+    function getToken() {
+        var token = localStorage.getItem('accessToken');
+        if (!token) { window.location.href = '/'; }
+        return token;
+    }
 
     async function loadSources() {
-        var token = localStorage.getItem('accessToken');
-        if (!token) { window.location.href = '/'; return; }
+        var token = getToken();
+        if (!token) return;
         try {
             var response = await fetch('/api/v1/news/sources', {
                 headers: { 'Authorization': 'Bearer ' + token }
@@ -102,38 +502,313 @@
                 var sources = await response.json();
                 renderSources(sources);
             } else {
-                await showApiError(response, 'ソースの読み込みに失敗しました');
+                await showApiError(response, '{msg:news_error_load_sources}');
             }
-        } catch (err) { showToast('error', 'ソースの読み込みに失敗しました'); }
+        } catch (err) { showToast('error', '{msg:news_error_load_sources}'); }
     }
 
     function renderSources(sources) {
         var container = document.getElementById('sources-list');
         if (sources.length === 0) {
-            container.innerHTML = '<div class="source-card" style="text-align:center; padding:3rem;"><p style="color:var(--text-sec, #7A7464);">ニュースソースがまだ登録されていません</p></div>';
+            container.innerHTML = '<div class="source-card" style="text-align:center; padding:3rem;"><p style="color:var(--text-sec, #7A7464);">{msg:news_empty_sources}</p></div>';
             return;
         }
         container.innerHTML = sources.map(function(s) {
             return '<div class="source-card">' +
-                '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">' +
                 '<div>' +
                 '<span class="source-type-badge">' + escapeHtmlGlobal(s.sourceType) + '</span>' +
                 '&nbsp;&nbsp;<strong style="color:var(--text-heading, #3D3A32);">' + escapeHtmlGlobal(s.name) + '</strong>' +
                 '<div style="font-size:0.8rem; color:var(--text-sec, #7A7464); margin-top:0.3rem; word-break:break-all;">' + escapeHtmlGlobal(s.url) + '</div>' +
                 '</div>' +
-                '<div style="display:flex; gap:0.5rem;">' +
-                '<button onclick="generatePost(\'' + s.id + '\')" style="font-size:0.78rem; padding:0.4rem 0.9rem; border:1px solid var(--accent-gold, #C8964A); color:var(--accent-gold, #C8964A); background:transparent; border-radius:2px; cursor:pointer;">AI投稿生成</button>' +
-                '<button onclick="removeSource(\'' + s.id + '\')" style="font-size:0.78rem; padding:0.4rem 0.9rem; border:1px solid #C1574B; color:#C1574B; background:transparent; border-radius:2px; cursor:pointer;">削除</button>' +
+                '<div style="display:flex; gap:0.5rem; flex-wrap:wrap;">' +
+                '<button onclick="fetchSourceArticles(\'' + s.id + '\')" class="news-btn">{msg:news_fetch_btn}</button>' +
+                '<button onclick="removeSource(\'' + s.id + '\')" style="font-size:0.78rem; padding:0.4rem 0.9rem; border:1px solid #C1574B; color:#C1574B; background:transparent; border-radius:2px; cursor:pointer;">{msg:news_remove_source}</button>' +
                 '</div></div></div>';
         }).join('');
     }
 
+    async function loadArticles() {
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/news/articles', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                articlesCache = await response.json();
+                renderArticles(articlesCache);
+            }
+        } catch (err) { showToast('error', '{msg:news_error_fetch}'); }
+    }
+
+    function renderArticles(articles) {
+        var section = document.getElementById('news-section');
+        var container = document.getElementById('news-articles-list');
+        if (articles.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = 'block';
+        container.innerHTML = articles.map(function(a, idx) {
+            var dateStr = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('ja-JP') : '';
+            return '<div class="news-card" data-idx="' + idx + '">' +
+                '<div class="news-card-meta">' +
+                '<span class="news-card-tag">' + escapeHtmlGlobal(a.sourceName) + '</span>' +
+                (dateStr ? '<span>' + dateStr + '</span>' : '') +
+                '</div>' +
+                '<div class="news-card-title">' + escapeHtmlGlobal(a.title) + '</div>' +
+                (a.summary ? '<div class="news-card-summary">' + escapeHtmlGlobal(a.summary) + '</div>' : '') +
+                '<div class="news-card-actions">' +
+                '<button class="news-btn" onclick="openPostIdea(' + idx + ')">{msg:news_action_post_idea}</button>' +
+                '<button class="news-btn" onclick="openMultiAngle(' + idx + ')">{msg:news_action_multi_angle}</button>' +
+                '<button class="news-btn" onclick="openTemplateMatch(' + idx + ')">{msg:news_action_template_match}</button>' +
+                '<button class="news-btn" onclick="openABTest(' + idx + ')">{msg:news_action_abtest}</button>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    async function loadPersonas() {
+        var token = getToken();
+        try {
+            var response = await fetch('/api/v1/ai/personas', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                personasCache = await response.json();
+            }
+        } catch (err) { showToast('error', '{msg:error_load_failed}'); }
+    }
+
+    function renderPersonaGrid(containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = personasCache.map(function(p) {
+            var initial = (p.name || 'P').charAt(0);
+            return '<div class="news-persona-card" data-personaid="' + p.id + '" onclick="selectNewsPersona(this)">' +
+                '<div class="news-persona-avatar">' + escapeHtmlGlobal(initial) + '</div>' +
+                '<div style="font-size:0.85rem;font-weight:500;color:var(--text-heading)">' + escapeHtmlGlobal(p.name) + '</div>' +
+                (p.tone ? '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:var(--sp-xs)">' + escapeHtmlGlobal(p.tone) + '</div>' : '') +
+                '</div>';
+        }).join('');
+    }
+
+    function populatePersonaSelects() {
+        var selects = ['abPersonaA', 'abPersonaB'];
+        selects.forEach(function(id) {
+            var sel = document.getElementById(id);
+            sel.innerHTML = '<option value="">{msg:news_abtest_select}</option>';
+            personasCache.forEach(function(p) {
+                sel.innerHTML += '<option value="' + p.id + '">' + escapeHtmlGlobal(p.name) + '</option>';
+            });
+        });
+    }
+
+    function selectNewsPersona(el) {
+        el.parentElement.querySelectorAll('.news-persona-card').forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+        selectedPersonaId = el.dataset.personaid;
+        var btn = document.getElementById('btnPostIdeaNext');
+        if (btn) btn.disabled = false;
+    }
+
+    function closeAllModals() {
+        document.querySelectorAll('.news-modal-overlay').forEach(function(m) { m.classList.remove('active'); });
+    }
+
+    function openPostIdea(idx) {
+        currentNewsItem = articlesCache[idx];
+        selectedPersonaId = null;
+        document.getElementById('postIdeaStep1').style.display = '';
+        document.getElementById('postIdeaStep2').style.display = 'none';
+        document.getElementById('btnPostIdeaNext').disabled = true;
+        document.getElementById('stepPersona').classList.add('active');
+        document.getElementById('stepGenerate').classList.remove('active');
+        document.getElementById('stepConfirm').classList.remove('active');
+        renderPersonaGrid('personaGrid');
+        document.getElementById('modalPostIdea').classList.add('active');
+    }
+
+    async function goToPostIdeaStep2() {
+        if (!selectedPersonaId || !currentNewsItem) return;
+        var token = getToken();
+        showToast('info', '{msg:news_generating}');
+        try {
+            var response = await fetch('/api/v1/news/post-idea', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newsItemId: currentNewsItem.id, personaId: selectedPersonaId })
+            });
+            if (response.ok) {
+                var data = await response.json();
+                document.getElementById('postIdeaPersonaInfo').textContent = data.personaName;
+                document.getElementById('postIdeaGenerated').textContent = data.generatedText;
+                document.getElementById('postIdeaStep1').style.display = 'none';
+                document.getElementById('postIdeaStep2').style.display = '';
+                document.getElementById('stepPersona').classList.remove('active');
+                document.getElementById('stepGenerate').classList.add('active');
+            } else {
+                await showApiError(response, '{msg:news_error_generate}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:news_error_generate}');
+        }
+    }
+
+    function goToPostIdeaStep1() {
+        document.getElementById('postIdeaStep1').style.display = '';
+        document.getElementById('postIdeaStep2').style.display = 'none';
+        document.getElementById('stepGenerate').classList.remove('active');
+        document.getElementById('stepPersona').classList.add('active');
+    }
+
+    function goToPostCreate() {
+        document.getElementById('stepGenerate').classList.remove('active');
+        document.getElementById('stepConfirm').classList.add('active');
+        var text = document.getElementById('postIdeaGenerated').textContent;
+        window.location.href = '/compose?prefill=' + encodeURIComponent(text);
+    }
+
+    async function openMultiAngle(idx) {
+        currentNewsItem = articlesCache[idx];
+        var token = getToken();
+        showToast('info', '{msg:news_generating}');
+        try {
+            var response = await fetch('/api/v1/news/articles/' + currentNewsItem.id + '/multi-angle', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                document.getElementById('multiAngleNewsTitle').textContent = data.newsTitle;
+                var container = document.getElementById('angleCards');
+                var typeLabels = { breaking: '{msg:news_angle_breaking}', analysis: '{msg:news_angle_analysis}', dialogue: '{msg:news_angle_dialogue}' };
+                container.innerHTML = (data.angles || []).map(function(a) {
+                    var label = typeLabels[a.angleType] || a.angleType;
+                    var fitsHtml = (a.platformFits || []).map(function(pf) {
+                        var cls = pf.fitLevel === 'high' ? 'color:var(--status-success);border-color:var(--status-success);background:rgba(107,139,74,.08)' :
+                                  'color:var(--status-warning);border-color:var(--status-warning);background:rgba(200,169,110,.08)';
+                        return '<span style="font-size:0.72rem;padding:0.15rem var(--sp-sm);border:1px solid;border-radius:2px;' + cls + '">' + escapeHtmlGlobal(pf.platform) + ' : ' + escapeHtmlGlobal(pf.fitLevel) + '</span>';
+                    }).join(' ');
+                    return '<div class="news-angle-card">' +
+                        '<div class="news-angle-type">' + escapeHtmlGlobal(label) + '</div>' +
+                        '<div style="font-size:0.88rem;color:var(--text-body);line-height:1.65">' + escapeHtmlGlobal(a.body) + '</div>' +
+                        '<div style="display:flex;flex-wrap:wrap;gap:var(--sp-xs);margin-top:var(--sp-xs)">' + fitsHtml + '</div>' +
+                        '</div>';
+                }).join('');
+                document.getElementById('modalMultiAngle').classList.add('active');
+            } else {
+                await showApiError(response, '{msg:news_error_generate}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:news_error_generate}');
+        }
+    }
+
+    async function openTemplateMatch(idx) {
+        currentNewsItem = articlesCache[idx];
+        var token = getToken();
+        showToast('info', '{msg:news_generating}');
+        try {
+            var response = await fetch('/api/v1/news/articles/' + currentNewsItem.id + '/template-match', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (response.ok) {
+                var data = await response.json();
+                document.getElementById('templateMatchNewsTitle').textContent = data.newsTitle;
+                var container = document.getElementById('templateList');
+                if (!data.matches || data.matches.length === 0) {
+                    container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem;">{msg:news_no_templates}</p>';
+                } else {
+                    container.innerHTML = data.matches.map(function(m) {
+                        return '<div class="news-template-item">' +
+                            '<div style="font-size:1.4rem;font-weight:300;color:var(--text-muted);min-width:2rem;text-align:center">' + m.rank + '</div>' +
+                            '<div style="flex:1"><div style="font-size:0.9rem;font-weight:500;color:var(--text-heading)">' + escapeHtmlGlobal(m.templateName) + '</div>' +
+                            '<div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.15rem">' + escapeHtmlGlobal(m.reason) + '</div></div>' +
+                            '<div style="display:flex;align-items:center;gap:var(--sp-sm);min-width:120px">' +
+                            '<div style="flex:1;height:6px;background:var(--bg-field);border:1px solid var(--border-sub);overflow:hidden;border-radius:2px"><div style="height:100%;background:var(--accent-gold);width:' + m.score + '%"></div></div>' +
+                            '<div style="font-size:0.78rem;font-weight:500;color:var(--accent-gold);min-width:2.5rem;text-align:right">' + m.score + '%</div></div></div>';
+                    }).join('');
+                }
+                document.getElementById('modalTemplateMatch').classList.add('active');
+            } else {
+                await showApiError(response, '{msg:news_error_generate}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:news_error_generate}');
+        }
+    }
+
+    function openABTest(idx) {
+        currentNewsItem = articlesCache[idx];
+        document.getElementById('abTestNewsTitle').textContent = currentNewsItem.title;
+        document.getElementById('abStep1').style.display = '';
+        document.getElementById('abStep2').style.display = 'none';
+        var msgEl = document.getElementById('msgABError');
+        msgEl.style.display = 'none';
+        msgEl.textContent = '';
+        populatePersonaSelects();
+        document.getElementById('modalABTest').classList.add('active');
+    }
+
+    async function generateABTest() {
+        var personaA = document.getElementById('abPersonaA').value;
+        var personaB = document.getElementById('abPersonaB').value;
+        var msgEl = document.getElementById('msgABError');
+        if (!personaA || !personaB) {
+            msgEl.textContent = '{msg:news_abtest_error_select}';
+            msgEl.style.display = 'block';
+            return;
+        }
+        if (personaA === personaB) {
+            msgEl.textContent = '{msg:news_abtest_error_same}';
+            msgEl.style.display = 'block';
+            return;
+        }
+        msgEl.style.display = 'none';
+        var token = getToken();
+        showToast('info', '{msg:news_generating}');
+        try {
+            var response = await fetch('/api/v1/news/ab-test', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newsItemId: currentNewsItem.id, personaIdA: personaA, personaIdB: personaB })
+            });
+            if (response.ok) {
+                var data = await response.json();
+                renderABPanels(data);
+            } else {
+                await showApiError(response, '{msg:news_error_generate}');
+            }
+        } catch (err) {
+            showToast('error', '{msg:news_error_generate}');
+        }
+    }
+
+    function renderABPanels(data) {
+        document.getElementById('abStep1').style.display = 'none';
+        document.getElementById('abStep2').style.display = '';
+        var container = document.getElementById('abPanels');
+        container.innerHTML = [data.panelA, data.panelB].map(function(p) {
+            var labelColor = p.label === 'A' ? 'var(--status-info, #5A8BA0)' : 'var(--accent-gold, #C8964A)';
+            return '<div class="news-ab-panel">' +
+                '<div style="font-size:0.78rem;font-weight:500;letter-spacing:0.06em;color:' + labelColor + '">' + p.label + '</div>' +
+                '<div style="font-size:0.82rem;color:var(--text-sec)">' + escapeHtmlGlobal(p.personaName) + '</div>' +
+                '<div style="font-size:0.88rem;color:var(--text-body);line-height:1.65">' + escapeHtmlGlobal(p.generatedText) + '</div></div>';
+        }).join('');
+    }
+
+    function resetABTest() {
+        document.getElementById('abStep1').style.display = '';
+        document.getElementById('abStep2').style.display = 'none';
+    }
+
     function openAddModal() { document.getElementById('source-modal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('source-modal').style.display = 'none'; }
+    function closeSourceModal() { document.getElementById('source-modal').style.display = 'none'; }
 
     async function addSource(e) {
         e.preventDefault();
-        var token = localStorage.getItem('accessToken');
+        var token = getToken();
         var body = {
             name: document.getElementById('source-name').value,
             url: document.getElementById('source-url').value,
@@ -146,64 +821,74 @@
                 body: JSON.stringify(body)
             });
             if (response.ok || response.status === 201) {
-                showToast('success', 'ソースを追加しました');
-                closeModal();
+                showToast('success', '{msg:news_source_added}');
+                closeSourceModal();
                 loadSources();
             } else {
-                await showApiError(response, 'ソースの追加に失敗しました');
+                await showApiError(response, '{msg:news_error_add_source}');
             }
-        } catch (err) { showToast('error', 'ソースの追加に失敗しました'); }
+        } catch (err) { showToast('error', '{msg:news_error_add_source}'); }
     }
 
     async function removeSource(id) {
-        if (!confirm('このソースを削除してもよろしいですか？')) return;
-        var token = localStorage.getItem('accessToken');
+        if (!confirm('{msg:news_confirm_remove_source}')) return;
+        var token = getToken();
         try {
             var response = await fetch('/api/v1/news/sources/' + id, {
                 method: 'DELETE',
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.ok || response.status === 204) {
-                showToast('success', 'ソースを削除しました');
+                showToast('success', '{msg:news_source_removed}');
                 loadSources();
             } else {
-                await showApiError(response, 'ソースの削除に失敗しました');
+                await showApiError(response, '{msg:news_error_remove_source}');
             }
-        } catch (err) { showToast('error', 'ソースの削除に失敗しました'); }
+        } catch (err) { showToast('error', '{msg:news_error_remove_source}'); }
     }
 
-    async function generatePost(sourceId) {
-        var token = localStorage.getItem('accessToken');
-        showToast('info', 'AI投稿を生成中...');
+    async function fetchSourceArticles(sourceId) {
+        var token = getToken();
+        showToast('info', '{msg:news_fetching_articles}');
         try {
-            var response = await fetch('/api/v1/news/sources/' + sourceId + '/generate', {
+            var response = await fetch('/api/v1/news/sources/' + sourceId + '/fetch', {
                 method: 'POST',
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (response.ok) {
-                var data = await response.json();
-                document.getElementById('generated-news-title').textContent = data.newsTitle;
-                document.getElementById('generated-text').textContent = data.generatedText;
-                var urlEl = document.getElementById('generated-news-url');
-                urlEl.href = data.newsUrl || '#';
-                urlEl.style.display = data.newsUrl ? 'inline' : 'none';
-                document.getElementById('generated-preview').style.display = 'block';
-                showToast('success', 'AI投稿を生成しました');
+                showToast('success', '{msg:news_articles_fetched}');
+                loadArticles();
             } else {
-                await showApiError(response, 'AI投稿の生成に失敗しました');
+                await showApiError(response, '{msg:news_error_fetch}');
             }
-        } catch (err) { showToast('error', 'AI投稿の生成に失敗しました'); }
+        } catch (err) { showToast('error', '{msg:news_error_fetch}'); }
+    }
+
+    async function fetchAllArticles() {
+        var token = getToken();
+        showToast('info', '{msg:news_fetching_articles}');
+        try {
+            var sourcesResp = await fetch('/api/v1/news/sources', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (sourcesResp.ok) {
+                var sources = await sourcesResp.json();
+                for (var i = 0; i < sources.length; i++) {
+                    await fetch('/api/v1/news/sources/' + sources[i].id + '/fetch', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                }
+                showToast('success', '{msg:news_articles_fetched}');
+                loadArticles();
+            }
+        } catch (err) { showToast('error', '{msg:news_error_fetch}'); }
     }
 
     function logout() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';
-    }
-
-    function toggleMobileMenu() {
-        var sidebar = document.querySelector('.ak-sidebar');
-        if (sidebar) sidebar.classList.toggle('ak-sidebar--open');
     }
 </script>
 {/body}
