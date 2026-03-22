@@ -42,7 +42,7 @@ dependencies {
     implementation("io.quarkiverse.renarde:quarkus-renarde:3.1.1")
 
     // Quarkiverse Web Bundler
-    implementation("io.quarkiverse.web-bundler:quarkus-web-bundler:1.7.3")
+    implementation("io.quarkiverse.web-bundler:quarkus-web-bundler:2.2.1")
 
     // htmx (compileOnly for Web Bundler)
     compileOnly("org.mvnpm:htmx.org:2.0.8")
