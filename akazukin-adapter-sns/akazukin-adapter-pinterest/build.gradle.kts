@@ -1,5 +1,5 @@
 dependencies {
     api(project(":akazukin-adapter-sns:akazukin-adapter-core"))
     implementation(project(":akazukin-sdk:akazukin-sdk-pinterest"))
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
 }
