@@ -3,5 +3,5 @@ dependencies {
     implementation(project(":akazukin-sdk:akazukin-sdk-ollama"))
     implementation("jakarta.inject:jakarta.inject-api:2.0.1")
     implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
 }
