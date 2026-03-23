@@ -39,7 +39,7 @@ dependencies {
     implementation("io.quarkus:quarkus-rest-jackson")
 
     // Quarkiverse Renarde (server-side rendered web framework)
-    implementation("io.quarkiverse.renarde:quarkus-renarde:3.1.1")
+    implementation("io.quarkiverse.renarde:quarkus-renarde:3.1.6")
 
     // Quarkiverse Web Bundler
     implementation("io.quarkiverse.web-bundler:quarkus-web-bundler:1.7.3")
@@ -73,9 +73,9 @@ dependencies {
     implementation("io.quarkus:quarkus-logging-json")
 
     // AWS services
-    implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.0")
-    implementation("io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:3.15.0")
-    implementation("io.quarkiverse.amazonservices:quarkus-amazon-secretsmanager:3.15.0")
+    implementation("io.quarkiverse.amazonservices:quarkus-amazon-sqs:3.15.1")
+    implementation("io.quarkiverse.amazonservices:quarkus-amazon-dynamodb:3.15.1")
+    implementation("io.quarkiverse.amazonservices:quarkus-amazon-secretsmanager:3.15.1")
     implementation("software.amazon.awssdk:url-connection-client:2.25.27")
     implementation("software.amazon.awssdk:scheduler:2.25.27")
 
