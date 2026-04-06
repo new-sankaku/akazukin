@@ -45,6 +45,11 @@ class LatentKeyNormalizerTest {
         assertEquals("ABCDEFGH9999", normalizer.removeCharAt9and10("ABCDEFGHE19999"));
     }
 
+    @Test
+    void removesE1FromActualLatentKey() {
+        assertEquals("1450226601", normalizer.removeCharAt9and10("14502266E101"));
+    }
+
     @ParameterizedTest
     @CsvSource({
         "12345678E1,       12345678",
